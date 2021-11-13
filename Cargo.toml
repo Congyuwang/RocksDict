@@ -1,0 +1,19 @@
+[package]
+name = "RocksDict"
+version = "0.1.0"
+edition = "2021"
+description = "On-disk Dict With RocksDB (dbm alternative)"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "rocksdict"
+crate-type = ["cdylib"]
+
+[dependencies]
+rocksdb = "^0.17.0"
+num_cpus = "^1.13.0"
+
+[dependencies.pyo3]
+version = "~0.15"
+features = ["extension-module"]
