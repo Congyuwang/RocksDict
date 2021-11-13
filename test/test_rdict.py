@@ -3,7 +3,7 @@ from rocksdict import Rdict
 from random import randint, random, randbytes
 
 
-TEST_INT_RANGE_UPPER = 9999999
+TEST_INT_RANGE_UPPER = 999999
 
 
 def compare_int_dicts(ref_dict: dict, test_dict: Rdict, lower: int, upper: int):

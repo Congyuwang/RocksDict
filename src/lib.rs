@@ -4,8 +4,9 @@ use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyFloat, PyInt, PyString};
 use rocksdb::{Options, PlainTableFactoryOptions, SliceTransform, WriteOptions, DB};
 use std::fs::{create_dir_all, remove_dir_all};
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use std::path::Path;
+use ahash::AHashMap;
 use pyo3::{PyTypeInfo, PyTryFrom};
 
 #[pyclass]
@@ -19,6 +20,65 @@ impl Deref for Rdict {
 
     fn deref(&self) -> &Self::Target {
         &self.db
+    }
+}
+
+#[pyclass]
+struct Mdict(AHashMap<Box<[u8]>, Box<[u8]>>);
+
+impl Deref for Mdict {
+    type Target = AHashMap<Box<[u8]>, Box<[u8]>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for Mdict {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+#[pymethods]
+impl Mdict {
+    #[new]
+    fn new() -> Self {
+        Mdict(AHashMap::new())
+    }
+
+    fn __getitem__(&self, key: &PyAny, py: Python) -> PyResult<PyObject> {
+        let key = convert_key(key, py)?;
+        match self.get(key.as_bytes()) {
+            None => Err(PyException::new_err("key not found")),
+            Some(slice) => decode_value(py, &slice[..]),
+        }
+    }
+
+    fn __setitem__(&mut self, key: &PyAny, value: &PyAny, py: Python) -> PyResult<()> {
+        let key = convert_key(key, py)?;
+        match encode_value(value) {
+            Ok(value) => {
+                self.insert(key.as_bytes().to_vec().into_boxed_slice(), value);
+                Ok(())
+            }
+            Err(e) => Err(PyException::new_err(e.to_string()))
+        }
+    }
+
+    fn __contains__(&self, key: &PyAny, py: Python) -> PyResult<bool> {
+        let key = convert_key(key, py)?;
+        Ok(self.contains_key(key.as_bytes()))
+    }
+
+    fn __delitem__(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
+        let key = convert_key(key, py)?;
+        self.remove(key.as_bytes());
+        Ok(())
+    }
+
+    fn __len__(&self) -> usize {
+        self.len()
     }
 }
 
@@ -105,6 +165,7 @@ impl Rdict {
 #[pymodule]
 fn rocksdict(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<Rdict>()?;
+    m.add_class::<Mdict>()?;
     Ok(())
 }
 
