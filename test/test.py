@@ -9,12 +9,12 @@ TEST_INT_RANGE_UPPER = 9999999
 def compare_int_dicts(ref_dict: dict, test_dict: Rdict, lower: int, upper: int):
     # assert that the keys are the same
     for i in range(lower, upper):
-        assert (i in ref_dict) == (i.to_bytes(4, "little") in test_dict)
+        assert (i in ref_dict) == (i in test_dict)
 
     # assert that the values are the same
     for k, v in ref_dict.items():
-        assert k.to_bytes(4, "little") in test_dict
-        assert int.from_bytes(test_dict[k.to_bytes(4, "little")], "little")
+        assert k in test_dict
+        assert int.from_bytes(test_dict[k], "little") == v
 
 
 class TestIntKeys(unittest.TestCase):
@@ -31,7 +31,7 @@ class TestIntKeys(unittest.TestCase):
             key = randint(0, TEST_INT_RANGE_UPPER)
             value = randint(0, TEST_INT_RANGE_UPPER)
             self.ref_dict[key] = value
-            self.test_dict[key.to_bytes(4, "little")] = value.to_bytes(4, "little")
+            self.test_dict[key] = value.to_bytes(4, "little")
 
         compare_int_dicts(self.ref_dict, self.test_dict, 0, TEST_INT_RANGE_UPPER)
 
@@ -40,7 +40,7 @@ class TestIntKeys(unittest.TestCase):
             key = randint(0, TEST_INT_RANGE_UPPER)
             if key in self.ref_dict:
                 del self.ref_dict[key]
-                del self.test_dict[key.to_bytes(4, "little")]
+                del self.test_dict[key]
 
         compare_int_dicts(self.ref_dict, self.test_dict, 0, TEST_INT_RANGE_UPPER)
 
@@ -57,17 +57,17 @@ class TestStringKeys(unittest.TestCase):
         cls.test_dict = Rdict("./temp2")
 
     def test_string(self):
-        self.test_dict[b"Guangdong"] = b"Shenzhen"
-        self.test_dict[b"Sichuan"] = b"Changsha"
+        self.test_dict["Guangdong"] = b"Shenzhen"
+        self.test_dict["Sichuan"] = b"Changsha"
         # overwrite
-        self.test_dict[b"Sichuan"] = b"Chengdu"
-        self.test_dict[b"Beijing"] = b"Beijing"
+        self.test_dict["Sichuan"] = b"Chengdu"
+        self.test_dict["Beijing"] = b"Beijing"
         del self.test_dict[b"Beijing"]
 
         # assertions
-        assert b"Beijing" not in self.test_dict
-        assert self.test_dict[b"Sichuan"] == b"Chengdu"
-        assert self.test_dict[b"Guangdong"] == b"Shenzhen"
+        assert "Beijing" not in self.test_dict
+        assert self.test_dict["Sichuan"] == b"Chengdu"
+        assert self.test_dict["Guangdong"] == b"Shenzhen"
 
     @classmethod
     def tearDownClass(cls):

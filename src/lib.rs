@@ -1,11 +1,12 @@
 use num_cpus;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use pyo3::types::PyBytes;
+use pyo3::types::{PyBytes, PyInt, PyString};
 use rocksdb::{Options, PlainTableFactoryOptions, SliceTransform, WriteOptions, DB};
 use std::fs::{create_dir_all, remove_dir_all};
 use std::ops::Deref;
 use std::path::Path;
+use pyo3::{PyTypeInfo, PyTryFrom};
 
 #[pyclass]
 struct Rdict {
@@ -46,7 +47,8 @@ impl Rdict {
         Ok(self.len)
     }
 
-    fn __getitem__<'a>(&self, key: &PyBytes, py: Python<'a>) -> PyResult<&'a PyBytes> {
+    fn __getitem__<'a>(&self, key: &PyAny, py: Python<'a>) -> PyResult<&'a PyBytes> {
+        let key = convert_key(key, py)?;
         match self.get_pinned(key.as_bytes()) {
             Ok(value) => match value {
                 None => Err(PyException::new_err("key not found")),
@@ -56,14 +58,16 @@ impl Rdict {
         }
     }
 
-    fn __setitem__(&self, key: &PyBytes, value: &PyBytes) -> PyResult<()> {
+    fn __setitem__(&self, key: &PyAny, value: &PyBytes, py: Python) -> PyResult<()> {
+        let key = convert_key(key, py)?;
         match self.put_opt(key.as_bytes(), value.as_bytes(), &self.write_opt) {
             Ok(_) => Ok(()),
             Err(e) => Err(PyException::new_err(e.to_string())),
         }
     }
 
-    fn __contains__(&self, key: &PyBytes) -> PyResult<bool> {
+    fn __contains__(&self, key: &PyAny, py: Python) -> PyResult<bool> {
+        let key = convert_key(key, py)?;
         match self.get_pinned(key.as_bytes()) {
             Ok(value) => match value {
                 None => Ok(false),
@@ -73,7 +77,8 @@ impl Rdict {
         }
     }
 
-    fn __delitem__(&self, key: &PyBytes) -> PyResult<()> {
+    fn __delitem__(&self, key: &PyAny, py: Python) -> PyResult<()> {
+        let key = convert_key(key, py)?;
         match self.delete_opt(key.as_bytes(), &self.write_opt) {
             Ok(_) => Ok(()),
             Err(e) => Err(PyException::new_err(e.to_string())),
@@ -92,6 +97,26 @@ impl Rdict {
 fn rocksdict(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<Rdict>()?;
     Ok(())
+}
+
+///
+/// Convert string, int, bytes as values and keys.
+///
+fn convert_key<'a>(key: &'a PyAny, py: Python<'a>) -> PyResult<&'a PyBytes> {
+    if PyString::is_type_of(key) {
+        let key: &PyString = PyTryFrom::try_from(key).unwrap();
+        let key: String = key.to_string();
+        Ok(PyBytes::new(py, key.as_bytes()))
+    } else if PyBytes::is_type_of(key) {
+        let bytes: &PyBytes = PyTryFrom::try_from(key).unwrap();
+        Ok(bytes)
+    } else if PyInt::is_type_of(key) {
+        let key: &PyInt = PyTryFrom::try_from(key).unwrap();
+        let key: i64 = key.extract().unwrap();
+        Ok(PyBytes::new(py, &key.to_le_bytes()[..]))
+    } else {
+        Err(PyException::new_err("Only support `string`, `int` and `bytes` as keys"))
+    }
 }
 
 fn default_options() -> Options {
