@@ -44,8 +44,8 @@ class TestInt(unittest.TestCase):
 
     def test_add_integer(self):
         for i in range(10000):
-            key = randint(0, TEST_INT_RANGE_UPPER)
-            value = randint(0, TEST_INT_RANGE_UPPER)
+            key = randint(0, TEST_INT_RANGE_UPPER - 1)
+            value = randint(0, TEST_INT_RANGE_UPPER - 1)
             self.ref_dict[key] = value
             self.test_dict[key] = value
 
@@ -53,7 +53,7 @@ class TestInt(unittest.TestCase):
 
     def test_delete_integer(self):
         for i in range(5000):
-            key = randint(0, TEST_INT_RANGE_UPPER)
+            key = randint(0, TEST_INT_RANGE_UPPER - 1)
             if key in self.ref_dict:
                 del self.ref_dict[key]
                 del self.test_dict[key]
