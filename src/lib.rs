@@ -10,18 +10,11 @@ use ahash::AHashMap;
 use pyo3::{PyTypeInfo, PyTryFrom};
 use integer_encoding::VarInt;
 
+/// Option<DB> so it can be destroyed
 #[pyclass]
 struct Rdict {
-    db: DB,
+    db: Option<DB>,
     write_opt: WriteOptions,
-}
-
-impl Deref for Rdict {
-    type Target = DB;
-
-    fn deref(&self) -> &Self::Target {
-        &self.db
-    }
 }
 
 #[pyclass]
@@ -96,7 +89,7 @@ impl Rdict {
         match create_dir_all(path) {
             Ok(_) => match DB::open(&default_options(), &path) {
                 Ok(db) => Ok(Rdict {
-                    db,
+                    db: Some(db),
                     write_opt,
                 }),
                 Err(e) => Err(PyException::new_err(e.to_string())),
@@ -106,55 +99,84 @@ impl Rdict {
     }
 
     fn __getitem__(&self, key: &PyAny, py: Python) -> PyResult<PyObject> {
-        let key = encode_value(key)?;
-        match self.get_pinned(&key[..]) {
-            Ok(value) => match value {
-                None => Err(PyException::new_err("key not found")),
-                Some(slice) => decode_value(py, slice.as_ref()),
-            },
-            Err(e) => Err(PyException::new_err(e.to_string())),
+        if let Some(db) = &self.db {
+            let key = encode_value(key)?;
+            match db.get_pinned(&key[..]) {
+                Ok(value) => match value {
+                    None => Err(PyException::new_err("key not found")),
+                    Some(slice) => decode_value(py, slice.as_ref()),
+                },
+                Err(e) => Err(PyException::new_err(e.to_string())),
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
         }
     }
 
     fn __setitem__(&self, key: &PyAny, value: &PyAny) -> PyResult<()> {
-        let key = encode_value(key)?;
-        let value = encode_value(value)?;
-        match self.put_opt(&key[..], value, &self.write_opt) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(PyException::new_err(e.to_string())),
+        if let Some(db) = &self.db {
+            let key = encode_value(key)?;
+            let value = encode_value(value)?;
+            match db.put_opt(&key[..], value, &self.write_opt) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(PyException::new_err(e.to_string())),
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
         }
     }
 
     fn __contains__(&self, key: &PyAny) -> PyResult<bool> {
-        let key = encode_value(key)?;
-        match self.get_pinned(&key[..]) {
-            Ok(value) => match value {
-                None => Ok(false),
-                Some(_) => Ok(true),
-            },
-            Err(e) => Err(PyException::new_err(e.to_string())),
+        if let Some(db) = &self.db {
+            let key = encode_value(key)?;
+            match db.get_pinned(&key[..]) {
+                Ok(value) => match value {
+                    None => Ok(false),
+                    Some(_) => Ok(true),
+                },
+                Err(e) => Err(PyException::new_err(e.to_string())),
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
         }
     }
 
     fn __delitem__(&self, key: &PyAny) -> PyResult<()> {
-        let key = encode_value(key)?;
-        match self.delete_opt(&key[..], &self.write_opt) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(PyException::new_err(e.to_string())),
+        if let Some(db) = &self.db {
+            let key = encode_value(key)?;
+            match db.delete_opt(&key[..], &self.write_opt) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(PyException::new_err(e.to_string())),
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
         }
     }
 
-    fn close(&self) -> PyResult<()> {
-        match self.db.flush() {
-            Ok(_) => Ok(()),
-            Err(e) => Err(PyException::new_err(e.to_string())),
+    /// flush mem-table, drop database
+    fn close(&mut self) -> PyResult<()> {
+        if let Some(db) = &self.db {
+            match db.flush() {
+                Ok(_) => Ok(drop(self.db.take().unwrap())),
+                Err(e) => {
+                    drop(self.db.take().unwrap());
+                    Err(PyException::new_err(e.to_string()))
+                },
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
         }
     }
 
-    fn destroy(&self) -> PyResult<()> {
-        match remove_dir_all(self.path()) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(PyException::new_err(e.to_string())),
+    /// destroy database
+    fn destroy(&mut self) -> PyResult<()> {
+        if let Some(db) = &self.db {
+            let path = db.path().to_owned();
+            drop(self.db.take().unwrap());
+            DB::destroy(&default_options(), path);
+            Ok(())
+        } else {
+            Err(PyException::new_err("DB already closed"))
         }
     }
 }
