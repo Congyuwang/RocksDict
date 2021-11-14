@@ -184,6 +184,14 @@ impl Rdict {
     }
 }
 
+impl Drop for Rdict {
+    fn drop(&mut self) {
+        if let Some(db) = self.db.take() {
+            let _ = db.flush();
+        }
+    }
+}
+
 #[pymodule]
 fn rocksdict(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<Rdict>()?;
