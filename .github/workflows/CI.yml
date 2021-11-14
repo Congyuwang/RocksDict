@@ -31,7 +31,7 @@ jobs:
           pip install rocksdict --no-index --find-links dist --force-reinstall
       - name: Python UnitTest
         run: |
-          python -m unittest discover test
+          python -m unittest discover -v test
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
@@ -76,7 +76,7 @@ jobs:
           pip install rocksdict --no-index --find-links dist --force-reinstall
       - name: Python UnitTest
         run: |
-          python -m unittest discover test
+          python -m unittest discover -v test
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
@@ -107,7 +107,7 @@ jobs:
         pip install rocksdict --no-index --find-links dist --force-reinstall
     - name: Python UnitTest
       run: |
-        python -m unittest discover test
+        python -m unittest discover -v test
     - name: Upload wheels
       uses: actions/upload-artifact@v2
       with:
