@@ -73,7 +73,7 @@ jobs:
           args: --release --out dist --no-sdist
         env:
           LIBCLANG_PATH: ${{ runner.temp }}/llvm-11.0/lib
-      - name: Install built wheel - universal2
+      - name: Install built wheel
         run: |
           pip install rocksdict --no-index --find-links dist --force-reinstall
       - name: Python UnitTest
@@ -104,7 +104,7 @@ jobs:
         manylinux: 2014
         args: --release --out dist --no-sdist
         container: messense/manylinux2014-cross:${{ matrix.target }}
-    - name: Install built wheel - universal2
+    - name: Install built wheel
       run: |
         pip install rocksdict --no-index --find-links dist --force-reinstall
     - name: Python UnitTest
