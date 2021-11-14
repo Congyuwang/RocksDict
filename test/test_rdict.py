@@ -1,4 +1,5 @@
 import unittest
+from sys import getrefcount
 from rocksdict import Rdict
 from random import randint, random, randbytes
 
@@ -101,8 +102,15 @@ class TestBytes(unittest.TestCase):
         for i in range(10000):
             key = randbytes(10)
             value = randbytes(20)
-            self.ref_dict[key] = value
+            assert getrefcount(key) == 2
+            assert getrefcount(value) == 2
             self.test_dict[key] = value
+            # rdict does not increase ref_count
+            assert getrefcount(key) == 2
+            assert getrefcount(value) == 2
+            self.ref_dict[key] = value
+            assert getrefcount(key) == 3
+            assert getrefcount(value) == 3
 
         compare_dicts(self.ref_dict, self.test_dict)
 
@@ -110,8 +118,12 @@ class TestBytes(unittest.TestCase):
         for i in range(5000):
             keys = [k for k in self.ref_dict.keys()]
             key = keys[randint(0, len(self.ref_dict) - 1)]
-            del self.ref_dict[key]
+            # key + ref_dict + keys + getrefcount -> 4
+            assert getrefcount(key) == 4
             del self.test_dict[key]
+            assert getrefcount(key) == 4
+            del self.ref_dict[key]
+            assert getrefcount(key) == 3
 
         compare_dicts(self.ref_dict, self.test_dict)
 
