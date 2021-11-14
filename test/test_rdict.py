@@ -7,22 +7,30 @@ from random import randint, random, randbytes
 TEST_INT_RANGE_UPPER = 999999
 
 
-def compare_int_dicts(ref_dict: dict, test_dict: Rdict, lower: int, upper: int):
+def compare_int_dicts(test_case: unittest.TestCase,
+                      ref_dict: dict,
+                      test_dict: Rdict,
+                      lower: int,
+                      upper: int):
     # assert that the keys are the same
-    for i in range(lower, upper):
-        assert (i in ref_dict) == (i in test_dict)
+    keys_ref = list(ref_dict.keys())
+    keys_ref.sort()
+    keys_test = [k for k in range(lower, upper) if k in test_dict]
+    test_case.assertEqual(keys_ref, keys_test)
 
     # assert that the values are the same
     for k, v in ref_dict.items():
-        assert k in test_dict
-        assert test_dict[k] == v
+        test_case.assertTrue(k in test_dict)
+        test_case.assertEqual(test_dict[k], v)
 
 
-def compare_dicts(ref_dict: dict, test_dict: Rdict):
+def compare_dicts(test_case: unittest.TestCase,
+                  ref_dict: dict,
+                  test_dict: Rdict):
     # assert that the values are the same
     for k, v in ref_dict.items():
-        assert k in test_dict
-        assert test_dict[k] == v
+        test_case.assertTrue(k in test_dict)
+        test_case.assertEqual(test_dict[k], v)
 
 
 class TestInt(unittest.TestCase):
@@ -41,7 +49,7 @@ class TestInt(unittest.TestCase):
             self.ref_dict[key] = value
             self.test_dict[key] = value
 
-        compare_int_dicts(self.ref_dict, self.test_dict, 0, TEST_INT_RANGE_UPPER)
+        compare_int_dicts(self, self.ref_dict, self.test_dict, 0, TEST_INT_RANGE_UPPER)
 
     def test_delete_integer(self):
         for i in range(5000):
@@ -50,11 +58,17 @@ class TestInt(unittest.TestCase):
                 del self.ref_dict[key]
                 del self.test_dict[key]
 
-        compare_int_dicts(self.ref_dict, self.test_dict, 0, TEST_INT_RANGE_UPPER)
+        compare_int_dicts(self, self.ref_dict, self.test_dict, 0, TEST_INT_RANGE_UPPER)
+
+    def test_reopen(self):
+        self.test_dict.close()
+        self.test_dict = None
+        test_dict = Rdict("./temp_int")
+        compare_int_dicts(self, self.ref_dict, test_dict, 0, TEST_INT_RANGE_UPPER)
 
     @classmethod
     def tearDownClass(cls):
-        cls.test_dict.destroy()
+        Rdict("./temp_int").destroy()
 
 
 class TestFloat(unittest.TestCase):
@@ -73,7 +87,7 @@ class TestFloat(unittest.TestCase):
             self.ref_dict[key] = value
             self.test_dict[key] = value
 
-        compare_dicts(self.ref_dict, self.test_dict)
+        compare_dicts(self, self.ref_dict, self.test_dict)
 
     def test_delete_float(self):
         for i in range(5000):
@@ -82,11 +96,17 @@ class TestFloat(unittest.TestCase):
             del self.ref_dict[key]
             del self.test_dict[key]
 
-        compare_dicts(self.ref_dict, self.test_dict)
+        compare_dicts(self, self.ref_dict, self.test_dict)
+
+    def test_reopen(self):
+        self.test_dict.close()
+        self.test_dict = None
+        test_dict = Rdict("./temp_float")
+        compare_dicts(self, self.ref_dict, test_dict)
 
     @classmethod
     def tearDownClass(cls):
-        cls.test_dict.destroy()
+        Rdict("./temp_float").destroy()
 
 
 class TestBytes(unittest.TestCase):
@@ -102,34 +122,40 @@ class TestBytes(unittest.TestCase):
         for i in range(10000):
             key = randbytes(10)
             value = randbytes(20)
-            assert getrefcount(key) == 2
-            assert getrefcount(value) == 2
+            self.assertEqual(getrefcount(key), 2)
+            self.assertEqual(getrefcount(value), 2)
             self.test_dict[key] = value
             # rdict does not increase ref_count
-            assert getrefcount(key) == 2
-            assert getrefcount(value) == 2
+            self.assertEqual(getrefcount(key), 2)
+            self.assertEqual(getrefcount(value), 2)
             self.ref_dict[key] = value
-            assert getrefcount(key) == 3
-            assert getrefcount(value) == 3
+            self.assertEqual(getrefcount(key), 3)
+            self.assertEqual(getrefcount(value), 3)
 
-        compare_dicts(self.ref_dict, self.test_dict)
+        compare_dicts(self, self.ref_dict, self.test_dict)
 
     def test_delete_bytes(self):
         for i in range(5000):
             keys = [k for k in self.ref_dict.keys()]
             key = keys[randint(0, len(self.ref_dict) - 1)]
             # key + ref_dict + keys + getrefcount -> 4
-            assert getrefcount(key) == 4
+            self.assertEqual(getrefcount(key), 4)
             del self.test_dict[key]
-            assert getrefcount(key) == 4
+            self.assertEqual(getrefcount(key), 4)
             del self.ref_dict[key]
-            assert getrefcount(key) == 3
+            self.assertEqual(getrefcount(key), 3)
 
-        compare_dicts(self.ref_dict, self.test_dict)
+        compare_dicts(self, self.ref_dict, self.test_dict)
+
+    def test_reopen(self):
+        self.test_dict.close()
+        self.test_dict = None
+        test_dict = Rdict("./temp_bytes")
+        compare_dicts(self, self.ref_dict, test_dict)
 
     @classmethod
     def tearDownClass(cls):
-        cls.test_dict.destroy()
+        Rdict("./temp_bytes").destroy()
 
 
 class TestString(unittest.TestCase):
@@ -148,9 +174,9 @@ class TestString(unittest.TestCase):
         del self.test_dict["Beijing"]
 
         # assertions
-        assert "Beijing" not in self.test_dict
-        assert self.test_dict["Sichuan"] == "Chengdu"
-        assert self.test_dict["Guangdong"] == "Shenzhen"
+        self.assertNotIn("Beijing", self.test_dict)
+        self.assertEqual(self.test_dict["Sichuan"], "Chengdu")
+        self.assertEqual(self.test_dict["Guangdong"], "Shenzhen")
 
     @classmethod
     def tearDownClass(cls):
