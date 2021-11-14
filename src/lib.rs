@@ -2,8 +2,8 @@ use num_cpus;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyFloat, PyInt, PyString};
-use rocksdb::{Options, PlainTableFactoryOptions, SliceTransform, WriteOptions, DB};
-use std::fs::{create_dir_all, remove_dir_all};
+use rocksdb::{Options, PlainTableFactoryOptions, SliceTransform, WriteOptions, DB, FlushOptions};
+use std::fs::create_dir_all;
 use std::ops::{Deref, DerefMut};
 use std::path::Path;
 use ahash::AHashMap;
@@ -84,8 +84,7 @@ impl Rdict {
     #[new]
     fn new(path: &str) -> PyResult<Self> {
         let path = Path::new(path);
-        let mut write_opt = WriteOptions::default();
-        write_opt.disable_wal(true);
+        let write_opt = WriteOptions::default();
         match create_dir_all(path) {
             Ok(_) => match DB::open(&default_options(), &path) {
                 Ok(db) => Ok(Rdict {
@@ -156,7 +155,9 @@ impl Rdict {
     /// flush mem-table, drop database
     fn close(&mut self) -> PyResult<()> {
         if let Some(db) = &self.db {
-            match db.flush() {
+            let mut flush_opt = FlushOptions::default();
+            flush_opt.set_wait(true);
+            match db.flush_opt(&flush_opt) {
                 Ok(_) => Ok(drop(self.db.take().unwrap())),
                 Err(e) => {
                     drop(self.db.take().unwrap());
@@ -173,8 +174,10 @@ impl Rdict {
         if let Some(db) = &self.db {
             let path = db.path().to_owned();
             drop(self.db.take().unwrap());
-            DB::destroy(&default_options(), path);
-            Ok(())
+            match DB::destroy(&default_options(), path) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(PyException::new_err(e.to_string()))
+            }
         } else {
             Err(PyException::new_err("DB already closed"))
         }
@@ -309,7 +312,9 @@ fn default_options() -> Options {
     // use a smaller compaction multiplier
     options.set_max_bytes_for_level_multiplier(4.0);
     // use 8-byte prefix (2 ^ 64 is far enough for transaction counts)
-    options.set_prefix_extractor(SliceTransform::create_fixed_prefix(8));
+    options.set_prefix_extractor(SliceTransform::create("fixed", |slice| {
+        if slice.len() > 8 { &slice[0..8] } else { slice }
+    }, None));
     // set to plain-table for better performance
     options.set_plain_table_factory(&PlainTableFactoryOptions {
         // 16 (compressed txid) + 4 (i32 out n)
