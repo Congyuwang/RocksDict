@@ -1,7 +1,7 @@
 import unittest
 from sys import getrefcount
 from rocksdict import Rdict
-from random import randint, random, randbytes
+from random import randint, randbytes, random
 
 
 TEST_INT_RANGE_UPPER = 999999
