@@ -1,15 +1,15 @@
 import unittest
 from sys import getrefcount
 from rocksdict import Rdict
-from random import randint, random
+from random import randint, random, getrandbits
 
 
 TEST_INT_RANGE_UPPER = 999999
 
 
-def randbytes(self, n):
+def randbytes(n):
     """Generate n random bytes."""
-    return self.getrandbits(n * 8).to_bytes(n, 'little')
+    return getrandbits(n * 8).to_bytes(n, 'little')
 
 
 def compare_int_dicts(test_case: unittest.TestCase,
