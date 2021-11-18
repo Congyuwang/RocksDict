@@ -119,7 +119,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    needs: [ macos, windows, linux ]
+    needs: [ windows, linux ]
     steps:
       - uses: actions/download-artifact@v2
         with:
