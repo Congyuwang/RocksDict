@@ -7,38 +7,38 @@ on:
     branches: [ main ]
 
 jobs:
-  macos:
-    runs-on: macos-latest
-    strategy:
-      matrix:
-        py_version: [3.6, 3.7, 3.8, 3.9, "3.10"]
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.py_version }}
-          architecture: x64
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          default: true
-      - name: Build wheels - universal2
-        uses: messense/maturin-action@v1
-        with:
-          args: --release --universal2 --out dist --no-sdist
-      - name: Install built wheel - universal2
-        run: |
-          pip install rocksdict --no-index --find-links dist --force-reinstall
-      - name: Python UnitTest
-        run: |
-          python -m unittest discover -v test
-      - name: Upload wheels
-        uses: actions/upload-artifact@v2
-        with:
-          name: wheels
-          path: dist
+#   macos:
+#     runs-on: macos-latest
+#     strategy:
+#       matrix:
+#         py_version: [3.6, 3.7, 3.8, 3.9, "3.10"]
+#     steps:
+#       - uses: actions/checkout@v2
+#       - uses: actions/setup-python@v2
+#         with:
+#           python-version: ${{ matrix.py_version }}
+#           architecture: x64
+#       - name: Install Rust toolchain
+#         uses: actions-rs/toolchain@v1
+#         with:
+#           toolchain: stable
+#           profile: minimal
+#           default: true
+#       - name: Build wheels - universal2
+#         uses: messense/maturin-action@v1
+#         with:
+#           args: --release --universal2 --out dist --no-sdist
+#       - name: Install built wheel - universal2
+#         run: |
+#           pip install rocksdict --no-index --find-links dist --force-reinstall
+#       - name: Python UnitTest
+#         run: |
+#           python -m unittest discover -v test
+#       - name: Upload wheels
+#         uses: actions/upload-artifact@v2
+#         with:
+#           name: wheels
+#           path: dist
 
   windows:
     runs-on: windows-latest
