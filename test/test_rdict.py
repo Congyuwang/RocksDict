@@ -66,6 +66,10 @@ class TestInt(unittest.TestCase):
         test_dict = Rdict("./temp_int")
         compare_int_dicts(self, self.ref_dict, test_dict, 0, TEST_INT_RANGE_UPPER)
 
+    def test_get_batch(self):
+        keys = list(self.ref_dict.keys())[:100]
+        self.assertEqual(self.test_dict.get_batch(keys), [self.ref_dict[k] for k in keys])
+
     @classmethod
     def tearDownClass(cls):
         Rdict("./temp_int").destroy()
@@ -103,6 +107,10 @@ class TestFloat(unittest.TestCase):
         self.test_dict = None
         test_dict = Rdict("./temp_float")
         compare_dicts(self, self.ref_dict, test_dict)
+
+    def test_get_batch(self):
+        keys = list(self.ref_dict.keys())[:100]
+        self.assertEqual(self.test_dict.get_batch(keys), [self.ref_dict[k] for k in keys])
 
     @classmethod
     def tearDownClass(cls):
@@ -152,6 +160,10 @@ class TestBytes(unittest.TestCase):
         self.test_dict = None
         test_dict = Rdict("./temp_bytes")
         compare_dicts(self, self.ref_dict, test_dict)
+
+    def test_get_batch(self):
+        keys = list(self.ref_dict.keys())[:100]
+        self.assertEqual(self.test_dict.get_batch(keys), [self.ref_dict[k] for k in keys])
 
     @classmethod
     def tearDownClass(cls):

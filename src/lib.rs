@@ -1,7 +1,7 @@
 use num_cpus;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use pyo3::types::{PyBytes, PyFloat, PyInt, PyString};
+use pyo3::types::{PyBytes, PyFloat, PyInt, PyList, PyString};
 use rocksdb::{Options, PlainTableFactoryOptions, SliceTransform, WriteOptions, DB, FlushOptions};
 use std::fs::create_dir_all;
 use std::ops::{Deref, DerefMut};
@@ -107,6 +107,29 @@ impl Rdict {
                 },
                 Err(e) => Err(PyException::new_err(e.to_string())),
             }
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
+
+    fn get_batch<'a>(&self, keys: &'a PyList, py: Python<'a>) -> PyResult<&'a PyList> {
+        if let Some(db) = &self.db {
+            let mut keys_batch = Vec::new();
+            for key in keys {
+                keys_batch.push(encode_value(key)?);
+            }
+            let values = db.multi_get(keys_batch);
+            let result = PyList::empty(py);
+            for v in values {
+                match v {
+                    Ok(value) => match value {
+                        None => result.append(py.None())?,
+                        Some(slice) => result.append(decode_value(py, slice.as_ref())?)?,
+                    },
+                    Err(e) => return Err(PyException::new_err(e.to_string())),
+                }
+            }
+            Ok(result)
         } else {
             Err(PyException::new_err("DB already closed"))
         }
