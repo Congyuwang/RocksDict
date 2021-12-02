@@ -24,7 +24,7 @@ jobs:
       - name: Run benchmarks
         run: |
           cd examples/benchmarks
-          pip install rocksdict --no-index --find-links dist --force-reinstall
+          pip install rocksdict
           python -m pip install -r requirements-dev.txt
           pytest ../../test/benchmark.py --benchmark-json ../../output.json
 
