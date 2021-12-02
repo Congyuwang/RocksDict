@@ -39,7 +39,7 @@ class TargetDict:
 
     def prepare_ref_data(self, ref_num=2000000, dict_type='p'):
         if dict_type == 'p':
-            for i in range(ref_num * 5):
+            for i in range(ref_num * 3):
                 self.ref_dict[randbytes(self.key_size)] = randbytes(self.data_size)
                 self.backup_dict[randbytes(self.key_size)] = randbytes(self.data_size)
         else:
