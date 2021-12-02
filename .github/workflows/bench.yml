@@ -1,0 +1,38 @@
+on:
+  push:
+    branches:
+      - main
+name: Benchmark
+
+jobs:
+  pytest-benchmark:
+    name: pytest benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+          architecture: x64
+
+      - name: Download previous benchmark data
+        uses: actions/cache@v1
+        with:
+          path: ./cache
+          key: ${{ runner.os }}-pytest-benchmark
+
+      - name: Run benchmarks
+        run: |
+          cd examples/benchmarks
+          pip install rocksdict --no-index --find-links dist --force-reinstall
+          python -m pip install -r requirements-dev.txt
+          pytest ../../test/benchmark.py --benchmark-json ../../output.json
+
+      - name: Store benchmark result
+        uses: rhysd/github-action-benchmark@v1
+        with:
+          name: pytest-bench
+          tool: "pytest"
+          output-file-path: output.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: ${{ github.event_name != 'pull_request' }}
