@@ -36,3 +36,5 @@ jobs:
           output-file-path: output.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: ${{ github.event_name != 'pull_request' }}
+          benchmark-data-dir-path: "dev/bench"
+          gh-pages-branch: "gh-pages"
