@@ -225,14 +225,6 @@ impl OptionsPy {
         self.0.set_is_fd_close_on_exec(enabled)
     }
 
-    // pub fn set_skip_log_error_on_recovery(&mut self, enabled: bool) {
-    //     self.0.set_skip_log_error_on_recovery(enabled)
-    // }
-    //
-    // pub fn set_allow_os_buffer(&mut self, is_allow: bool) {
-    //     self.0.set_allow_os_buffer(is_allow)
-    // }
-
     pub fn set_table_cache_num_shard_bits(&mut self, nbits: c_int) {
         self.0.set_table_cache_num_shard_bits(nbits)
     }
@@ -312,14 +304,6 @@ impl OptionsPy {
     pub fn set_max_background_jobs(&mut self, jobs: c_int) {
         self.0.set_max_background_jobs(jobs)
     }
-
-    // pub fn set_max_background_compactions(&mut self, n: c_int) {
-    //     self.0.set_max_background_compactions(n)
-    // }
-    //
-    // pub fn set_max_background_flushes(&mut self, n: c_int) {
-    //     self.0.set_max_background_flushes(n)
-    // }
 
     pub fn set_disable_auto_compactions(&mut self, disable: bool) {
         self.0.set_disable_auto_compactions(disable)
@@ -587,14 +571,6 @@ impl BlockBasedOptionsPy {
     pub fn set_partition_filters(&mut self, size: bool) {
         self.0.set_partition_filters(size)
     }
-
-    // pub fn set_lru_cache(&mut self, size: size_t) {
-    //     self.0.set_lru_cache(size)
-    // }
-    //
-    // pub fn set_lru_cache_compressed(&mut self, size: size_t) {
-    //     self.0.set_lru_cache_compressed(size)
-    // }
 
     pub fn set_block_cache(&mut self, cache: PyRef<CachePy>) {
         self.0.set_block_cache(&cache.0)
