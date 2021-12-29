@@ -1,13 +1,51 @@
 use libc::size_t;
+use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use rocksdb::{DBPath, Options};
+use rocksdb::{
+    BlockBasedIndexType, BlockBasedOptions, Cache, CuckooTableOptions, DataBlockIndexType,
+    MemtableFactory, Options, PlainTableFactoryOptions,
+};
 use std::os::raw::{c_int, c_uint};
 
 #[pyclass(name = "Options")]
 pub(crate) struct OptionsPy(pub(crate) Options);
 
+/// Defines the underlying memtable implementation.
+/// See official [wiki](https://github.com/facebook/rocksdb/wiki/MemTable) for more information.
+#[pyclass(name = "MemtableFactory")]
+pub(crate) struct MemtableFactoryPy(pub(crate) MemtableFactory);
+
+#[pyclass(name = "BlockBasedOptions")]
+pub(crate) struct BlockBasedOptionsPy(pub(crate) BlockBasedOptions);
+
+#[pyclass(name = "CuckooTableOptions")]
+pub(crate) struct CuckooTableOptionsPy(pub(crate) CuckooTableOptions);
+
+#[pyclass(name = "PlainTableFactoryOptions")]
+pub(crate) struct PlainTableFactoryOptionsPy {
+    #[pyo3(get, set)]
+    user_key_length: u32,
+
+    #[pyo3(get, set)]
+    bloom_bits_per_key: i32,
+
+    #[pyo3(get, set)]
+    hash_table_ratio: f64,
+
+    #[pyo3(get, set)]
+    index_sparseness: usize,
+}
+
+#[pyclass(name = "Cache")]
+pub(crate) struct CachePy(pub(crate) Cache);
+
+#[pyclass(name = "BlockBasedIndexType")]
+pub(crate) struct BlockBasedIndexTypePy(BlockBasedIndexType);
+
+#[pyclass(name = "BlockBasedIndexType")]
+pub(crate) struct DataBlockIndexTypePy(DataBlockIndexType);
+
 // TODO: Path issue
-// TODO: table factories options
 // TODO: prefix extractor settings
 
 #[pymethods]
@@ -324,21 +362,35 @@ impl OptionsPy {
         self.0.set_enable_pipelined_write(value)
     }
 
-    // pub fn set_memtable_factory(&mut self, factory: MemtableFactory) {
-    //     self.0.set_memtable_factory(factory)
-    // }
-    //
-    // pub fn set_block_based_table_factory(&mut self, factory: &BlockBasedOptions) {
-    //     self.0.set_block_based_table_factory(factory)
-    // }
-    //
-    // pub fn set_cuckoo_table_factory(&mut self, factory: &CuckooTableOptions) {
-    //     self.0.set_cuckoo_table_factory(factory)
-    // }
-    //
-    // pub fn set_plain_table_factory(&mut self, options: &PlainTableFactoryOptions) {
-    //     self.0.set_plain_table_factory(options)
-    // }
+    pub fn set_memtable_factory(&mut self, factory: PyRef<MemtableFactoryPy>) {
+        self.0.set_memtable_factory(match factory.0 {
+            MemtableFactory::Vector => MemtableFactory::Vector,
+            MemtableFactory::HashSkipList {
+                bucket_count,
+                height,
+                branching_factor,
+            } => MemtableFactory::HashSkipList {
+                bucket_count,
+                height,
+                branching_factor,
+            },
+            MemtableFactory::HashLinkList { bucket_count } => {
+                MemtableFactory::HashLinkList { bucket_count }
+            }
+        })
+    }
+
+    pub fn set_block_based_table_factory(&mut self, factory: PyRef<BlockBasedOptionsPy>) {
+        self.0.set_block_based_table_factory(&factory.0)
+    }
+
+    pub fn set_cuckoo_table_factory(&mut self, factory: PyRef<CuckooTableOptionsPy>) {
+        self.0.set_cuckoo_table_factory(&factory.0)
+    }
+
+    pub fn set_plain_table_factory(&mut self, options: PyRef<PlainTableFactoryOptionsPy>) {
+        self.0.set_plain_table_factory(&options.to_rocks())
+    }
 
     pub fn set_min_level_to_compress(&mut self, lvl: c_int) {
         self.0.set_min_level_to_compress(lvl)
@@ -436,9 +488,9 @@ impl OptionsPy {
         self.0.set_atomic_flush(atomic_flush)
     }
 
-    // pub fn set_row_cache(&mut self, cache: &Cache) {
-    //     self.0.set_row_cache(cache)
-    // }
+    pub fn set_row_cache(&mut self, cache: PyRef<CachePy>) {
+        self.0.set_row_cache(&cache.0)
+    }
 
     pub fn set_ratelimiter(
         &mut self,
@@ -492,5 +544,268 @@ impl OptionsPy {
 
     pub fn set_memtable_whole_key_filtering(&mut self, whole_key_filter: bool) {
         self.0.set_memtable_whole_key_filtering(whole_key_filter)
+    }
+}
+
+#[pymethods]
+impl MemtableFactoryPy {
+    #[staticmethod]
+    pub fn vector() -> Self {
+        MemtableFactoryPy(MemtableFactory::Vector)
+    }
+
+    #[staticmethod]
+    pub fn hash_skip_list(bucket_count: usize, height: i32, branching_factor: i32) -> Self {
+        MemtableFactoryPy(MemtableFactory::HashSkipList {
+            bucket_count,
+            height,
+            branching_factor,
+        })
+    }
+
+    #[staticmethod]
+    pub fn hash_link_list(bucket_count: usize) -> Self {
+        MemtableFactoryPy(MemtableFactory::HashLinkList { bucket_count })
+    }
+}
+
+#[pymethods]
+impl BlockBasedOptionsPy {
+    #[new]
+    pub fn default() -> Self {
+        BlockBasedOptionsPy(BlockBasedOptions::default())
+    }
+
+    pub fn set_block_size(&mut self, size: usize) {
+        self.0.set_block_size(size)
+    }
+
+    pub fn set_metadata_block_size(&mut self, size: usize) {
+        self.0.set_metadata_block_size(size)
+    }
+
+    pub fn set_partition_filters(&mut self, size: bool) {
+        self.0.set_partition_filters(size)
+    }
+
+    // pub fn set_lru_cache(&mut self, size: size_t) {
+    //     self.0.set_lru_cache(size)
+    // }
+    //
+    // pub fn set_lru_cache_compressed(&mut self, size: size_t) {
+    //     self.0.set_lru_cache_compressed(size)
+    // }
+
+    pub fn set_block_cache(&mut self, cache: PyRef<CachePy>) {
+        self.0.set_block_cache(&cache.0)
+    }
+
+    pub fn set_block_cache_compressed(&mut self, cache: PyRef<CachePy>) {
+        self.0.set_block_cache_compressed(&cache.0)
+    }
+
+    pub fn disable_cache(&mut self) {
+        self.0.disable_cache()
+    }
+
+    pub fn set_bloom_filter(&mut self, bits_per_key: c_int, block_based: bool) {
+        self.0.set_bloom_filter(bits_per_key, block_based)
+    }
+
+    pub fn set_cache_index_and_filter_blocks(&mut self, v: bool) {
+        self.0.set_cache_index_and_filter_blocks(v)
+    }
+
+    pub fn set_index_type(&mut self, index_type: PyRef<BlockBasedIndexTypePy>) {
+        self.0.set_index_type(match index_type.0 {
+            BlockBasedIndexType::BinarySearch => BlockBasedIndexType::BinarySearch,
+            BlockBasedIndexType::HashSearch => BlockBasedIndexType::HashSearch,
+            BlockBasedIndexType::TwoLevelIndexSearch => BlockBasedIndexType::TwoLevelIndexSearch,
+        })
+    }
+
+    pub fn set_pin_l0_filter_and_index_blocks_in_cache(&mut self, v: bool) {
+        self.0.set_pin_l0_filter_and_index_blocks_in_cache(v)
+    }
+
+    pub fn set_pin_top_level_index_and_filter(&mut self, v: bool) {
+        self.0.set_pin_top_level_index_and_filter(v)
+    }
+
+    pub fn set_format_version(&mut self, version: i32) {
+        self.0.set_format_version(version)
+    }
+
+    pub fn set_block_restart_interval(&mut self, interval: i32) {
+        self.0.set_block_restart_interval(interval)
+    }
+
+    pub fn set_index_block_restart_interval(&mut self, interval: i32) {
+        self.0.set_index_block_restart_interval(interval)
+    }
+
+    pub fn set_data_block_index_type(&mut self, index_type: PyRef<DataBlockIndexTypePy>) {
+        self.0.set_data_block_index_type(match index_type.0 {
+            DataBlockIndexType::BinarySearch => DataBlockIndexType::BinarySearch,
+            DataBlockIndexType::BinaryAndHash => DataBlockIndexType::BinaryAndHash,
+        })
+    }
+
+    pub fn set_data_block_hash_ratio(&mut self, ratio: f64) {
+        self.0.set_data_block_hash_ratio(ratio)
+    }
+}
+
+#[pymethods]
+impl CuckooTableOptionsPy {
+    #[new]
+    pub fn default() -> Self {
+        CuckooTableOptionsPy(CuckooTableOptions::default())
+    }
+
+    /// Determines the utilization of hash tables. Smaller values
+    /// result in larger hash tables with fewer collisions.
+    /// Default: 0.9
+    pub fn set_hash_ratio(&mut self, ratio: f64) {
+        self.0.set_hash_ratio(ratio)
+    }
+
+    /// A property used by builder to determine the depth to go to
+    /// to search for a path to displace elements in case of
+    /// collision. See Builder.MakeSpaceForKey method. Higher
+    /// values result in more efficient hash tables with fewer
+    /// lookups but take more time to build.
+    /// Default: 100
+    pub fn set_max_search_depth(&mut self, depth: u32) {
+        self.0.set_max_search_depth(depth)
+    }
+
+    /// In case of collision while inserting, the builder
+    /// attempts to insert in the next cuckoo_block_size
+    /// locations before skipping over to the next Cuckoo hash
+    /// function. This makes lookups more cache friendly in case
+    /// of collisions.
+    /// Default: 5
+    pub fn set_cuckoo_block_size(&mut self, size: u32) {
+        self.0.set_cuckoo_block_size(size)
+    }
+
+    /// If this option is enabled, user key is treated as uint64_t and its value
+    /// is used as hash value directly. This option changes builder's behavior.
+    /// Reader ignore this option and behave according to what specified in
+    /// table property.
+    /// Default: false
+    pub fn set_identity_as_first_hash(&mut self, flag: bool) {
+        self.0.set_identity_as_first_hash(flag)
+    }
+
+    /// If this option is set to true, module is used during hash calculation.
+    /// This often yields better space efficiency at the cost of performance.
+    /// If this option is set to false, # of entries in table is constrained to
+    /// be power of two, and bit and is used to calculate hash, which is faster in general.
+    /// Default: true
+    pub fn set_use_module_hash(&mut self, flag: bool) {
+        self.0.set_use_module_hash(flag)
+    }
+}
+
+#[pymethods]
+impl PlainTableFactoryOptionsPy {
+    #[new]
+    pub fn default() -> Self {
+        PlainTableFactoryOptionsPy {
+            user_key_length: 0,
+            bloom_bits_per_key: 10,
+            hash_table_ratio: 0.75,
+            index_sparseness: 16,
+        }
+    }
+}
+
+impl PlainTableFactoryOptionsPy {
+    /// Used with DBOptions::set_plain_table_factory.
+    /// See official [wiki](https://github.com/facebook/rocksdb/wiki/PlainTable-Format) for more
+    /// information.
+    ///
+    /// Defaults:
+    ///  user_key_length: 0 (variable length)
+    ///  bloom_bits_per_key: 10
+    ///  hash_table_ratio: 0.75
+    ///  index_sparseness: 16
+    pub(crate) fn to_rocks(&self) -> PlainTableFactoryOptions {
+        PlainTableFactoryOptions {
+            user_key_length: self.user_key_length,
+            bloom_bits_per_key: self.bloom_bits_per_key,
+            hash_table_ratio: self.hash_table_ratio,
+            index_sparseness: self.index_sparseness,
+        }
+    }
+}
+
+#[pymethods]
+impl CachePy {
+    /// Create a lru cache with capacity
+    #[new]
+    pub fn new_lru_cache(capacity: size_t) -> PyResult<CachePy> {
+        match Cache::new_lru_cache(capacity) {
+            Ok(cache) => Ok(CachePy(cache)),
+            Err(e) => Err(PyException::new_err(e.into_string())),
+        }
+    }
+
+    /// Returns the Cache memory usage
+    pub fn get_usage(&self) -> usize {
+        self.0.get_usage()
+    }
+
+    /// Returns pinned memory usage
+    pub fn get_pinned_usage(&self) -> usize {
+        self.0.get_pinned_usage()
+    }
+
+    /// Sets cache capacity
+    pub fn set_capacity(&mut self, capacity: size_t) {
+        self.0.set_capacity(capacity)
+    }
+}
+
+#[pymethods]
+impl BlockBasedIndexTypePy {
+    /// A space efficient index block that is optimized for
+    /// binary-search-based index.
+    #[staticmethod]
+    pub fn binary_search() -> Self {
+        BlockBasedIndexTypePy(BlockBasedIndexType::BinarySearch)
+    }
+
+    /// The hash index, if enabled, will perform a hash lookup if
+    /// a prefix extractor has been provided through Options::set_prefix_extractor.
+    #[staticmethod]
+    pub fn hash_search() -> Self {
+        BlockBasedIndexTypePy(BlockBasedIndexType::HashSearch)
+    }
+
+    /// A two-level index implementation. Both levels are binary search indexes.
+    #[staticmethod]
+    pub fn two_level_index_search() -> Self {
+        BlockBasedIndexTypePy(BlockBasedIndexType::TwoLevelIndexSearch)
+    }
+}
+
+#[pymethods]
+impl DataBlockIndexTypePy {
+    /// Use binary search when performing point lookup for keys in data blocks.
+    /// This is the default.
+    #[staticmethod]
+    pub fn binary_search() -> Self {
+        DataBlockIndexTypePy(DataBlockIndexType::BinarySearch)
+    }
+
+    /// Appends a compact hash table to the end of the data block for efficient indexing. Backwards
+    /// compatible with databases created without this feature. Once turned on, existing data will
+    /// be gradually converted to the hash index format.
+    #[staticmethod]
+    pub fn binary_and_hash() -> Self {
+        DataBlockIndexTypePy(DataBlockIndexType::BinaryAndHash)
     }
 }
