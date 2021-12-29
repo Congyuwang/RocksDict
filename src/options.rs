@@ -3,7 +3,7 @@ use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use rocksdb::{
     BlockBasedIndexType, BlockBasedOptions, Cache, CuckooTableOptions, DataBlockIndexType,
-    MemtableFactory, Options, PlainTableFactoryOptions,
+    MemtableFactory, Options, PlainTableFactoryOptions, SliceTransform,
 };
 use std::os::raw::{c_int, c_uint};
 
@@ -44,6 +44,15 @@ pub(crate) struct BlockBasedIndexTypePy(BlockBasedIndexType);
 
 #[pyclass(name = "BlockBasedIndexType")]
 pub(crate) struct DataBlockIndexTypePy(DataBlockIndexType);
+
+#[pyclass(name = "SliceTransform")]
+pub(crate) struct SliceTransformPy(SliceTransformType);
+
+pub(crate) enum SliceTransformType {
+    Fixed(size_t),
+    MaxLen(usize),
+    NOOP,
+}
 
 // TODO: Path issue
 // TODO: prefix extractor settings
@@ -148,11 +157,212 @@ impl OptionsPy {
     // pub fn set_comparator(&mut self, name: &str, compare_fn: CompareFn) {
     //     self.0.set_comparator(name, compare_fn)
     // }
-    //
-    // pub fn set_prefix_extractor(&mut self, prefix_extractor: SliceTransform) {
-    //     self.0.set_prefix_extractor(prefix_extractor)
-    // }
-    //
+
+    pub fn set_prefix_extractor(
+        &mut self,
+        prefix_extractor: PyRef<SliceTransformPy>,
+    ) -> PyResult<()> {
+        let transform = match prefix_extractor.0 {
+            SliceTransformType::Fixed(len) => SliceTransform::create_fixed_prefix(len),
+            SliceTransformType::MaxLen(len) => match len {
+                4 => SliceTransform::create(
+                    "max_len",
+                    |slice| {
+                        if slice.len() > 4 {
+                            &slice[0..4]
+                        } else {
+                            slice
+                        }
+                    },
+                    None,
+                ),
+                5 => SliceTransform::create(
+                    "max_len",
+                    |slice| {
+                        if slice.len() > 5 {
+                            &slice[0..5]
+                        } else {
+                            slice
+                        }
+                    },
+                    None,
+                ),
+                6 => SliceTransform::create(
+                    "max_len",
+                    |slice| {
+                        if slice.len() > 6 {
+                            &slice[0..6]
+                        } else {
+                            slice
+                        }
+                    },
+                    None,
+                ),
+                7 => SliceTransform::create(
+                    "max_len",
+                    |slice| {
+                        if slice.len() > 7 {
+                            &slice[0..7]
+                        } else {
+                            slice
+                        }
+                    },
+                    None,
+                ),
+                8 => SliceTransform::create(
+                    "max_len",
+                    |slice| {
+                        if slice.len() > 8 {
+                            &slice[0..8]
+                        } else {
+                            slice
+                        }
+                    },
+                    None,
+                ),
+                9 => SliceTransform::create(
+                    "max_len",
+                    |slice| {
+                        if slice.len() > 9 {
+                            &slice[0..9]
+                        } else {
+                            slice
+                        }
+                    },
+                    None,
+                ),
+                10 => SliceTransform::create(
+                    "max_len",
+                    |slice| {
+                        if slice.len() > 10 {
+                            &slice[0..10]
+                        } else {
+                            slice
+                        }
+                    },
+                    None,
+                ),
+                11 => SliceTransform::create(
+                    "max_len",
+                    |slice| {
+                        if slice.len() > 11 {
+                            &slice[0..11]
+                        } else {
+                            slice
+                        }
+                    },
+                    None,
+                ),
+                12 => SliceTransform::create(
+                    "max_len",
+                    |slice| {
+                        if slice.len() > 12 {
+                            &slice[0..12]
+                        } else {
+                            slice
+                        }
+                    },
+                    None,
+                ),
+                13 => SliceTransform::create(
+                    "max_len",
+                    |slice| {
+                        if slice.len() > 13 {
+                            &slice[0..13]
+                        } else {
+                            slice
+                        }
+                    },
+                    None,
+                ),
+                14 => SliceTransform::create(
+                    "max_len",
+                    |slice| {
+                        if slice.len() > 14 {
+                            &slice[0..14]
+                        } else {
+                            slice
+                        }
+                    },
+                    None,
+                ),
+                15 => SliceTransform::create(
+                    "max_len",
+                    |slice| {
+                        if slice.len() > 15 {
+                            &slice[0..15]
+                        } else {
+                            slice
+                        }
+                    },
+                    None,
+                ),
+                16 => SliceTransform::create(
+                    "max_len",
+                    |slice| {
+                        if slice.len() > 16 {
+                            &slice[0..16]
+                        } else {
+                            slice
+                        }
+                    },
+                    None,
+                ),
+                17 => SliceTransform::create(
+                    "max_len",
+                    |slice| {
+                        if slice.len() > 17 {
+                            &slice[0..17]
+                        } else {
+                            slice
+                        }
+                    },
+                    None,
+                ),
+                18 => SliceTransform::create(
+                    "max_len",
+                    |slice| {
+                        if slice.len() > 18 {
+                            &slice[0..18]
+                        } else {
+                            slice
+                        }
+                    },
+                    None,
+                ),
+                19 => SliceTransform::create(
+                    "max_len",
+                    |slice| {
+                        if slice.len() > 19 {
+                            &slice[0..19]
+                        } else {
+                            slice
+                        }
+                    },
+                    None,
+                ),
+                20 => SliceTransform::create(
+                    "max_len",
+                    |slice| {
+                        if slice.len() > 20 {
+                            &slice[0..20]
+                        } else {
+                            slice
+                        }
+                    },
+                    None,
+                ),
+                _ => {
+                    return Err(PyException::new_err(
+                        "max len prefix only supports len from 4 to 20",
+                    ))
+                }
+            },
+            SliceTransformType::NOOP => SliceTransform::create_noop(),
+        };
+        Ok(self.0.set_prefix_extractor(transform))
+    }
+
     // pub fn add_comparator(&mut self, name: &str, compare_fn: CompareFn) {
     //     self.0.add_comparator(name, compare_fn)
     // }
@@ -784,5 +994,26 @@ impl DataBlockIndexTypePy {
     #[staticmethod]
     pub fn binary_and_hash() -> Self {
         DataBlockIndexTypePy(DataBlockIndexType::BinaryAndHash)
+    }
+}
+
+#[pymethods]
+impl SliceTransformPy {
+    #[staticmethod]
+    pub fn create_fixed_prefix(len: size_t) -> Self {
+        SliceTransformPy(SliceTransformType::Fixed(len))
+    }
+
+    ///
+    /// prefix max length at `len`
+    ///
+    #[staticmethod]
+    pub fn create_max_len_prefix(len: usize) -> Self {
+        SliceTransformPy(SliceTransformType::MaxLen(len))
+    }
+
+    #[staticmethod]
+    pub fn create_noop() -> Self {
+        SliceTransformPy(SliceTransformType::NOOP)
     }
 }
