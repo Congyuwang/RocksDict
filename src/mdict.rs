@@ -1,9 +1,9 @@
+use crate::encoder::{decode_value, encode_value};
 use ahash::AHashMap;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::{PyAny, PyObject, PyResult, Python};
 use std::ops::{Deref, DerefMut};
-use crate::encoder::{decode_value, encode_value};
 
 #[pyclass]
 pub(crate) struct Mdict(AHashMap<Box<[u8]>, Box<[u8]>>);

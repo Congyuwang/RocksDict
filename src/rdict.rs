@@ -1,3 +1,4 @@
+use crate::encoder::{decode_value, encode_value};
 use crate::OptionsPy;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
@@ -5,7 +6,6 @@ use pyo3::types::PyList;
 use rocksdb::{FlushOptions, WriteOptions, DB};
 use std::fs::create_dir_all;
 use std::path::Path;
-use crate::encoder::{decode_value, encode_value};
 
 /// Option<DB> so it can be destroyed
 #[pyclass]
