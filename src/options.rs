@@ -710,7 +710,8 @@ impl PlainTableFactoryOptionsPy {
     ///  index_sparseness: 16
     pub(crate) fn to_rocks(&self) -> PlainTableFactoryOptions {
         PlainTableFactoryOptions {
-            user_key_length: self.user_key_length,
+            // One extra byte for python object type
+            user_key_length: self.user_key_length + 1,
             bloom_bits_per_key: self.bloom_bits_per_key,
             hash_table_ratio: self.hash_table_ratio,
             index_sparseness: self.index_sparseness,
