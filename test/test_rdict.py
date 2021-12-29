@@ -1,6 +1,6 @@
 import unittest
 from sys import getrefcount
-from rocksdict import Rdict, Options
+from rocksdict import Rdict, Options, PlainTableFactoryOptions, SliceTransform
 from random import randint, random, getrandbits
 
 
@@ -47,6 +47,8 @@ class TestInt(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.opt = Options()
         cls.opt.create_if_missing(True)
+        cls.opt.set_plain_table_factory(PlainTableFactoryOptions())
+        cls.opt.set_prefix_extractor(SliceTransform.create_max_len_prefix(8))
         cls.test_dict = Rdict("./temp_int", cls.opt)
         cls.ref_dict = dict()
 
@@ -71,9 +73,7 @@ class TestInt(unittest.TestCase):
     def test_reopen(self):
         self.test_dict.close()
         self.test_dict = None
-        opt = Options()
-        opt.create_if_missing(True)
-        test_dict = Rdict("./temp_int", opt)
+        test_dict = Rdict("./temp_int", self.opt)
         compare_int_dicts(self, self.ref_dict, test_dict, 0, TEST_INT_RANGE_UPPER)
 
     def test_get_batch(self):
@@ -174,8 +174,6 @@ class TestBytes(unittest.TestCase):
     def test_reopen(self):
         self.test_dict.close()
         self.test_dict = None
-        opt = Options()
-        opt.create_if_missing(True)
         test_dict = Rdict("./temp_bytes", self.opt)
         compare_dicts(self, self.ref_dict, test_dict)
 
