@@ -1,11 +1,13 @@
 use libc::size_t;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
+use pyo3::types::PyList;
 use rocksdb::{
-    BlockBasedIndexType, BlockBasedOptions, Cache, CuckooTableOptions, DataBlockIndexType,
-    MemtableFactory, Options, PlainTableFactoryOptions,
+    BlockBasedIndexType, BlockBasedOptions, Cache, CuckooTableOptions, DBPath, DataBlockIndexType,
+    MemtableFactory, Options, PlainTableFactoryOptions, SliceTransform, UniversalCompactOptions,
 };
 use std::os::raw::{c_int, c_uint};
+use std::path::{Path, PathBuf};
 
 #[pyclass(name = "Options")]
 pub(crate) struct OptionsPy(pub(crate) Options);
@@ -45,8 +47,20 @@ pub(crate) struct BlockBasedIndexTypePy(BlockBasedIndexType);
 #[pyclass(name = "BlockBasedIndexType")]
 pub(crate) struct DataBlockIndexTypePy(DataBlockIndexType);
 
-// TODO: Path issue
-// TODO: prefix extractor settings
+#[pyclass(name = "SliceTransform")]
+pub(crate) struct SliceTransformPy(SliceTransformType);
+
+pub(crate) enum SliceTransformType {
+    Fixed(size_t),
+    MaxLen(usize),
+    NOOP,
+}
+
+#[pyclass(name = "DBPath")]
+pub(crate) struct DBPathPy {
+    path: PathBuf,
+    target_size: u64,
+}
 
 #[pymethods]
 impl OptionsPy {
@@ -85,9 +99,19 @@ impl OptionsPy {
         self.0.set_paranoid_checks(enabled)
     }
 
-    // pub fn set_db_paths(&mut self, paths: &[DBPath]) {
-    //     self.0.set_db_paths(paths)
-    // }
+    pub fn set_db_paths(&mut self, paths: &PyList) -> PyResult<()> {
+        let mut db_paths = Vec::with_capacity(paths.len());
+        for p in paths.iter() {
+            let path: &PyCell<DBPathPy> = PyTryFrom::try_from(p)?;
+            db_paths.push(
+                match DBPath::new(&path.borrow().path, path.borrow().target_size) {
+                    Ok(p) => p,
+                    Err(e) => return Err(PyException::new_err(e.into_string())),
+                },
+            );
+        }
+        Ok(self.0.set_db_paths(&db_paths))
+    }
 
     // pub fn set_env(&mut self, env: &Env) {
     //     self.0.set_env(env)
@@ -148,11 +172,26 @@ impl OptionsPy {
     // pub fn set_comparator(&mut self, name: &str, compare_fn: CompareFn) {
     //     self.0.set_comparator(name, compare_fn)
     // }
-    //
-    // pub fn set_prefix_extractor(&mut self, prefix_extractor: SliceTransform) {
-    //     self.0.set_prefix_extractor(prefix_extractor)
-    // }
-    //
+
+    pub fn set_prefix_extractor(
+        &mut self,
+        prefix_extractor: PyRef<SliceTransformPy>,
+    ) -> PyResult<()> {
+        let transform = match prefix_extractor.0 {
+            SliceTransformType::Fixed(len) => SliceTransform::create_fixed_prefix(len),
+            SliceTransformType::MaxLen(len) => match create_max_len_transform(len) {
+                Ok(f) => f,
+                Err(_) => {
+                    return Err(PyException::new_err(
+                        "max len prefix only supports len from 1 to 128",
+                    ))
+                }
+            },
+            SliceTransformType::NOOP => SliceTransform::create_noop(),
+        };
+        Ok(self.0.set_prefix_extractor(transform))
+    }
+
     // pub fn add_comparator(&mut self, name: &str, compare_fn: CompareFn) {
     //     self.0.add_comparator(name, compare_fn)
     // }
@@ -185,9 +224,9 @@ impl OptionsPy {
         self.0.set_use_fsync(useit)
     }
 
-    // pub fn set_db_log_dir<P: AsRef<Path>>(&mut self, path: P) {
-    //     self.0.set_db_log_dir(path)
-    // }
+    pub fn set_db_log_dir(&mut self, path: &str) {
+        self.0.set_db_log_dir(Path::new(path))
+    }
 
     pub fn set_bytes_per_sync(&mut self, nbytes: u64) {
         self.0.set_bytes_per_sync(nbytes)
@@ -224,14 +263,6 @@ impl OptionsPy {
     pub fn set_is_fd_close_on_exec(&mut self, enabled: bool) {
         self.0.set_is_fd_close_on_exec(enabled)
     }
-
-    // pub fn set_skip_log_error_on_recovery(&mut self, enabled: bool) {
-    //     self.0.set_skip_log_error_on_recovery(enabled)
-    // }
-    //
-    // pub fn set_allow_os_buffer(&mut self, is_allow: bool) {
-    //     self.0.set_allow_os_buffer(is_allow)
-    // }
 
     pub fn set_table_cache_num_shard_bits(&mut self, nbits: c_int) {
         self.0.set_table_cache_num_shard_bits(nbits)
@@ -312,14 +343,6 @@ impl OptionsPy {
     pub fn set_max_background_jobs(&mut self, jobs: c_int) {
         self.0.set_max_background_jobs(jobs)
     }
-
-    // pub fn set_max_background_compactions(&mut self, n: c_int) {
-    //     self.0.set_max_background_compactions(n)
-    // }
-    //
-    // pub fn set_max_background_flushes(&mut self, n: c_int) {
-    //     self.0.set_max_background_flushes(n)
-    // }
 
     pub fn set_disable_auto_compactions(&mut self, disable: bool) {
         self.0.set_disable_auto_compactions(disable)
@@ -448,9 +471,9 @@ impl OptionsPy {
         self.0.set_max_compaction_bytes(nbytes)
     }
 
-    // pub fn set_wal_dir<P: AsRef<Path>>(&mut self, path: P) {
-    //     self.0.set_wal_dir(path)
-    // }
+    pub fn set_wal_dir(&mut self, path: &str) {
+        self.0.set_wal_dir(Path::new(path))
+    }
 
     pub fn set_wal_ttl_seconds(&mut self, secs: u64) {
         self.0.set_wal_ttl_seconds(secs)
@@ -587,14 +610,6 @@ impl BlockBasedOptionsPy {
     pub fn set_partition_filters(&mut self, size: bool) {
         self.0.set_partition_filters(size)
     }
-
-    // pub fn set_lru_cache(&mut self, size: size_t) {
-    //     self.0.set_lru_cache(size)
-    // }
-    //
-    // pub fn set_lru_cache_compressed(&mut self, size: size_t) {
-    //     self.0.set_lru_cache_compressed(size)
-    // }
 
     pub fn set_block_cache(&mut self, cache: PyRef<CachePy>) {
         self.0.set_block_cache(&cache.0)
@@ -734,7 +749,12 @@ impl PlainTableFactoryOptionsPy {
     ///  index_sparseness: 16
     pub(crate) fn to_rocks(&self) -> PlainTableFactoryOptions {
         PlainTableFactoryOptions {
-            user_key_length: self.user_key_length,
+            // One extra byte for python object type
+            user_key_length: if self.user_key_length > 0 {
+                self.user_key_length + 1
+            } else {
+                0
+            },
             bloom_bits_per_key: self.bloom_bits_per_key,
             hash_table_ratio: self.hash_table_ratio,
             index_sparseness: self.index_sparseness,
@@ -809,3 +829,68 @@ impl DataBlockIndexTypePy {
         DataBlockIndexTypePy(DataBlockIndexType::BinaryAndHash)
     }
 }
+
+#[pymethods]
+impl SliceTransformPy {
+    #[staticmethod]
+    pub fn create_fixed_prefix(len: size_t) -> Self {
+        SliceTransformPy(SliceTransformType::Fixed(len))
+    }
+
+    ///
+    /// prefix max length at `len`
+    ///
+    #[staticmethod]
+    pub fn create_max_len_prefix(len: usize) -> Self {
+        SliceTransformPy(SliceTransformType::MaxLen(len))
+    }
+
+    #[staticmethod]
+    pub fn create_noop() -> Self {
+        SliceTransformPy(SliceTransformType::NOOP)
+    }
+}
+
+#[pymethods]
+impl DBPathPy {
+    #[new]
+    pub fn new(path: &str, target_size: u64) -> Self {
+        DBPathPy {
+            path: PathBuf::from(path),
+            target_size,
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! implement_max_len_transform {
+    ($($len:literal),*) => {
+        fn create_max_len_transform(len: usize) -> Result<SliceTransform, ()> {
+            match len {
+                $($len => Ok(SliceTransform::create(
+                    "max_len",
+                    |slice| {
+                        if slice.len() > $len {
+                            &slice[0..$len]
+                        } else {
+                            slice
+                        }
+                    },
+                    None,
+                ))),*,
+                _ => {
+                    Err(())
+                }
+            }
+        }
+    };
+}
+
+implement_max_len_transform!(
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+    27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50,
+    51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74,
+    75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98,
+    99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117,
+    118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128
+);
