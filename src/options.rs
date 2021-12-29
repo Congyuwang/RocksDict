@@ -1,11 +1,13 @@
 use libc::size_t;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
+use pyo3::types::PyList;
 use rocksdb::{
-    BlockBasedIndexType, BlockBasedOptions, Cache, CuckooTableOptions, DataBlockIndexType,
-    MemtableFactory, Options, PlainTableFactoryOptions, SliceTransform,
+    BlockBasedIndexType, BlockBasedOptions, Cache, CuckooTableOptions, DBPath, DataBlockIndexType,
+    MemtableFactory, Options, PlainTableFactoryOptions, SliceTransform, UniversalCompactOptions,
 };
 use std::os::raw::{c_int, c_uint};
+use std::path::{Path, PathBuf};
 
 #[pyclass(name = "Options")]
 pub(crate) struct OptionsPy(pub(crate) Options);
@@ -54,8 +56,11 @@ pub(crate) enum SliceTransformType {
     NOOP,
 }
 
-// TODO: Path issue
-// TODO: prefix extractor settings
+#[pyclass(name = "DBPath")]
+pub(crate) struct DBPathPy {
+    path: PathBuf,
+    target_size: u64,
+}
 
 #[pymethods]
 impl OptionsPy {
@@ -94,9 +99,19 @@ impl OptionsPy {
         self.0.set_paranoid_checks(enabled)
     }
 
-    // pub fn set_db_paths(&mut self, paths: &[DBPath]) {
-    //     self.0.set_db_paths(paths)
-    // }
+    pub fn set_db_paths(&mut self, paths: &PyList) -> PyResult<()> {
+        let mut db_paths = Vec::with_capacity(paths.len());
+        for p in paths.iter() {
+            let path: &PyCell<DBPathPy> = PyTryFrom::try_from(p)?;
+            db_paths.push(
+                match DBPath::new(&path.borrow().path, path.borrow().target_size) {
+                    Ok(p) => p,
+                    Err(e) => return Err(PyException::new_err(e.into_string())),
+                },
+            );
+        }
+        Ok(self.0.set_db_paths(&db_paths))
+    }
 
     // pub fn set_env(&mut self, env: &Env) {
     //     self.0.set_env(env)
@@ -209,9 +224,9 @@ impl OptionsPy {
         self.0.set_use_fsync(useit)
     }
 
-    // pub fn set_db_log_dir<P: AsRef<Path>>(&mut self, path: P) {
-    //     self.0.set_db_log_dir(path)
-    // }
+    pub fn set_db_log_dir(&mut self, path: &str) {
+        self.0.set_db_log_dir(Path::new(path))
+    }
 
     pub fn set_bytes_per_sync(&mut self, nbytes: u64) {
         self.0.set_bytes_per_sync(nbytes)
@@ -456,9 +471,9 @@ impl OptionsPy {
         self.0.set_max_compaction_bytes(nbytes)
     }
 
-    // pub fn set_wal_dir<P: AsRef<Path>>(&mut self, path: P) {
-    //     self.0.set_wal_dir(path)
-    // }
+    pub fn set_wal_dir(&mut self, path: &str) {
+        self.0.set_wal_dir(Path::new(path))
+    }
 
     pub fn set_wal_ttl_seconds(&mut self, secs: u64) {
         self.0.set_wal_ttl_seconds(secs)
@@ -833,6 +848,17 @@ impl SliceTransformPy {
     #[staticmethod]
     pub fn create_noop() -> Self {
         SliceTransformPy(SliceTransformType::NOOP)
+    }
+}
+
+#[pymethods]
+impl DBPathPy {
+    #[new]
+    pub fn new(path: &str, target_size: u64) -> Self {
+        DBPathPy {
+            path: PathBuf::from(path),
+            target_size,
+        }
     }
 }
 
