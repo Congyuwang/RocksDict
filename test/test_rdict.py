@@ -1,6 +1,6 @@
 import unittest
 from sys import getrefcount
-from rocksdict import Rdict
+from rocksdict import Rdict, Options
 from random import randint, random, getrandbits
 
 
@@ -41,10 +41,13 @@ def compare_dicts(test_case: unittest.TestCase,
 class TestInt(unittest.TestCase):
     test_dict = None
     ref_dict = None
+    opt = None
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.test_dict = Rdict("./temp_int")
+        cls.opt = Options()
+        cls.opt.create_if_missing(True)
+        cls.test_dict = Rdict("./temp_int", cls.opt)
         cls.ref_dict = dict()
 
     def test_add_integer(self):
@@ -68,7 +71,9 @@ class TestInt(unittest.TestCase):
     def test_reopen(self):
         self.test_dict.close()
         self.test_dict = None
-        test_dict = Rdict("./temp_int")
+        opt = Options()
+        opt.create_if_missing(True)
+        test_dict = Rdict("./temp_int", opt)
         compare_int_dicts(self, self.ref_dict, test_dict, 0, TEST_INT_RANGE_UPPER)
 
     def test_get_batch(self):
@@ -77,16 +82,19 @@ class TestInt(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        Rdict("./temp_int").destroy()
+        Rdict("./temp_int", cls.opt).destroy(cls.opt)
 
 
 class TestFloat(unittest.TestCase):
     test_dict = None
     ref_dict = None
+    opt = None
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.test_dict = Rdict("./temp_float")
+        cls.opt = Options()
+        cls.opt.create_if_missing(True)
+        cls.test_dict = Rdict("./temp_float", cls.opt)
         cls.ref_dict = dict()
 
     def test_add_float(self):
@@ -110,7 +118,7 @@ class TestFloat(unittest.TestCase):
     def test_reopen(self):
         self.test_dict.close()
         self.test_dict = None
-        test_dict = Rdict("./temp_float")
+        test_dict = Rdict("./temp_float", self.opt)
         compare_dicts(self, self.ref_dict, test_dict)
 
     def test_get_batch(self):
@@ -119,16 +127,19 @@ class TestFloat(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        Rdict("./temp_float").destroy()
+        Rdict("./temp_float", cls.opt).destroy(cls.opt)
 
 
 class TestBytes(unittest.TestCase):
     test_dict = None
     ref_dict = None
+    opt = None
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.test_dict = Rdict("./temp_bytes")
+        cls.opt = Options()
+        cls.opt.create_if_missing(True)
+        cls.test_dict = Rdict("./temp_bytes", cls.opt)
         cls.ref_dict = dict()
 
     def test_add_bytes(self):
@@ -163,7 +174,9 @@ class TestBytes(unittest.TestCase):
     def test_reopen(self):
         self.test_dict.close()
         self.test_dict = None
-        test_dict = Rdict("./temp_bytes")
+        opt = Options()
+        opt.create_if_missing(True)
+        test_dict = Rdict("./temp_bytes", self.opt)
         compare_dicts(self, self.ref_dict, test_dict)
 
     def test_get_batch(self):
@@ -172,15 +185,18 @@ class TestBytes(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        Rdict("./temp_bytes").destroy()
+        Rdict("./temp_bytes", cls.opt).destroy(cls.opt)
 
 
 class TestString(unittest.TestCase):
     test_dict = None
+    opt = None
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.test_dict = Rdict("./temp_string")
+        cls.opt = Options()
+        cls.opt.create_if_missing(True)
+        cls.test_dict = Rdict("./temp_string", cls.opt)
 
     def test_string(self):
         self.test_dict["Guangdong"] = "Shenzhen"
@@ -197,7 +213,7 @@ class TestString(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.test_dict.destroy()
+        cls.test_dict.destroy(cls.opt)
 
 
 if __name__ == '__main__':
