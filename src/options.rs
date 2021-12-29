@@ -164,199 +164,11 @@ impl OptionsPy {
     ) -> PyResult<()> {
         let transform = match prefix_extractor.0 {
             SliceTransformType::Fixed(len) => SliceTransform::create_fixed_prefix(len),
-            SliceTransformType::MaxLen(len) => match len {
-                4 => SliceTransform::create(
-                    "max_len",
-                    |slice| {
-                        if slice.len() > 4 {
-                            &slice[0..4]
-                        } else {
-                            slice
-                        }
-                    },
-                    None,
-                ),
-                5 => SliceTransform::create(
-                    "max_len",
-                    |slice| {
-                        if slice.len() > 5 {
-                            &slice[0..5]
-                        } else {
-                            slice
-                        }
-                    },
-                    None,
-                ),
-                6 => SliceTransform::create(
-                    "max_len",
-                    |slice| {
-                        if slice.len() > 6 {
-                            &slice[0..6]
-                        } else {
-                            slice
-                        }
-                    },
-                    None,
-                ),
-                7 => SliceTransform::create(
-                    "max_len",
-                    |slice| {
-                        if slice.len() > 7 {
-                            &slice[0..7]
-                        } else {
-                            slice
-                        }
-                    },
-                    None,
-                ),
-                8 => SliceTransform::create(
-                    "max_len",
-                    |slice| {
-                        if slice.len() > 8 {
-                            &slice[0..8]
-                        } else {
-                            slice
-                        }
-                    },
-                    None,
-                ),
-                9 => SliceTransform::create(
-                    "max_len",
-                    |slice| {
-                        if slice.len() > 9 {
-                            &slice[0..9]
-                        } else {
-                            slice
-                        }
-                    },
-                    None,
-                ),
-                10 => SliceTransform::create(
-                    "max_len",
-                    |slice| {
-                        if slice.len() > 10 {
-                            &slice[0..10]
-                        } else {
-                            slice
-                        }
-                    },
-                    None,
-                ),
-                11 => SliceTransform::create(
-                    "max_len",
-                    |slice| {
-                        if slice.len() > 11 {
-                            &slice[0..11]
-                        } else {
-                            slice
-                        }
-                    },
-                    None,
-                ),
-                12 => SliceTransform::create(
-                    "max_len",
-                    |slice| {
-                        if slice.len() > 12 {
-                            &slice[0..12]
-                        } else {
-                            slice
-                        }
-                    },
-                    None,
-                ),
-                13 => SliceTransform::create(
-                    "max_len",
-                    |slice| {
-                        if slice.len() > 13 {
-                            &slice[0..13]
-                        } else {
-                            slice
-                        }
-                    },
-                    None,
-                ),
-                14 => SliceTransform::create(
-                    "max_len",
-                    |slice| {
-                        if slice.len() > 14 {
-                            &slice[0..14]
-                        } else {
-                            slice
-                        }
-                    },
-                    None,
-                ),
-                15 => SliceTransform::create(
-                    "max_len",
-                    |slice| {
-                        if slice.len() > 15 {
-                            &slice[0..15]
-                        } else {
-                            slice
-                        }
-                    },
-                    None,
-                ),
-                16 => SliceTransform::create(
-                    "max_len",
-                    |slice| {
-                        if slice.len() > 16 {
-                            &slice[0..16]
-                        } else {
-                            slice
-                        }
-                    },
-                    None,
-                ),
-                17 => SliceTransform::create(
-                    "max_len",
-                    |slice| {
-                        if slice.len() > 17 {
-                            &slice[0..17]
-                        } else {
-                            slice
-                        }
-                    },
-                    None,
-                ),
-                18 => SliceTransform::create(
-                    "max_len",
-                    |slice| {
-                        if slice.len() > 18 {
-                            &slice[0..18]
-                        } else {
-                            slice
-                        }
-                    },
-                    None,
-                ),
-                19 => SliceTransform::create(
-                    "max_len",
-                    |slice| {
-                        if slice.len() > 19 {
-                            &slice[0..19]
-                        } else {
-                            slice
-                        }
-                    },
-                    None,
-                ),
-                20 => SliceTransform::create(
-                    "max_len",
-                    |slice| {
-                        if slice.len() > 20 {
-                            &slice[0..20]
-                        } else {
-                            slice
-                        }
-                    },
-                    None,
-                ),
-                _ => {
-                    return Err(PyException::new_err(
-                        "max len prefix only supports len from 4 to 20",
-                    ))
-                }
+            SliceTransformType::MaxLen(len) => match create_max_len_transform(len) {
+                Ok(f) => f,
+                Err(_) => return Err(PyException::new_err(
+                    "max len prefix only supports len from 1 to 128",
+                ))
             },
             SliceTransformType::NOOP => SliceTransform::create_noop(),
         };
@@ -1017,3 +829,41 @@ impl SliceTransformPy {
         SliceTransformPy(SliceTransformType::NOOP)
     }
 }
+
+#[macro_export]
+macro_rules! implement_max_len_transform {
+    ($($len:literal),*) => {
+        fn create_max_len_transform(len: usize) -> Result<SliceTransform, ()> {
+            match len {
+                $($len => Ok(SliceTransform::create(
+                    "max_len",
+                    |slice| {
+                        if slice.len() > $len {
+                            &slice[0..$len]
+                        } else {
+                            slice
+                        }
+                    },
+                    None,
+                ))),*,
+                _ => {
+                    Err(())
+                }
+            }
+        }
+    };
+}
+
+implement_max_len_transform!( 1,  2,  3,  4,  5,  6,  7,  8,  9, 10,
+                             11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+                             21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+                             31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+                             41, 42, 43, 44, 45, 46, 47, 48, 49, 50,
+                             51, 52, 53, 54, 55, 56, 57, 58, 59, 60,
+                             61, 62, 63, 64, 65, 66, 67, 68, 69, 70,
+                             71, 72, 73, 74, 75, 76, 77, 78, 79, 80,
+                             81, 82, 83, 84, 85, 86, 87, 88, 89, 90,
+                             91, 92, 93, 94, 95, 96, 97, 98, 99,100,
+                            101,102,103,104,105,106,107,108,109,110,
+                            111,112,113,114,115,116,117,118,119,120,
+                            121,122,123,124,125,126,127,128);
