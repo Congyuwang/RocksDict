@@ -1,6 +1,6 @@
 [package]
 name = "RocksDict"
-version = "0.1.2"
+version = "0.2.0"
 edition = "2021"
 description = "On-disk Dict With RocksDB (dbm alternative)"
 
@@ -12,9 +12,9 @@ crate-type = ["cdylib"]
 
 [dependencies]
 rocksdb = "^0.17.0"
-num_cpus = "^1.13.0"
 ahash = "^0.7"
 integer-encoding = "^3.0"
+libc = "0.2.112"
 
 [dependencies.pyo3]
 version = "~0.15"
