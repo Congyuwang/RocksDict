@@ -22,3 +22,6 @@ classifiers=[
 [build-system]
 requires = ["maturin>=0.11,<0.12"]
 build-backend = "maturin"
+
+[package.metadata.maturin]
+python-source = "src-py"

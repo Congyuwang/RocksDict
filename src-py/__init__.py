@@ -1,6 +1,6 @@
 from .rocksdict import *
 import pickle as _pkl
-from typing import Union
+from typing import Union, List
 
 
 class Rdict:
@@ -29,7 +29,7 @@ class Rdict:
         """Configure Read Options."""
         self._inner.set_read_options(read_opt)
 
-    def __getitem__(self, key: Union[str, int, float, bytes]):
+    def __getitem__(self, key: Union[str, int, float, bytes, List[Union[str, int, float, bytes]]]):
         value = self._inner[key]
         if type(value) is _Pickle:
             return _pkl.loads(value.data)
