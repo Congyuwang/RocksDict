@@ -30,5 +30,7 @@ fn rocksdict(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<DBRecoveryModePy>()?;
     m.add_class::<UniversalCompactOptionsPy>()?;
     m.add_class::<UniversalCompactionStopStylePy>()?;
+    m.add_class::<EnvPy>()?;
+    m.add_class::<FifoCompactOptionsPy>()?;
     Ok(())
 }

@@ -23,6 +23,7 @@ pub(crate) struct Rdict {
 #[pymethods]
 impl Rdict {
     #[new]
+    #[text_signature = "(path, options)"]
     fn new(path: &str, options: PyRef<OptionsPy>) -> PyResult<Self> {
         let path = Path::new(path);
         match create_dir_all(path) {
@@ -39,14 +40,60 @@ impl Rdict {
         }
     }
 
+    /// Optionally disable WAL or sync for this write.
+    ///
+    /// # Examples
+    ///
+    /// Making an unsafe write of a batch:
+    ///
+    /// ```python
+    /// from rocksdict import Rdict, Options, WriteBatch, WriteOptions
+    ///
+    /// db = Rdict("_path_for_rocksdb_storageY1", Options())
+    ///
+    /// # set write options
+    /// write_options = WriteOptions()
+    /// write_options.set_sync(false)
+    /// write_options.disable_wal(true)
+    /// db.set_write_options(write_options)
+    ///
+    /// # write to db
+    /// db["my key"] = "my value"
+    /// db["key2"] = "value2"
+    /// db["key3"] = "value3"
+    ///
+    /// # remove db
+    /// db.destroy(Options())
+    /// ```
+    #[text_signature = "($self, write_opt)"]
     fn set_write_options(&mut self, write_opt: PyRef<WriteOptionsPy>) {
         self.write_opt = write_opt.deref().into()
     }
 
+    /// Optionally wait for the memtable flush to be performed.
+    ///
+    /// # Examples
+    ///
+    /// Manually flushing the memtable:
+    ///
+    /// ```python
+    /// from rocksdb import Rdict, Options, FlushOptions
+    ///
+    /// path = "_path_for_rocksdb_storageY2"
+    /// db = Rdict(path, Options())
+    ///
+    /// flush_options = FlushOptions()
+    /// flush_options.set_wait(true)
+    ///
+    /// db.flush_opt(flush_options)
+    /// db.destroy(Options())
+    /// ```
+    #[text_signature = "($self, flush_opt)"]
     fn set_flush_options(&mut self, flush_opt: PyRef<FlushOptionsPy>) {
         self.flush_opt = *flush_opt.deref()
     }
 
+    #[text_signature = "($self, read_opt)"]
     fn set_read_options(&mut self, read_opt: &mut ReadOptionsPy) -> PyResult<()> {
         match read_opt.0.take() {
             None => Err(PyException::new_err(
@@ -120,6 +167,7 @@ impl Rdict {
     }
 
     /// flush mem-table, drop database
+    #[text_signature = "($self)"]
     fn close(&mut self) -> PyResult<()> {
         if let Some(db) = &self.db {
             let f_opt = &self.flush_opt;
@@ -136,6 +184,7 @@ impl Rdict {
     }
 
     /// destroy database
+    #[text_signature = "($self, options)"]
     fn destroy(&mut self, options: PyRef<OptionsPy>) -> PyResult<()> {
         if let Some(db) = &self.db {
             let path = db.path().to_owned();
