@@ -78,7 +78,7 @@ class TestInt(unittest.TestCase):
 
     def test_get_batch(self):
         keys = list(self.ref_dict.keys())[:100]
-        self.assertEqual(self.test_dict[keys], [self.ref_dict[k] for k in keys])
+        self.assertEqual(self.test_dict[keys + ["no such key"] * 3], [self.ref_dict[k] for k in keys] + [None] * 3)
 
     @classmethod
     def tearDownClass(cls):
@@ -123,7 +123,7 @@ class TestFloat(unittest.TestCase):
 
     def test_get_batch(self):
         keys = list(self.ref_dict.keys())[:100]
-        self.assertEqual(self.test_dict[keys], [self.ref_dict[k] for k in keys])
+        self.assertEqual(self.test_dict[keys + ["no such key"] * 3], [self.ref_dict[k] for k in keys] + [None] * 3)
 
     @classmethod
     def tearDownClass(cls):
@@ -179,7 +179,7 @@ class TestBytes(unittest.TestCase):
 
     def test_get_batch(self):
         keys = list(self.ref_dict.keys())[:100]
-        self.assertEqual(self.test_dict[keys], [self.ref_dict[k] for k in keys])
+        self.assertEqual(self.test_dict[keys + ["no such key"] * 3], [self.ref_dict[k] for k in keys] + [None] * 3)
 
     @classmethod
     def tearDownClass(cls):

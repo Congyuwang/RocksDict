@@ -66,6 +66,10 @@ class TestInt(unittest.TestCase):
 
         compare_int_dicts(self, self.ref_dict, self.test_dict, 0, TEST_INT_RANGE_UPPER)
 
+    def test_get_batch(self):
+        keys = list(self.ref_dict.keys())[:100]
+        self.assertEqual(self.test_dict[keys + ["no such key"] * 3], [self.ref_dict[k] for k in keys] + [None] * 3)
+
 
 class TestFloat(unittest.TestCase):
     test_dict = None
@@ -94,6 +98,10 @@ class TestFloat(unittest.TestCase):
             self.assertEqual(len(self.ref_dict), len(self.test_dict))
 
         compare_dicts(self, self.ref_dict, self.test_dict)
+
+    def test_get_batch(self):
+        keys = list(self.ref_dict.keys())[:100]
+        self.assertEqual(self.test_dict[keys + ["no such key"] * 3], [self.ref_dict[k] for k in keys] + [None] * 3)
 
 
 class TestBytes(unittest.TestCase):
@@ -134,6 +142,10 @@ class TestBytes(unittest.TestCase):
             self.assertEqual(len(self.ref_dict), len(self.test_dict))
 
         compare_dicts(self, self.ref_dict, self.test_dict)
+
+    def test_get_batch(self):
+        keys = list(self.ref_dict.keys())[:100]
+        self.assertEqual(self.test_dict[keys + ["no such key"] * 3], [self.ref_dict[k] for k in keys] + [None] * 3)
 
 
 class TestString(unittest.TestCase):
