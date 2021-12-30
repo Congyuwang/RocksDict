@@ -6,7 +6,7 @@ use pyo3::types::PyList;
 use pyo3::{PyAny, PyObject, PyResult, Python};
 use std::ops::{Deref, DerefMut};
 
-#[pyclass]
+#[pyclass(name = "_Mdict")]
 pub(crate) struct Mdict(AHashMap<Box<[u8]>, Box<[u8]>>);
 
 impl Deref for Mdict {

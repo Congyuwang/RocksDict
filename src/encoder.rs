@@ -3,11 +3,28 @@ use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyFloat, PyInt, PyString};
 
+#[pyclass(name = "_Pickle")]
+pub(crate) struct Pickle {
+    #[pyo3(get)]
+    data: Vec<u8>,
+}
+
+#[pymethods]
+impl Pickle {
+    #[new]
+    fn new(bytes: &[u8]) -> Self {
+        Pickle {
+            data: bytes.to_vec(),
+        }
+    }
+}
+
 pub(crate) enum ValueTypes<'a> {
     Bytes(&'a [u8]),
     String(String),
     Int(i64),
     Float(f64),
+    Pickle(Vec<u8>),
     Unsupported,
 }
 
@@ -18,6 +35,7 @@ pub(crate) fn encoding_byte(v_type: &ValueTypes) -> u8 {
         ValueTypes::String(_) => 2,
         ValueTypes::Int(_) => 3,
         ValueTypes::Float(_) => 4,
+        ValueTypes::Pickle(_) => 5,
         ValueTypes::Unsupported => 0,
     }
 }
@@ -42,6 +60,7 @@ pub(crate) fn encode_value(value: &PyAny) -> PyResult<Box<[u8]>> {
             type_encoding,
             &value.to_be_bytes()[..],
         )),
+        ValueTypes::Pickle(value) => Ok(concat_type_encoding(type_encoding, &value)),
         ValueTypes::Unsupported => Err(PyException::new_err(
             "Only support `string`, `int`, `float`, and `bytes` as keys / values",
         )),
@@ -62,6 +81,9 @@ fn py_to_value_types(value: &PyAny) -> PyResult<ValueTypes> {
     if let Ok(value) = <PyFloat as PyTryFrom>::try_from(value) {
         return Ok(ValueTypes::Float(value.extract()?));
     }
+    if let Ok(value) = <PyCell<Pickle> as PyTryFrom>::try_from(value) {
+        return Ok(ValueTypes::Pickle(value.borrow().data.clone()));
+    }
     Ok(ValueTypes::Unsupported)
 }
 
@@ -79,7 +101,7 @@ pub(crate) fn decode_value(py: Python, bytes: &[u8]) -> PyResult<PyObject> {
                 Ok(string.into_py(py))
             }
             3 => {
-                if let Some((int, _)) = i64::decode_var(bytes[1..].try_into().unwrap()) {
+                if let Some((int, _)) = i64::decode_var(&bytes[1..]) {
                     Ok(int.into_py(py))
                 } else {
                     Err(PyException::new_err("varint decoding error"))
@@ -89,6 +111,7 @@ pub(crate) fn decode_value(py: Python, bytes: &[u8]) -> PyResult<PyObject> {
                 let float: f64 = f64::from_be_bytes(bytes[1..].try_into().unwrap());
                 Ok(float.into_py(py))
             }
+            5 => Ok(Py::new(py, Pickle::new(&bytes[1..]))?.to_object(py)),
             _ => Err(PyException::new_err("Unknown value type")),
         },
     }

@@ -3,6 +3,7 @@ mod mdict;
 mod options;
 mod rdict;
 
+use crate::encoder::Pickle;
 use crate::mdict::Mdict;
 use crate::options::*;
 use crate::rdict::Rdict;
@@ -32,5 +33,6 @@ fn rocksdict(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<UniversalCompactionStopStylePy>()?;
     m.add_class::<EnvPy>()?;
     m.add_class::<FifoCompactOptionsPy>()?;
+    m.add_class::<Pickle>()?;
     Ok(())
 }

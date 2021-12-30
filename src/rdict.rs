@@ -25,7 +25,7 @@ use std::path::Path;
 /// assert(db[0] == 1)
 /// ```
 ///
-#[pyclass]
+#[pyclass(name = "_Rdict")]
 #[pyo3(text_signature = "(path, options)")]
 pub(crate) struct Rdict {
     db: Option<DB>,
