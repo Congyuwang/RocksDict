@@ -104,6 +104,15 @@ pub(crate) struct DBPathPy {
     target_size: u64,
 }
 
+#[pyclass(name = "DBCompressionType")]
+pub(crate) struct DBCompressionTypePy(DBCompressionType);
+
+#[pyclass(name = "DBCompactionStyle")]
+pub(crate) struct DBCompactionStylePy(DBCompactionStyle);
+
+#[pyclass(name = "DBRecoveryMode")]
+pub(crate) struct DBRecoveryModePy(DBRecoveryMode);
+
 #[pymethods]
 impl OptionsPy {
     #[new]
@@ -162,13 +171,18 @@ impl OptionsPy {
     //     self.0.set_env(env)
     // }
 
-    // pub fn set_compression_type(&mut self, t: DBCompressionType) {
-    //     self.0.set_compression_type(t)
-    // }
+    pub fn set_compression_type(&mut self, t: PyRef<DBCompressionTypePy>) {
+        self.0.set_compression_type(t.0)
+    }
 
-    // pub fn set_compression_per_level(&mut self, level_types: &[DBCompressionType]) {
-    //     self.0.set_compression_per_level(level_types])
-    // }
+    pub fn set_compression_per_level(&mut self, level_types: &PyList) -> PyResult<()> {
+        let mut db_level_types = Vec::with_capacity(level_types.len());
+        for level_type in level_types.iter() {
+            let level_type: &PyCell<DBCompressionTypePy> = PyTryFrom::try_from(level_type)?;
+            db_level_types.push(level_type.borrow().0)
+        }
+        Ok(self.0.set_compression_per_level(&db_level_types))
+    }
 
     pub fn set_compression_options(
         &mut self,
@@ -365,10 +379,10 @@ impl OptionsPy {
         self.0.set_level_zero_stop_writes_trigger(n)
     }
 
-    // pub fn set_compaction_style(&mut self, style: DBCompactionStyle) {
-    //     self.0.set_compaction_style(style)
-    // }
-    //
+    pub fn set_compaction_style(&mut self, style: PyRef<DBCompactionStylePy>) {
+        self.0.set_compaction_style(style.0)
+    }
+
     // pub fn set_universal_compaction_options(&mut self, uco: &UniversalCompactOptions) {
     //     self.0.set_universal_compaction_options(uco)
     // }
@@ -472,9 +486,9 @@ impl OptionsPy {
         self.0.set_max_total_wal_size(size)
     }
 
-    // pub fn set_wal_recovery_mode(&mut self, mode: DBRecoveryMode) {
-    //     self.0.set_wal_recovery_mode(mode)
-    // }
+    pub fn set_wal_recovery_mode(&mut self, mode: PyRef<DBRecoveryModePy>) {
+        self.0.set_wal_recovery_mode(mode.0)
+    }
 
     pub fn enable_statistics(&mut self) {
         self.0.enable_statistics()
@@ -1191,6 +1205,74 @@ impl DBPathPy {
             path: PathBuf::from(path),
             target_size,
         }
+    }
+}
+
+#[pymethods]
+impl DBCompressionTypePy {
+    #[staticmethod]
+    pub fn none() -> Self {
+        DBCompressionTypePy(DBCompressionType::None)
+    }
+    #[staticmethod]
+    pub fn snappy() -> Self {
+        DBCompressionTypePy(DBCompressionType::Snappy)
+    }
+    #[staticmethod]
+    pub fn zlib() -> Self {
+        DBCompressionTypePy(DBCompressionType::Zlib)
+    }
+    #[staticmethod]
+    pub fn bz2() -> Self {
+        DBCompressionTypePy(DBCompressionType::Bz2)
+    }
+    #[staticmethod]
+    pub fn lz4() -> Self {
+        DBCompressionTypePy(DBCompressionType::Lz4)
+    }
+    #[staticmethod]
+    pub fn lz4hc() -> Self {
+        DBCompressionTypePy(DBCompressionType::Lz4hc)
+    }
+    #[staticmethod]
+    pub fn zstd() -> Self {
+        DBCompressionTypePy(DBCompressionType::Zstd)
+    }
+}
+
+#[pymethods]
+impl DBCompactionStylePy {
+    #[staticmethod]
+    pub fn level_style() -> Self {
+        DBCompactionStylePy(DBCompactionStyle::Level)
+    }
+    #[staticmethod]
+    pub fn universal_style() -> Self {
+        DBCompactionStylePy(DBCompactionStyle::Universal)
+    }
+    #[staticmethod]
+    pub fn fifo_style() -> Self {
+        DBCompactionStylePy(DBCompactionStyle::Fifo)
+    }
+}
+
+#[pymethods]
+impl DBRecoveryModePy {
+    #[staticmethod]
+    pub fn tolerate_corrupted_tail_records_mode() -> Self {
+        DBRecoveryModePy(DBRecoveryMode::TolerateCorruptedTailRecords)
+    }
+    #[staticmethod]
+    pub fn absolute_consistency_mode() -> Self {
+        DBRecoveryModePy(DBRecoveryMode::AbsoluteConsistency)
+    }
+    #[staticmethod]
+    pub fn point_in_time_mode() -> Self {
+        DBRecoveryModePy(DBRecoveryMode::PointInTime)
+    }
+    #[staticmethod]
+    pub fn skip_any_corrupted_record_mode() -> Self {
+        DBRecoveryModePy(DBRecoveryMode::SkipAnyCorruptedRecord)
     }
 }
 
