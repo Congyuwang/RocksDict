@@ -174,7 +174,7 @@ pub(crate) struct CachePy(Cache);
 #[pyclass(name = "BlockBasedIndexType")]
 pub(crate) struct BlockBasedIndexTypePy(BlockBasedIndexType);
 
-#[pyclass(name = "BlockBasedIndexType")]
+#[pyclass(name = "DataBlockIndexType")]
 pub(crate) struct DataBlockIndexTypePy(DataBlockIndexType);
 
 #[pyclass(name = "SliceTransform")]
