@@ -19,3 +19,6 @@ libc = "0.2.112"
 [dependencies.pyo3]
 version = "~0.15"
 features = ["extension-module"]
+
+[package.metadata.maturin]
+python-source = "python"
