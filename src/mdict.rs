@@ -3,7 +3,7 @@ use ahash::AHashMap;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
-use pyo3::{PyAny, PyNativeType, PyObject, PyResult, PyTypeInfo, Python};
+use pyo3::{PyAny, PyObject, PyResult, Python};
 use std::ops::{Deref, DerefMut};
 
 #[pyclass]
@@ -32,9 +32,9 @@ impl Mdict {
 
     /// support get_batch
     fn __getitem__(&self, key: &PyAny, py: Python) -> PyResult<PyObject> {
-        if PyList::is_type_of(key) {
-            let keys = unsafe { PyList::unchecked_downcast(key) };
+        if let Ok(keys) = <PyList as PyTryFrom>::try_from(key) {
             let result = PyList::empty(py);
+            // type annotation
             for key in keys {
                 match self.get(&encode_value(key)?) {
                     None => result.append(py.None())?,

@@ -3,7 +3,6 @@ use crate::{FlushOptionsPy, OptionsPy, ReadOptionsPy, WriteOptionsPy};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
-use pyo3::{PyNativeType, PyTypeInfo};
 use rocksdb::{ReadOptions, WriteOptions, DB};
 use std::fs::create_dir_all;
 use std::path::Path;
@@ -49,8 +48,10 @@ impl Rdict {
 
     fn set_read_options(&mut self, read_opt: &mut ReadOptionsPy) -> PyResult<()> {
         match read_opt.0.take() {
-            None => Err(PyException::new_err("this `ReadOptions` instance is already consumed, create a new ReadOptions()")),
-            Some(opt) => Ok(self.read_opt = opt)
+            None => Err(PyException::new_err(
+                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
+            )),
+            Some(opt) => Ok(self.read_opt = opt),
         }
     }
 
@@ -60,10 +61,8 @@ impl Rdict {
     fn __getitem__(&self, key: &PyAny, py: Python) -> PyResult<PyObject> {
         if let Some(db) = &self.db {
             // batch_get
-            if PyList::is_type_of(key) {
-                let keys = unsafe { PyList::unchecked_downcast(key) };
-                let result = get_batch_inner(db, keys, py, &self.read_opt)?;
-                return Ok(result.to_object(py));
+            if let Ok(keys) = PyTryFrom::try_from(key) {
+                return Ok(get_batch_inner(db, keys, py, &self.read_opt)?.to_object(py));
             }
             // single get
             let key = encode_value(key)?;
