@@ -5,7 +5,6 @@ use pyo3::types::{PyBytes, PyFloat, PyInt, PyString};
 
 #[pyclass(name = "_Pickle")]
 pub(crate) struct Pickle {
-    #[pyo3(get)]
     data: Vec<u8>,
 }
 
@@ -16,6 +15,11 @@ impl Pickle {
         Pickle {
             data: bytes.to_vec(),
         }
+    }
+
+    #[getter]
+    fn get_data(&self, py: Python) -> PyObject {
+        PyBytes::new(py, &self.data).to_object(py)
     }
 }
 

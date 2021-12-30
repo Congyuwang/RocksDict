@@ -30,16 +30,16 @@ class Rdict:
         self._inner.set_read_options(read_opt)
 
     def __getitem__(self, key: Union[str, int, float, bytes]):
-        if type(key) is _Pickle:
-            return _pkl.loads(self._inner[key].data)
-        return self._inner[key]
+        value = self._inner[key]
+        if type(value) is _Pickle:
+            return _pkl.loads(value.data)
+        return value
 
     def __setitem__(self, key: Union[str, int, float, bytes], value):
         value_type = type(value)
         if value_type is str or value_type is int or value_type is float or value_type is bytes:
             self._inner[key] = value
         else:
-            print("we are here")
             self._inner[key] = _Pickle(_pkl.dumps(value))
 
     def __contains__(self, key: Union[str, int, float, bytes]):
@@ -66,32 +66,3 @@ class Rdict:
 
         """
         self._inner.destroy(options)
-
-
-class Mdict:
-    """An in-memory equivalent of Rdict."""
-
-    def __init__(self):
-        self._inner = _Mdict()
-
-    def __getitem__(self, key: Union[str, int, float, bytes]):
-        if type(key) is _Pickle:
-            return _pkl.loads(self._inner[key].data)
-        return self._inner[key]
-
-    def __setitem__(self, key: Union[str, int, float, bytes], value):
-        value_type = type(value)
-        if value_type is str or value_type is int or value_type is float or value_type is bytes:
-            self._inner[key] = value
-        else:
-            print("we are here")
-            self._inner[key] = _Pickle(_pkl.dumps(value))
-
-    def __contains__(self, key: Union[str, int, float, bytes]):
-        return key in self._inner
-
-    def __delitem__(self, key: Union[str, int, float, bytes]):
-        del self._inner[key]
-
-    def __len__(self):
-        return len(self._inner)
