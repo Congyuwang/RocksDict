@@ -1,5 +1,5 @@
 use crate::encoder::{decode_value, encode_value};
-use crate::{FlushOptionsPy, OptionsPy, WriteOptionsPy};
+use crate::{FlushOptionsPy, OptionsPy, ReadOptionsPy, WriteOptionsPy};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
@@ -45,6 +45,13 @@ impl Rdict {
 
     fn set_flush_options(&mut self, flush_opt: PyRef<FlushOptionsPy>) {
         self.flush_opt = flush_opt.clone()
+    }
+
+    fn set_read_options(&mut self, read_opt: &mut ReadOptionsPy) -> PyResult<()> {
+        match read_opt.0.take() {
+            None => Err(PyException::new_err("this `ReadOptions` instance is already consumed, create a new ReadOptions()")),
+            Some(opt) => Ok(self.read_opt = opt)
+        }
     }
 
     ///

@@ -5,6 +5,7 @@ use pyo3::types::PyList;
 use rocksdb::*;
 use std::os::raw::{c_int, c_uint};
 use std::path::{Path, PathBuf};
+use crate::encoder::encode_value;
 
 #[pyclass(name = "Options")]
 pub(crate) struct OptionsPy(pub(crate) Options);
@@ -36,6 +37,9 @@ pub(crate) struct FlushOptionsPy {
     #[pyo3(get, set)]
     wait: bool,
 }
+
+#[pyclass(name = "ReadOptions")]
+pub(crate) struct ReadOptionsPy(pub(crate) Option<ReadOptions>);
 
 /// Defines the underlying memtable implementation.
 /// See official [wiki](https://github.com/facebook/rocksdb/wiki/MemTable) for more information.
@@ -710,6 +714,184 @@ impl FlushOptionsPy {
         let mut opt = FlushOptions::default();
         opt.set_wait(self.wait);
         opt
+    }
+}
+
+#[pymethods]
+impl ReadOptionsPy {
+    #[new]
+    pub fn default() -> Self {
+        ReadOptionsPy(Some(ReadOptions::default()))
+    }
+
+    /// Specify whether the "data block"/"index block"/"filter block"
+    /// read for this iteration should be cached in memory?
+    /// Callers may wish to set this field to false for bulk scans.
+    ///
+    /// Default: true
+    pub fn fill_cache(&mut self, v: bool) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.fill_cache(v))
+        } else {
+            Err(PyException::new_err("this `ReadOptions` instance is already consumed, create a new ReadOptions()"))
+        }
+    }
+
+
+    /// Sets the upper bound for an iterator.
+    /// The upper bound itself is not included on the iteration result.
+    pub fn set_iterate_upper_bound(&mut self, key: &PyAny) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_iterate_upper_bound(encode_value(key)?))
+        } else {
+            Err(PyException::new_err("this `ReadOptions` instance is already consumed, create a new ReadOptions()"))
+        }
+    }
+
+
+    /// Sets the lower bound for an iterator.
+    pub fn set_iterate_lower_bound(&mut self, key: &PyAny) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_iterate_lower_bound(encode_value(key)?))
+        } else {
+            Err(PyException::new_err("this `ReadOptions` instance is already consumed, create a new ReadOptions()"))
+        }
+    }
+
+
+    /// Enforce that the iterator only iterates over the same
+    /// prefix as the seek.
+    /// This option is effective only for prefix seeks, i.e. prefix_extractor is
+    /// non-null for the column family and total_order_seek is false.  Unlike
+    /// iterate_upper_bound, prefix_same_as_start only works within a prefix
+    /// but in both directions.
+    ///
+    /// Default: false
+    pub fn set_prefix_same_as_start(&mut self, v: bool) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_prefix_same_as_start(v))
+        } else {
+            Err(PyException::new_err("this `ReadOptions` instance is already consumed, create a new ReadOptions()"))
+        }
+    }
+
+
+    /// Enable a total order seek regardless of index format (e.g. hash index)
+    /// used in the table. Some table format (e.g. plain table) may not support
+    /// this option.
+    ///
+    /// If true when calling Get(), we also skip prefix bloom when reading from
+    /// block based table. It provides a way to read existing data after
+    /// changing implementation of prefix extractor.
+    pub fn set_total_order_seek(&mut self, v: bool) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_total_order_seek(v))
+        } else {
+            Err(PyException::new_err("this `ReadOptions` instance is already consumed, create a new ReadOptions()"))
+        }
+    }
+
+
+    /// Sets a threshold for the number of keys that can be skipped
+    /// before failing an iterator seek as incomplete. The default value of 0 should be used to
+    /// never fail a request as incomplete, even on skipping too many keys.
+    ///
+    /// Default: 0
+    pub fn set_max_skippable_internal_keys(&mut self, num: u64) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_max_skippable_internal_keys(num))
+        } else {
+            Err(PyException::new_err("this `ReadOptions` instance is already consumed, create a new ReadOptions()"))
+        }
+    }
+
+
+    /// If true, when PurgeObsoleteFile is called in CleanupIteratorState, we schedule a background job
+    /// in the flush job queue and delete obsolete files in background.
+    ///
+    /// Default: false
+    pub fn set_background_purge_on_interator_cleanup(&mut self, v: bool) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_background_purge_on_interator_cleanup(v))
+        } else {
+            Err(PyException::new_err("this `ReadOptions` instance is already consumed, create a new ReadOptions()"))
+        }
+    }
+
+
+    /// If true, keys deleted using the DeleteRange() API will be visible to
+    /// readers until they are naturally deleted during compaction. This improves
+    /// read performance in DBs with many range deletions.
+    ///
+    /// Default: false
+    pub fn set_ignore_range_deletions(&mut self, v: bool) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_ignore_range_deletions(v))
+        } else {
+            Err(PyException::new_err("this `ReadOptions` instance is already consumed, create a new ReadOptions()"))
+        }
+    }
+
+
+    /// If true, all data read from underlying storage will be
+    /// verified against corresponding checksums.
+    ///
+    /// Default: true
+    pub fn set_verify_checksums(&mut self, v: bool) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_verify_checksums(v))
+        } else {
+            Err(PyException::new_err("this `ReadOptions` instance is already consumed, create a new ReadOptions()"))
+        }
+    }
+
+
+    /// If non-zero, an iterator will create a new table reader which
+    /// performs reads of the given size. Using a large size (> 2MB) can
+    /// improve the performance of forward iteration on spinning disks.
+    /// Default: 0
+    ///
+    /// ```
+    /// use rocksdb::{ReadOptions};
+    ///
+    /// let mut opts = ReadOptions::default();
+    /// opts.set_readahead_size(4_194_304); // 4mb
+    /// ```
+    pub fn set_readahead_size(&mut self, v: usize) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_readahead_size(v))
+        } else {
+            Err(PyException::new_err("this `ReadOptions` instance is already consumed, create a new ReadOptions()"))
+        }
+    }
+
+
+    /// If true, create a tailing iterator. Note that tailing iterators
+    /// only support moving in the forward direction. Iterating in reverse
+    /// or seek_to_last are not supported.
+    pub fn set_tailing(&mut self, v: bool) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_tailing(v))
+        } else {
+            Err(PyException::new_err("this `ReadOptions` instance is already consumed, create a new ReadOptions()"))
+        }
+    }
+
+
+    /// Specifies the value of "pin_data". If true, it keeps the blocks
+    /// loaded by the iterator pinned in memory as long as the iterator is not deleted,
+    /// If used when reading from tables created with
+    /// BlockBasedTableOptions::use_delta_encoding = false,
+    /// Iterator's property "rocksdb.iterator.is-key-pinned" is guaranteed to
+    /// return 1.
+    ///
+    /// Default: false
+    pub fn set_pin_data(&mut self, v: bool) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_pin_data(v))
+        } else {
+            Err(PyException::new_err("this `ReadOptions` instance is already consumed, create a new ReadOptions()"))
+        }
     }
 }
 
