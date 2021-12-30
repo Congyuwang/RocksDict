@@ -8,8 +8,25 @@ use std::fs::create_dir_all;
 use std::ops::Deref;
 use std::path::Path;
 
-/// Option<DB> so it can be destroyed
+///
+/// A persistent on-disk dictionary. Supports string, int, float, bytes as key, values.
+///
+/// # Example
+///
+/// ```python
+///
+/// from rocksdict import Rdict
+///
+/// db = Rdict("./test_dir")
+/// db[0] = 1
+///
+/// db = None
+/// db = Rdict("./test_dir")
+/// assert(db[0] == 1)
+/// ```
+///
 #[pyclass]
+#[pyo3(text_signature = "(path, options)")]
 pub(crate) struct Rdict {
     db: Option<DB>,
     write_opt: WriteOptions,
@@ -17,17 +34,14 @@ pub(crate) struct Rdict {
     read_opt: ReadOptions,
 }
 
-///
-/// Note that we do not support __len__()
-///
 #[pymethods]
 impl Rdict {
     #[new]
-    #[text_signature = "(path, options)"]
-    fn new(path: &str, options: PyRef<OptionsPy>) -> PyResult<Self> {
+    #[args(options = "Python::with_gil(|py| Py::new(py, OptionsPy::new()).unwrap())")]
+    fn new(path: &str, options: Py<OptionsPy>, py: Python) -> PyResult<Self> {
         let path = Path::new(path);
         match create_dir_all(path) {
-            Ok(_) => match DB::open(&options.0, &path) {
+            Ok(_) => match DB::open(&options.borrow(py).0, &path) {
                 Ok(db) => Ok(Rdict {
                     db: Some(db),
                     write_opt: WriteOptions::default(),
@@ -53,8 +67,8 @@ impl Rdict {
     ///
     /// # set write options
     /// write_options = WriteOptions()
-    /// write_options.set_sync(false)
-    /// write_options.disable_wal(true)
+    /// write_options.set_sync(False)
+    /// write_options.disable_wal(True)
     /// db.set_write_options(write_options)
     ///
     /// # write to db
@@ -65,7 +79,7 @@ impl Rdict {
     /// # remove db
     /// db.destroy(Options())
     /// ```
-    #[text_signature = "($self, write_opt)"]
+    #[pyo3(text_signature = "($self, write_opt)")]
     fn set_write_options(&mut self, write_opt: PyRef<WriteOptionsPy>) {
         self.write_opt = write_opt.deref().into()
     }
@@ -83,17 +97,17 @@ impl Rdict {
     /// db = Rdict(path, Options())
     ///
     /// flush_options = FlushOptions()
-    /// flush_options.set_wait(true)
+    /// flush_options.set_wait(True)
     ///
     /// db.flush_opt(flush_options)
     /// db.destroy(Options())
     /// ```
-    #[text_signature = "($self, flush_opt)"]
+    #[pyo3(text_signature = "($self, flush_opt)")]
     fn set_flush_options(&mut self, flush_opt: PyRef<FlushOptionsPy>) {
         self.flush_opt = *flush_opt.deref()
     }
 
-    #[text_signature = "($self, read_opt)"]
+    #[pyo3(text_signature = "($self, read_opt)")]
     fn set_read_options(&mut self, read_opt: &mut ReadOptionsPy) -> PyResult<()> {
         match read_opt.0.take() {
             None => Err(PyException::new_err(
@@ -167,7 +181,7 @@ impl Rdict {
     }
 
     /// flush mem-table, drop database
-    #[text_signature = "($self)"]
+    #[pyo3(text_signature = "($self)")]
     fn close(&mut self) -> PyResult<()> {
         if let Some(db) = &self.db {
             let f_opt = &self.flush_opt;
@@ -184,7 +198,7 @@ impl Rdict {
     }
 
     /// destroy database
-    #[text_signature = "($self, options)"]
+    #[pyo3(text_signature = "($self, options)")]
     fn destroy(&mut self, options: PyRef<OptionsPy>) -> PyResult<()> {
         if let Some(db) = &self.db {
             let path = db.path().to_owned();
