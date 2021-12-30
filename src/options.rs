@@ -108,7 +108,9 @@ pub(crate) struct DBPathPy {
 impl OptionsPy {
     #[new]
     pub fn new() -> Self {
-        OptionsPy(Options::default())
+        let mut opt = Options::default();
+        opt.create_if_missing(true);
+        OptionsPy(opt)
     }
 
     pub fn increase_parallelism(&mut self, parallelism: i32) {
@@ -125,6 +127,7 @@ impl OptionsPy {
             .optimize_universal_style_compaction(memtable_memory_budget)
     }
 
+    /// default is changed to True.
     pub fn create_if_missing(&mut self, create_if_missing: bool) {
         self.0.create_if_missing(create_if_missing)
     }
