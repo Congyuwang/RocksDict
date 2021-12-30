@@ -65,7 +65,6 @@ fn py_to_value_types(value: &PyAny) -> PyResult<ValueTypes> {
     Ok(ValueTypes::Unsupported)
 }
 
-
 #[inline(always)]
 pub(crate) fn decode_value(py: Python, bytes: &[u8]) -> PyResult<PyObject> {
     match bytes.get(0) {

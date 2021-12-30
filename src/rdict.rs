@@ -5,6 +5,7 @@ use pyo3::prelude::*;
 use pyo3::types::PyList;
 use rocksdb::{ReadOptions, WriteOptions, DB};
 use std::fs::create_dir_all;
+use std::ops::Deref;
 use std::path::Path;
 
 /// Option<DB> so it can be destroyed
@@ -39,11 +40,11 @@ impl Rdict {
     }
 
     fn set_write_options(&mut self, write_opt: PyRef<WriteOptionsPy>) {
-        self.write_opt = write_opt.to_rust()
+        self.write_opt = write_opt.deref().into()
     }
 
     fn set_flush_options(&mut self, flush_opt: PyRef<FlushOptionsPy>) {
-        self.flush_opt = flush_opt.clone()
+        self.flush_opt = *flush_opt.deref()
     }
 
     fn set_read_options(&mut self, read_opt: &mut ReadOptionsPy) -> PyResult<()> {
@@ -121,7 +122,8 @@ impl Rdict {
     /// flush mem-table, drop database
     fn close(&mut self) -> PyResult<()> {
         if let Some(db) = &self.db {
-            match db.flush_opt(&self.flush_opt.to_rust()) {
+            let f_opt = &self.flush_opt;
+            match db.flush_opt(&f_opt.into()) {
                 Ok(_) => Ok(drop(self.db.take().unwrap())),
                 Err(e) => {
                     drop(self.db.take().unwrap());
@@ -176,7 +178,8 @@ fn get_batch_inner<'a>(
 impl Drop for Rdict {
     fn drop(&mut self) {
         if let Some(db) = self.db.take() {
-            let _ = db.flush_opt(&self.flush_opt.to_rust());
+            let f_opt = &self.flush_opt;
+            let _ = db.flush_opt(&f_opt.into());
         }
     }
 }

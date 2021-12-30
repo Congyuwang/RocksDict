@@ -25,5 +25,10 @@ fn rocksdict(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<WriteOptionsPy>()?;
     m.add_class::<FlushOptionsPy>()?;
     m.add_class::<ReadOptionsPy>()?;
+    m.add_class::<DBCompressionTypePy>()?;
+    m.add_class::<DBCompactionStylePy>()?;
+    m.add_class::<DBRecoveryModePy>()?;
+    m.add_class::<UniversalCompactOptionsPy>()?;
+    m.add_class::<UniversalCompactionStopStylePy>()?;
     Ok(())
 }

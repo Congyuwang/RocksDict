@@ -4,6 +4,7 @@ use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 use rocksdb::*;
+use std::ops::Deref;
 use std::os::raw::{c_int, c_uint};
 use std::path::{Path, PathBuf};
 
@@ -32,10 +33,10 @@ pub(crate) struct WriteOptionsPy {
 }
 
 #[pyclass(name = "FlushOptions")]
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub(crate) struct FlushOptionsPy {
     #[pyo3(get, set)]
-    wait: bool,
+    pub(crate) wait: bool,
 }
 
 #[pyclass(name = "ReadOptions")]
@@ -44,15 +45,15 @@ pub(crate) struct ReadOptionsPy(pub(crate) Option<ReadOptions>);
 /// Defines the underlying memtable implementation.
 /// See official [wiki](https://github.com/facebook/rocksdb/wiki/MemTable) for more information.
 #[pyclass(name = "MemtableFactory")]
-pub(crate) struct MemtableFactoryPy(pub(crate) MemtableFactory);
+pub(crate) struct MemtableFactoryPy(MemtableFactory);
 
 /// For configuring block-based file storage.
 #[pyclass(name = "BlockBasedOptions")]
-pub(crate) struct BlockBasedOptionsPy(pub(crate) BlockBasedOptions);
+pub(crate) struct BlockBasedOptionsPy(BlockBasedOptions);
 
 /// Configuration of cuckoo-based storage.
 #[pyclass(name = "CuckooTableOptions")]
-pub(crate) struct CuckooTableOptionsPy(pub(crate) CuckooTableOptions);
+pub(crate) struct CuckooTableOptionsPy(CuckooTableOptions);
 
 ///
 /// Used with DBOptions::set_plain_table_factory.
@@ -81,7 +82,7 @@ pub(crate) struct PlainTableFactoryOptionsPy {
 }
 
 #[pyclass(name = "Cache")]
-pub(crate) struct CachePy(pub(crate) Cache);
+pub(crate) struct CachePy(Cache);
 
 #[pyclass(name = "BlockBasedIndexType")]
 pub(crate) struct BlockBasedIndexTypePy(BlockBasedIndexType);
@@ -112,6 +113,40 @@ pub(crate) struct DBCompactionStylePy(DBCompactionStyle);
 
 #[pyclass(name = "DBRecoveryMode")]
 pub(crate) struct DBRecoveryModePy(DBRecoveryMode);
+
+#[pyclass(name = "Env")]
+pub(crate) struct EnvPy(Env);
+
+#[pyclass(name = "UniversalCompactOptions")]
+pub(crate) struct UniversalCompactOptionsPy {
+    #[pyo3(get, set)]
+    size_ratio: c_int,
+
+    #[pyo3(get, set)]
+    min_merge_width: c_int,
+
+    #[pyo3(get, set)]
+    max_merge_width: c_int,
+
+    #[pyo3(get, set)]
+    max_size_amplification_percent: c_int,
+
+    #[pyo3(get, set)]
+    compression_size_percent: c_int,
+
+    #[pyo3(get, set)]
+    stop_style: UniversalCompactionStopStylePy,
+}
+
+#[pyclass(name = "UniversalCompactionStopStyle")]
+#[derive(Copy, Clone)]
+pub(crate) struct UniversalCompactionStopStylePy(UniversalCompactionStopStyle);
+
+#[pyclass(name = "FifoCompactOptions")]
+pub(crate) struct FifoCompactOptionsPy {
+    #[pyo3(get, set)]
+    set_max_table_files_size: u64,
+}
 
 #[pymethods]
 impl OptionsPy {
@@ -167,21 +202,21 @@ impl OptionsPy {
         Ok(self.0.set_db_paths(&db_paths))
     }
 
-    // pub fn set_env(&mut self, env: &Env) {
-    //     self.0.set_env(env)
-    // }
+    pub fn set_env(&mut self, env: PyRef<EnvPy>) {
+        self.0.set_env(&env.0)
+    }
 
     pub fn set_compression_type(&mut self, t: PyRef<DBCompressionTypePy>) {
         self.0.set_compression_type(t.0)
     }
 
     pub fn set_compression_per_level(&mut self, level_types: &PyList) -> PyResult<()> {
-        let mut db_level_types = Vec::with_capacity(level_types.len());
-        for level_type in level_types.iter() {
-            let level_type: &PyCell<DBCompressionTypePy> = PyTryFrom::try_from(level_type)?;
-            db_level_types.push(level_type.borrow().0)
+        let mut result = Vec::with_capacity(level_types.len());
+        for py_any in level_types.iter() {
+            let level_type: &PyCell<DBCompressionTypePy> = PyTryFrom::try_from(py_any)?;
+            result.push(level_type.borrow().0)
         }
-        Ok(self.0.set_compression_per_level(&db_level_types))
+        Ok(self.0.set_compression_per_level(&result))
     }
 
     pub fn set_compression_options(
@@ -211,11 +246,11 @@ impl OptionsPy {
     // pub fn set_merge_operator_associative<F: MergeFn + Clone>(&mut self, name: &str, full_merge_fn: F) {
     //     self.0.set_merge_operator_associative(name, full_merge_fn)
     // }
-    //
+
     // pub fn set_merge_operator<F: MergeFn, PF: MergeFn>(&mut self, name: &str, full_merge_fn: F, partial_merge_fn: PF,) {
     //     self.0.set_merge_operator(name, full_merge_fn, partial_merge_fn,)
     // }
-    //
+
     // pub fn add_merge_operator<F: MergeFn + Clone>(&mut self, name: &str, merge_fn: F) {
     //     self.0.add_merge_operator(name, merge_fn)
     // }
@@ -223,11 +258,11 @@ impl OptionsPy {
     // pub fn set_compaction_filter<F>(&mut self, name: &str, filter_fn: F) {
     //     self.0.set_compaction_filter(name, filter_fn)
     // }
-    //
+
     // pub fn set_compaction_filter_factory<F>(&mut self, factory: F) {
     //     self.0.set_compaction_filter_factory(factory)
     // }
-    //
+
     // pub fn set_comparator(&mut self, name: &str, compare_fn: CompareFn) {
     //     self.0.set_comparator(name, compare_fn)
     // }
@@ -383,13 +418,13 @@ impl OptionsPy {
         self.0.set_compaction_style(style.0)
     }
 
-    // pub fn set_universal_compaction_options(&mut self, uco: &UniversalCompactOptions) {
-    //     self.0.set_universal_compaction_options(uco)
-    // }
-    //
-    // pub fn set_fifo_compaction_options(&mut self, fco: &FifoCompactOptions) {
-    //     self.0.set_fifo_compaction_options(fco)
-    // }
+    pub fn set_universal_compaction_options(&mut self, uco: PyRef<UniversalCompactOptionsPy>) {
+        self.0.set_universal_compaction_options(&uco.deref().into())
+    }
+
+    pub fn set_fifo_compaction_options(&mut self, fco: PyRef<FifoCompactOptionsPy>) {
+        self.0.set_fifo_compaction_options(&fco.deref().into())
+    }
 
     pub fn set_unordered_write(&mut self, unordered: bool) {
         self.0.set_unordered_write(unordered)
@@ -471,7 +506,7 @@ impl OptionsPy {
     }
 
     pub fn set_plain_table_factory(&mut self, options: PyRef<PlainTableFactoryOptionsPy>) {
-        self.0.set_plain_table_factory(&options.to_rust())
+        self.0.set_plain_table_factory(&options.deref().into())
     }
 
     pub fn set_min_level_to_compress(&mut self, lvl: c_int) {
@@ -701,15 +736,15 @@ impl WriteOptionsPy {
     }
 }
 
-impl WriteOptionsPy {
-    pub(crate) fn to_rust(&self) -> WriteOptions {
+impl From<&WriteOptionsPy> for WriteOptions {
+    fn from(w_opt: &WriteOptionsPy) -> Self {
         let mut opt = WriteOptions::default();
-        opt.set_sync(self.sync);
-        opt.disable_wal(self.disable_wal);
-        opt.set_ignore_missing_column_families(self.ignore_missing_column_families);
-        opt.set_low_pri(self.low_pri);
-        opt.set_memtable_insert_hint_per_batch(self.memtable_insert_hint_per_batch);
-        opt.set_no_slowdown(self.no_slowdown);
+        opt.set_sync(w_opt.sync);
+        opt.disable_wal(w_opt.disable_wal);
+        opt.set_ignore_missing_column_families(w_opt.ignore_missing_column_families);
+        opt.set_low_pri(w_opt.low_pri);
+        opt.set_memtable_insert_hint_per_batch(w_opt.memtable_insert_hint_per_batch);
+        opt.set_no_slowdown(w_opt.no_slowdown);
         opt
     }
 }
@@ -726,10 +761,10 @@ impl FlushOptionsPy {
     }
 }
 
-impl FlushOptionsPy {
-    pub(crate) fn to_rust(&self) -> FlushOptions {
+impl From<&FlushOptionsPy> for FlushOptions {
+    fn from(f_opt: &FlushOptionsPy) -> Self {
         let mut opt = FlushOptions::default();
-        opt.set_wait(self.wait);
+        opt.set_wait(f_opt.wait);
         opt
     }
 }
@@ -954,30 +989,57 @@ impl BlockBasedOptionsPy {
         BlockBasedOptionsPy(BlockBasedOptions::default())
     }
 
+    /// Approximate size of user data packed per block. Note that the
+    /// block size specified here corresponds to uncompressed data. The
+    /// actual size of the unit read from disk may be smaller if
+    /// compression is enabled. This parameter can be changed dynamically.
     pub fn set_block_size(&mut self, size: usize) {
         self.0.set_block_size(size)
     }
 
+    /// Block size for partitioned metadata. Currently applied to indexes when
+    /// kTwoLevelIndexSearch is used and to filters when partition_filters is used.
+    /// Note: Since in the current implementation the filters and index partitions
+    /// are aligned, an index/filter block is created when either index or filter
+    /// block size reaches the specified limit.
+    ///
+    /// Note: this limit is currently applied to only index blocks; a filter
+    /// partition is cut right after an index block is cut.
     pub fn set_metadata_block_size(&mut self, size: usize) {
         self.0.set_metadata_block_size(size)
     }
 
+    /// Note: currently this option requires kTwoLevelIndexSearch to be set as
+    /// well.
+    ///
+    /// Use partitioned full filters for each SST file. This option is
+    /// incompatible with block-based filters.
     pub fn set_partition_filters(&mut self, size: bool) {
         self.0.set_partition_filters(size)
     }
 
+    /// Sets global cache for blocks (user data is stored in a set of blocks, and
+    /// a block is the unit of reading from disk). Cache must outlive DB instance which uses it.
+    ///
+    /// If set, use the specified cache for blocks.
+    /// By default, rocksdb will automatically create and use an 8MB internal cache.
     pub fn set_block_cache(&mut self, cache: PyRef<CachePy>) {
         self.0.set_block_cache(&cache.0)
     }
 
+    /// Sets global cache for compressed blocks. Cache must outlive DB instance which uses it.
+    ///
+    /// By default, rocksdb will not use a compressed block cache.
     pub fn set_block_cache_compressed(&mut self, cache: PyRef<CachePy>) {
         self.0.set_block_cache_compressed(&cache.0)
     }
 
+    /// Disable block cache
     pub fn disable_cache(&mut self) {
         self.0.disable_cache()
     }
 
+    /// Sets the filter policy to reduce disk read
     pub fn set_bloom_filter(&mut self, bits_per_key: c_int, block_based: bool) {
         self.0.set_bloom_filter(bits_per_key, block_based)
     }
@@ -986,6 +1048,18 @@ impl BlockBasedOptionsPy {
         self.0.set_cache_index_and_filter_blocks(v)
     }
 
+    /// Defines the index type to be used for SS-table lookups.
+    ///
+    /// # Examples
+    ///
+    /// ```python
+    /// from rocksdict import BlockBasedOptions, BlockBasedIndexType, Options
+    ///
+    /// opts = Options()
+    /// block_opts = BlockBasedOptions()
+    /// block_opts.set_index_type(BlockBasedIndexType.hash_search())
+    /// opts.set_block_based_table_factory(block_opts)
+    /// ```
     pub fn set_index_type(&mut self, index_type: PyRef<BlockBasedIndexTypePy>) {
         self.0.set_index_type(match index_type.0 {
             BlockBasedIndexType::BinarySearch => BlockBasedIndexType::BinarySearch,
@@ -994,26 +1068,77 @@ impl BlockBasedOptionsPy {
         })
     }
 
+    /// If cache_index_and_filter_blocks is true and the below is true, then
+    /// filter and index blocks are stored in the cache, but a reference is
+    /// held in the "table reader" object so the blocks are pinned and only
+    /// evicted from cache when the table reader is freed.
+    ///
+    /// Default: false.
     pub fn set_pin_l0_filter_and_index_blocks_in_cache(&mut self, v: bool) {
         self.0.set_pin_l0_filter_and_index_blocks_in_cache(v)
     }
 
+    /// If cache_index_and_filter_blocks is true and the below is true, then
+    /// the top-level index of partitioned filter and index blocks are stored in
+    /// the cache, but a reference is held in the "table reader" object so the
+    /// blocks are pinned and only evicted from cache when the table reader is
+    /// freed. This is not limited to l0 in LSM tree.
+    ///
+    /// Default: false.
     pub fn set_pin_top_level_index_and_filter(&mut self, v: bool) {
         self.0.set_pin_top_level_index_and_filter(v)
     }
 
+    /// Format version, reserved for backward compatibility.
+    ///
+    /// See full [list](https://github.com/facebook/rocksdb/blob/f059c7d9b96300091e07429a60f4ad55dac84859/include/rocksdb/table.h#L249-L274)
+    /// of the supported versions.
+    ///
+    /// Default: 2.
     pub fn set_format_version(&mut self, version: i32) {
         self.0.set_format_version(version)
     }
 
+    /// Number of keys between restart points for delta encoding of keys.
+    /// This parameter can be changed dynamically. Most clients should
+    /// leave this parameter alone. The minimum value allowed is 1. Any smaller
+    /// value will be silently overwritten with 1.
+    ///
+    /// Default: 16.
     pub fn set_block_restart_interval(&mut self, interval: i32) {
         self.0.set_block_restart_interval(interval)
     }
 
+    /// Same as block_restart_interval but used for the index block.
+    /// If you don't plan to run RocksDB before version 5.16 and you are
+    /// using `index_block_restart_interval` > 1, you should
+    /// probably set the `format_version` to >= 4 as it would reduce the index size.
+    ///
+    /// Default: 1.
     pub fn set_index_block_restart_interval(&mut self, interval: i32) {
         self.0.set_index_block_restart_interval(interval)
     }
 
+    /// Set the data block index type for point lookups:
+    ///  `DataBlockIndexType::BinarySearch` to use binary search within the data block.
+    ///  `DataBlockIndexType::BinaryAndHash` to use the data block hash index in combination with
+    ///  the normal binary search.
+    ///
+    /// The hash table utilization ratio is adjustable using [`set_data_block_hash_ratio`](#method.set_data_block_hash_ratio), which is
+    /// valid only when using `DataBlockIndexType::BinaryAndHash`.
+    ///
+    /// Default: `BinarySearch`
+    /// # Examples
+    ///
+    /// ```python
+    /// from rocksdict import BlockBasedOptions, BlockBasedIndexType, Options
+    ///
+    /// opts = Options()
+    /// block_opts = BlockBasedOptions()
+    /// block_opts.set_data_block_index_type(DataBlockIndexType.binary_and_hash())
+    /// block_opts.set_data_block_hash_ratio(0.85)
+    /// opts.set_block_based_table_factory(block_opts)
+    /// ```
     pub fn set_data_block_index_type(&mut self, index_type: PyRef<DataBlockIndexTypePy>) {
         self.0.set_data_block_index_type(match index_type.0 {
             DataBlockIndexType::BinarySearch => DataBlockIndexType::BinarySearch,
@@ -1021,6 +1146,13 @@ impl BlockBasedOptionsPy {
         })
     }
 
+    /// Set the data block hash index utilization ratio.
+    ///
+    /// The smaller the utilization ratio, the less hash collisions happen, and so reduce the risk for a
+    /// point lookup to fall back to binary search due to the collisions. A small ratio means faster
+    /// lookup at the price of more space overhead.
+    ///
+    /// Default: 0.75
     pub fn set_data_block_hash_ratio(&mut self, ratio: f64) {
         self.0.set_data_block_hash_ratio(ratio)
     }
@@ -1092,18 +1224,18 @@ impl PlainTableFactoryOptionsPy {
     }
 }
 
-impl PlainTableFactoryOptionsPy {
-    pub(crate) fn to_rust(&self) -> PlainTableFactoryOptions {
+impl From<&PlainTableFactoryOptionsPy> for PlainTableFactoryOptions {
+    fn from(p_opt: &PlainTableFactoryOptionsPy) -> Self {
         PlainTableFactoryOptions {
             // One extra byte for python object type
-            user_key_length: if self.user_key_length > 0 {
-                self.user_key_length + 1
+            user_key_length: if p_opt.user_key_length > 0 {
+                p_opt.user_key_length + 1
             } else {
                 0
             },
-            bloom_bits_per_key: self.bloom_bits_per_key,
-            hash_table_ratio: self.hash_table_ratio,
-            index_sparseness: self.index_sparseness,
+            bloom_bits_per_key: p_opt.bloom_bits_per_key,
+            hash_table_ratio: p_opt.hash_table_ratio,
+            index_sparseness: p_opt.index_sparseness,
         }
     }
 }
@@ -1184,7 +1316,9 @@ impl SliceTransformPy {
     }
 
     ///
-    /// prefix max length at `len`
+    /// prefix max length at `len`. If key is longer than `len`,
+    /// the prefix will have length `len`, if key is shorter than `len`,
+    /// the prefix will have the same length as `len`.
     ///
     #[staticmethod]
     pub fn create_max_len_prefix(len: usize) -> Self {
@@ -1214,26 +1348,32 @@ impl DBCompressionTypePy {
     pub fn none() -> Self {
         DBCompressionTypePy(DBCompressionType::None)
     }
+
     #[staticmethod]
     pub fn snappy() -> Self {
         DBCompressionTypePy(DBCompressionType::Snappy)
     }
+
     #[staticmethod]
     pub fn zlib() -> Self {
         DBCompressionTypePy(DBCompressionType::Zlib)
     }
+
     #[staticmethod]
     pub fn bz2() -> Self {
         DBCompressionTypePy(DBCompressionType::Bz2)
     }
+
     #[staticmethod]
     pub fn lz4() -> Self {
         DBCompressionTypePy(DBCompressionType::Lz4)
     }
+
     #[staticmethod]
     pub fn lz4hc() -> Self {
         DBCompressionTypePy(DBCompressionType::Lz4hc)
     }
+
     #[staticmethod]
     pub fn zstd() -> Self {
         DBCompressionTypePy(DBCompressionType::Zstd)
@@ -1246,10 +1386,12 @@ impl DBCompactionStylePy {
     pub fn level_style() -> Self {
         DBCompactionStylePy(DBCompactionStyle::Level)
     }
+
     #[staticmethod]
     pub fn universal_style() -> Self {
         DBCompactionStylePy(DBCompactionStyle::Universal)
     }
+
     #[staticmethod]
     pub fn fifo_style() -> Self {
         DBCompactionStylePy(DBCompactionStyle::Fifo)
@@ -1262,17 +1404,224 @@ impl DBRecoveryModePy {
     pub fn tolerate_corrupted_tail_records_mode() -> Self {
         DBRecoveryModePy(DBRecoveryMode::TolerateCorruptedTailRecords)
     }
+
     #[staticmethod]
     pub fn absolute_consistency_mode() -> Self {
         DBRecoveryModePy(DBRecoveryMode::AbsoluteConsistency)
     }
+
     #[staticmethod]
     pub fn point_in_time_mode() -> Self {
         DBRecoveryModePy(DBRecoveryMode::PointInTime)
     }
+
     #[staticmethod]
     pub fn skip_any_corrupted_record_mode() -> Self {
         DBRecoveryModePy(DBRecoveryMode::SkipAnyCorruptedRecord)
+    }
+}
+
+#[pymethods]
+impl EnvPy {
+    /// Returns default env
+    #[new]
+    pub fn default() -> PyResult<Self> {
+        match Env::default() {
+            Ok(env) => Ok(EnvPy(env)),
+            Err(e) => Err(PyException::new_err(e.into_string())),
+        }
+    }
+
+    /// Returns a new environment that stores its data in memory and delegates
+    /// all non-file-storage tasks to base_env.
+    #[staticmethod]
+    pub fn mem_env() -> PyResult<Self> {
+        match Env::mem_env() {
+            Ok(env) => Ok(EnvPy(env)),
+            Err(e) => Err(PyException::new_err(e.into_string())),
+        }
+    }
+
+    /// Sets the number of background worker threads of a specific thread pool for this environment.
+    /// `LOW` is the default pool.
+    ///
+    /// Default: 1
+    pub fn set_background_threads(&mut self, num_threads: c_int) {
+        self.0.set_background_threads(num_threads)
+    }
+
+    /// Sets the size of the high priority thread pool that can be used to
+    /// prevent compactions from stalling memtable flushes.
+    pub fn set_high_priority_background_threads(&mut self, n: c_int) {
+        self.0.set_high_priority_background_threads(n)
+    }
+
+    /// Sets the size of the low priority thread pool that can be used to
+    /// prevent compactions from stalling memtable flushes.
+    pub fn set_low_priority_background_threads(&mut self, n: c_int) {
+        self.0.set_low_priority_background_threads(n)
+    }
+
+    /// Sets the size of the bottom priority thread pool that can be used to
+    /// prevent compactions from stalling memtable flushes.
+    pub fn set_bottom_priority_background_threads(&mut self, n: c_int) {
+        self.0.set_bottom_priority_background_threads(n)
+    }
+
+    /// Wait for all threads started by StartThread to terminate.
+    pub fn join_all_threads(&mut self) {
+        self.0.join_all_threads()
+    }
+
+    /// Lowering IO priority for threads from the specified pool.
+    pub fn lower_thread_pool_io_priority(&mut self) {
+        self.0.lower_thread_pool_io_priority()
+    }
+
+    /// Lowering IO priority for high priority thread pool.
+    pub fn lower_high_priority_thread_pool_io_priority(&mut self) {
+        self.0.lower_high_priority_thread_pool_io_priority()
+    }
+
+    /// Lowering CPU priority for threads from the specified pool.
+    pub fn lower_thread_pool_cpu_priority(&mut self) {
+        self.0.lower_thread_pool_cpu_priority()
+    }
+
+    /// Lowering CPU priority for high priority thread pool.
+    pub fn lower_high_priority_thread_pool_cpu_priority(&mut self) {
+        self.0.lower_high_priority_thread_pool_cpu_priority()
+    }
+}
+
+#[pymethods]
+impl UniversalCompactOptionsPy {
+    #[new]
+    pub fn default() -> Self {
+        UniversalCompactOptionsPy {
+            size_ratio: 1,
+            min_merge_width: 2,
+            max_merge_width: c_int::MAX,
+            max_size_amplification_percent: 200,
+            compression_size_percent: -1,
+            stop_style: UniversalCompactionStopStylePy(UniversalCompactionStopStyle::Total),
+        }
+    }
+
+    /// Sets the percentage flexibility while comparing file size.
+    /// If the candidate file(s) size is 1% smaller than the next file's size,
+    /// then include next file into this candidate set.
+    ///
+    /// Default: 1
+    pub fn set_size_ratio(&mut self, ratio: c_int) {
+        self.size_ratio = ratio
+    }
+
+    /// Sets the minimum number of files in a single compaction run.
+    ///
+    /// Default: 2
+    pub fn set_min_merge_width(&mut self, num: c_int) {
+        self.min_merge_width = num
+    }
+
+    /// Sets the maximum number of files in a single compaction run.
+    ///
+    /// Default: UINT_MAX
+    pub fn set_max_merge_width(&mut self, num: c_int) {
+        self.max_merge_width = num
+    }
+
+    /// sets the size amplification.
+    ///
+    /// It is defined as the amount (in percentage) of
+    /// additional storage needed to store a single byte of data in the database.
+    /// For example, a size amplification of 2% means that a database that
+    /// contains 100 bytes of user-data may occupy upto 102 bytes of
+    /// physical storage. By this definition, a fully compacted database has
+    /// a size amplification of 0%. Rocksdb uses the following heuristic
+    /// to calculate size amplification: it assumes that all files excluding
+    /// the earliest file contribute to the size amplification.
+    ///
+    /// Default: 200, which means that a 100 byte database could require upto 300 bytes of storage.
+    pub fn set_max_size_amplification_percent(&mut self, v: c_int) {
+        self.max_size_amplification_percent = v
+    }
+
+    /// Sets the percentage of compression size.
+    ///
+    /// If this option is set to be -1, all the output files
+    /// will follow compression type specified.
+    ///
+    /// If this option is not negative, we will try to make sure compressed
+    /// size is just above this value. In normal cases, at least this percentage
+    /// of data will be compressed.
+    /// When we are compacting to a new file, here is the criteria whether
+    /// it needs to be compressed: assuming here are the list of files sorted
+    /// by generation time:
+    ///    A1...An B1...Bm C1...Ct
+    /// where A1 is the newest and Ct is the oldest, and we are going to compact
+    /// B1...Bm, we calculate the total size of all the files as total_size, as
+    /// well as  the total size of C1...Ct as total_C, the compaction output file
+    /// will be compressed iff
+    ///   total_C / total_size < this percentage
+    ///
+    /// Default: -1
+    pub fn set_compression_size_percent(&mut self, v: c_int) {
+        self.compression_size_percent = v
+    }
+
+    /// Sets the algorithm used to stop picking files into a single compaction run.
+    ///
+    /// Default: ::Total
+    pub fn set_stop_style(&mut self, style: PyRef<UniversalCompactionStopStylePy>) {
+        self.stop_style = *style.deref()
+    }
+}
+
+impl From<&UniversalCompactOptionsPy> for UniversalCompactOptions {
+    fn from(u_opt: &UniversalCompactOptionsPy) -> Self {
+        let mut uni = UniversalCompactOptions::default();
+        uni.set_size_ratio(u_opt.size_ratio);
+        uni.set_min_merge_width(u_opt.min_merge_width);
+        uni.set_max_merge_width(u_opt.max_merge_width);
+        uni.set_max_size_amplification_percent(u_opt.max_size_amplification_percent);
+        uni.set_compression_size_percent(u_opt.compression_size_percent);
+        uni.set_stop_style(u_opt.stop_style.0);
+        uni
+    }
+}
+
+#[pymethods]
+impl UniversalCompactionStopStylePy {
+    #[staticmethod]
+    pub fn similar() -> Self {
+        UniversalCompactionStopStylePy(UniversalCompactionStopStyle::Similar)
+    }
+
+    #[staticmethod]
+    pub fn total() -> Self {
+        UniversalCompactionStopStylePy(UniversalCompactionStopStyle::Total)
+    }
+}
+
+#[pymethods]
+impl FifoCompactOptionsPy {
+    /// Sets the max table file size.
+    ///
+    /// Once the total sum of table files reaches this, we will delete the oldest
+    /// table file
+    ///
+    /// Default: 1GB
+    pub fn set_max_table_files_size(&mut self, nbytes: u64) {
+        self.set_max_table_files_size = nbytes
+    }
+}
+
+impl From<&FifoCompactOptionsPy> for FifoCompactOptions {
+    fn from(f_opt: &FifoCompactOptionsPy) -> Self {
+        let mut opt = FifoCompactOptions::default();
+        opt.set_max_table_files_size(f_opt.set_max_table_files_size);
+        opt
     }
 }
 
