@@ -2,7 +2,6 @@ use integer_encoding::VarInt;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyFloat, PyInt, PyString};
-use pyo3::PyTypeInfo;
 
 pub(crate) enum ValueTypes<'a> {
     Bytes(&'a [u8]),
@@ -30,25 +29,7 @@ pub(crate) fn encoding_byte(v_type: &ValueTypes) -> u8 {
 ///
 #[inline(always)]
 pub(crate) fn encode_value(value: &PyAny) -> PyResult<Box<[u8]>> {
-    let bytes = if PyBytes::is_type_of(value) {
-        let bytes: &PyBytes = unsafe { PyTryFrom::try_from_unchecked(value) };
-        let bytes = bytes.as_bytes();
-        ValueTypes::Bytes(bytes)
-    } else if PyString::is_type_of(value) {
-        let value: &PyString = unsafe { PyTryFrom::try_from_unchecked(value) };
-        let string = value.to_string();
-        ValueTypes::String(string)
-    } else if PyInt::is_type_of(value) {
-        let value: &PyInt = unsafe { PyTryFrom::try_from_unchecked(value) };
-        let value: i64 = value.extract().unwrap();
-        ValueTypes::Int(value)
-    } else if PyFloat::is_type_of(value) {
-        let value: &PyFloat = unsafe { PyTryFrom::try_from_unchecked(value) };
-        let value: f64 = value.extract().unwrap();
-        ValueTypes::Float(value)
-    } else {
-        ValueTypes::Unsupported
-    };
+    let bytes = py_to_value_types(value)?;
     let type_encoding = encoding_byte(&bytes);
     match bytes {
         ValueTypes::Bytes(value) => Ok(concat_type_encoding(type_encoding, value)),
@@ -67,6 +48,25 @@ pub(crate) fn encode_value(value: &PyAny) -> PyResult<Box<[u8]>> {
     }
 }
 
+#[inline(always)]
+fn py_to_value_types(value: &PyAny) -> PyResult<ValueTypes> {
+    if let Ok(value) = <PyBytes as PyTryFrom>::try_from(value) {
+        return Ok(ValueTypes::Bytes(value.as_bytes()));
+    }
+    if let Ok(value) = <PyString as PyTryFrom>::try_from(value) {
+        return Ok(ValueTypes::String(value.to_string()));
+    }
+    if let Ok(value) = <PyInt as PyTryFrom>::try_from(value) {
+        return Ok(ValueTypes::Int(value.extract()?));
+    }
+    if let Ok(value) = <PyFloat as PyTryFrom>::try_from(value) {
+        return Ok(ValueTypes::Float(value.extract()?));
+    }
+    Ok(ValueTypes::Unsupported)
+}
+
+
+#[inline(always)]
 pub(crate) fn decode_value(py: Python, bytes: &[u8]) -> PyResult<PyObject> {
     match bytes.get(0) {
         None => Err(PyException::new_err("Unknown value type")),
