@@ -1,10 +1,8 @@
 mod encoder;
-mod mdict;
 mod options;
 mod rdict;
 
 use crate::encoder::Pickle;
-use crate::mdict::Mdict;
 use crate::options::*;
 use crate::rdict::Rdict;
 use pyo3::prelude::*;
@@ -12,7 +10,6 @@ use pyo3::prelude::*;
 #[pymodule]
 fn rocksdict(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<Rdict>()?;
-    m.add_class::<Mdict>()?;
     m.add_class::<OptionsPy>()?;
     m.add_class::<MemtableFactoryPy>()?;
     m.add_class::<BlockBasedOptionsPy>()?;
