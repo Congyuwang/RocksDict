@@ -22,5 +22,8 @@ fn rocksdict(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<DataBlockIndexTypePy>()?;
     m.add_class::<SliceTransformPy>()?;
     m.add_class::<DBPathPy>()?;
+    m.add_class::<WriteOptionsPy>()?;
+    m.add_class::<FlushOptionsPy>()?;
+    m.add_class::<ReadOptionsPy>()?;
     Ok(())
 }
