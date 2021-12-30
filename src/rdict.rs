@@ -1,5 +1,5 @@
 use crate::encoder::{decode_value, encode_value};
-use crate::OptionsPy;
+use crate::{FlushOptionsPy, OptionsPy, WriteOptionsPy};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
@@ -12,6 +12,8 @@ use std::path::Path;
 pub(crate) struct Rdict {
     db: Option<DB>,
     write_opt: WriteOptions,
+    flush_opt: FlushOptionsPy,
+    read_opt: ReadOptions,
 }
 
 ///
@@ -27,7 +29,9 @@ impl Rdict {
             Ok(_) => match DB::open(&options.0, &path) {
                 Ok(db) => Ok(Rdict {
                     db: Some(db),
-                    write_opt,
+                    write_opt: WriteOptions::default(),
+                    flush_opt: FlushOptionsPy::new(),
+                    read_opt: ReadOptions::default(),
                 }),
                 Err(e) => Err(PyException::new_err(e.to_string())),
             },
@@ -35,10 +39,21 @@ impl Rdict {
         }
     }
 
+    fn set_write_options(&mut self, write_opt: PyRef<WriteOptionsPy>) {
+        self.write_opt = write_opt.to_rust()
+    }
+
+    fn set_flush_options(&mut self, flush_opt: PyRef<FlushOptionsPy>) {
+        self.flush_opt = flush_opt.clone()
+    }
+
+    ///
+    /// Supports batch get
+    ///
     fn __getitem__(&self, key: &PyAny, py: Python) -> PyResult<PyObject> {
         if let Some(db) = &self.db {
             let key = encode_value(key)?;
-            match db.get_pinned(&key[..]) {
+            match db.get_pinned_opt(&key[..], &self.read_opt) {
                 Ok(value) => match value {
                     None => Err(PyException::new_err("key not found")),
                     Some(slice) => decode_value(py, slice.as_ref()),
@@ -89,7 +104,7 @@ impl Rdict {
     fn __contains__(&self, key: &PyAny) -> PyResult<bool> {
         if let Some(db) = &self.db {
             let key = encode_value(key)?;
-            match db.get_pinned(&key[..]) {
+            match db.get_pinned_opt(&key[..], &self.read_opt) {
                 Ok(value) => match value {
                     None => Ok(false),
                     Some(_) => Ok(true),
@@ -116,9 +131,7 @@ impl Rdict {
     /// flush mem-table, drop database
     fn close(&mut self) -> PyResult<()> {
         if let Some(db) = &self.db {
-            let mut flush_opt = FlushOptions::default();
-            flush_opt.set_wait(true);
-            match db.flush_opt(&flush_opt) {
+            match db.flush_opt(&self.flush_opt.to_rust()) {
                 Ok(_) => Ok(drop(self.db.take().unwrap())),
                 Err(e) => {
                     drop(self.db.take().unwrap());
@@ -148,7 +161,7 @@ impl Rdict {
 impl Drop for Rdict {
     fn drop(&mut self) {
         if let Some(db) = self.db.take() {
-            let _ = db.flush();
+            let _ = db.flush_opt(&self.flush_opt.to_rust());
         }
     }
 }

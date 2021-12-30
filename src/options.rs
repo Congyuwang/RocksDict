@@ -2,27 +2,65 @@ use libc::size_t;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
-use rocksdb::{
-    BlockBasedIndexType, BlockBasedOptions, Cache, CuckooTableOptions, DBPath, DataBlockIndexType,
-    MemtableFactory, Options, PlainTableFactoryOptions, SliceTransform, UniversalCompactOptions,
-};
+use rocksdb::*;
 use std::os::raw::{c_int, c_uint};
 use std::path::{Path, PathBuf};
 
 #[pyclass(name = "Options")]
 pub(crate) struct OptionsPy(pub(crate) Options);
 
+#[pyclass(name = "WriteOptions")]
+pub(crate) struct WriteOptionsPy {
+    #[pyo3(get, set)]
+    sync: bool,
+
+    #[pyo3(get, set)]
+    disable_wal: bool,
+
+    #[pyo3(get, set)]
+    ignore_missing_column_families: bool,
+
+    #[pyo3(get, set)]
+    no_slowdown: bool,
+
+    #[pyo3(get, set)]
+    low_pri: bool,
+
+    #[pyo3(get, set)]
+    memtable_insert_hint_per_batch: bool,
+}
+
+#[pyclass(name = "FlushOptions")]
+#[derive(Clone)]
+pub(crate) struct FlushOptionsPy {
+    #[pyo3(get, set)]
+    wait: bool,
+}
+
 /// Defines the underlying memtable implementation.
 /// See official [wiki](https://github.com/facebook/rocksdb/wiki/MemTable) for more information.
 #[pyclass(name = "MemtableFactory")]
 pub(crate) struct MemtableFactoryPy(pub(crate) MemtableFactory);
 
+/// For configuring block-based file storage.
 #[pyclass(name = "BlockBasedOptions")]
 pub(crate) struct BlockBasedOptionsPy(pub(crate) BlockBasedOptions);
 
+/// Configuration of cuckoo-based storage.
 #[pyclass(name = "CuckooTableOptions")]
 pub(crate) struct CuckooTableOptionsPy(pub(crate) CuckooTableOptions);
 
+///
+/// Used with DBOptions::set_plain_table_factory.
+/// See official [wiki](https://github.com/facebook/rocksdb/wiki/PlainTable-Format) for more
+/// information.
+///
+/// Defaults:
+///  user_key_length: 0 (variable length)
+///  bloom_bits_per_key: 10
+///  hash_table_ratio: 0.75
+///  index_sparseness: 16
+///
 #[pyclass(name = "PlainTableFactoryOptions")]
 pub(crate) struct PlainTableFactoryOptionsPy {
     #[pyo3(get, set)]
@@ -412,7 +450,7 @@ impl OptionsPy {
     }
 
     pub fn set_plain_table_factory(&mut self, options: PyRef<PlainTableFactoryOptionsPy>) {
-        self.0.set_plain_table_factory(&options.to_rocks())
+        self.0.set_plain_table_factory(&options.to_rust())
     }
 
     pub fn set_min_level_to_compress(&mut self, lvl: c_int) {
@@ -567,6 +605,111 @@ impl OptionsPy {
 
     pub fn set_memtable_whole_key_filtering(&mut self, whole_key_filter: bool) {
         self.0.set_memtable_whole_key_filtering(whole_key_filter)
+    }
+}
+
+#[pymethods]
+impl WriteOptionsPy {
+    #[new]
+    pub fn new() -> Self {
+        WriteOptionsPy {
+            sync: false,
+            disable_wal: false,
+            ignore_missing_column_families: false,
+            no_slowdown: false,
+            low_pri: false,
+            memtable_insert_hint_per_batch: false,
+        }
+    }
+
+    /// Sets the sync mode. If true, the write will be flushed
+    /// from the operating system buffer cache before the write is considered complete.
+    /// If this flag is true, writes will be slower.
+    ///
+    /// Default: false
+    pub fn set_sync(&mut self, sync: bool) {
+        self.sync = sync
+    }
+
+    /// Sets whether WAL should be active or not.
+    /// If true, writes will not first go to the write ahead log,
+    /// and the write may got lost after a crash.
+    ///
+    /// Default: false
+    pub fn disable_wal(&mut self, disable: bool) {
+        self.disable_wal = disable
+    }
+
+    /// If true and if user is trying to write to column families that don't exist (they were dropped),
+    /// ignore the write (don't return an error). If there are multiple writes in a WriteBatch,
+    /// other writes will succeed.
+    ///
+    /// Default: false
+    pub fn set_ignore_missing_column_families(&mut self, ignore: bool) {
+        self.ignore_missing_column_families = ignore
+    }
+
+    /// If true and we need to wait or sleep for the write request, fails
+    /// immediately with Status::Incomplete().
+    ///
+    /// Default: false
+    pub fn set_no_slowdown(&mut self, no_slowdown: bool) {
+        self.no_slowdown = no_slowdown
+    }
+
+    /// If true, this write request is of lower priority if compaction is
+    /// behind. In this case, no_slowdown = true, the request will be cancelled
+    /// immediately with Status::Incomplete() returned. Otherwise, it will be
+    /// slowed down. The slowdown value is determined by RocksDB to guarantee
+    /// it introduces minimum impacts to high priority writes.
+    ///
+    /// Default: false
+    pub fn set_low_pri(&mut self, v: bool) {
+        self.low_pri = v
+    }
+
+    /// If true, writebatch will maintain the last insert positions of each
+    /// memtable as hints in concurrent write. It can improve write performance
+    /// in concurrent writes if keys in one writebatch are sequential. In
+    /// non-concurrent writes (when concurrent_memtable_writes is false) this
+    /// option will be ignored.
+    ///
+    /// Default: false
+    pub fn set_memtable_insert_hint_per_batch(&mut self, v: bool) {
+        self.memtable_insert_hint_per_batch = v
+    }
+}
+
+impl WriteOptionsPy {
+    pub(crate) fn to_rust(&self) -> WriteOptions {
+        let mut opt = WriteOptions::default();
+        opt.set_sync(self.sync);
+        opt.disable_wal(self.disable_wal);
+        opt.set_ignore_missing_column_families(self.ignore_missing_column_families);
+        opt.set_low_pri(self.low_pri);
+        opt.set_memtable_insert_hint_per_batch(self.memtable_insert_hint_per_batch);
+        opt.set_no_slowdown(self.no_slowdown);
+        opt
+    }
+}
+
+#[pymethods]
+impl FlushOptionsPy {
+    #[new]
+    pub fn new() -> Self {
+        FlushOptionsPy { wait: true }
+    }
+
+    pub fn set_wait(&mut self, wait: bool) {
+        self.wait = wait
+    }
+}
+
+impl FlushOptionsPy {
+    pub(crate) fn to_rust(&self) -> FlushOptions {
+        let mut opt = FlushOptions::default();
+        opt.set_wait(self.wait);
+        opt
     }
 }
 
@@ -738,16 +881,7 @@ impl PlainTableFactoryOptionsPy {
 }
 
 impl PlainTableFactoryOptionsPy {
-    /// Used with DBOptions::set_plain_table_factory.
-    /// See official [wiki](https://github.com/facebook/rocksdb/wiki/PlainTable-Format) for more
-    /// information.
-    ///
-    /// Defaults:
-    ///  user_key_length: 0 (variable length)
-    ///  bloom_bits_per_key: 10
-    ///  hash_table_ratio: 0.75
-    ///  index_sparseness: 16
-    pub(crate) fn to_rocks(&self) -> PlainTableFactoryOptions {
+    pub(crate) fn to_rust(&self) -> PlainTableFactoryOptions {
         PlainTableFactoryOptions {
             // One extra byte for python object type
             user_key_length: if self.user_key_length > 0 {
