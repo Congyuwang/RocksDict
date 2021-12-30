@@ -1,28 +1,70 @@
+use crate::encoder::encode_value;
 use libc::size_t;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
-use rocksdb::{
-    BlockBasedIndexType, BlockBasedOptions, Cache, CuckooTableOptions, DBPath, DataBlockIndexType,
-    MemtableFactory, Options, PlainTableFactoryOptions, SliceTransform, UniversalCompactOptions,
-};
+use rocksdb::*;
 use std::os::raw::{c_int, c_uint};
 use std::path::{Path, PathBuf};
 
 #[pyclass(name = "Options")]
 pub(crate) struct OptionsPy(pub(crate) Options);
 
+#[pyclass(name = "WriteOptions")]
+pub(crate) struct WriteOptionsPy {
+    #[pyo3(get, set)]
+    sync: bool,
+
+    #[pyo3(get, set)]
+    disable_wal: bool,
+
+    #[pyo3(get, set)]
+    ignore_missing_column_families: bool,
+
+    #[pyo3(get, set)]
+    no_slowdown: bool,
+
+    #[pyo3(get, set)]
+    low_pri: bool,
+
+    #[pyo3(get, set)]
+    memtable_insert_hint_per_batch: bool,
+}
+
+#[pyclass(name = "FlushOptions")]
+#[derive(Clone)]
+pub(crate) struct FlushOptionsPy {
+    #[pyo3(get, set)]
+    wait: bool,
+}
+
+#[pyclass(name = "ReadOptions")]
+pub(crate) struct ReadOptionsPy(pub(crate) Option<ReadOptions>);
+
 /// Defines the underlying memtable implementation.
 /// See official [wiki](https://github.com/facebook/rocksdb/wiki/MemTable) for more information.
 #[pyclass(name = "MemtableFactory")]
 pub(crate) struct MemtableFactoryPy(pub(crate) MemtableFactory);
 
+/// For configuring block-based file storage.
 #[pyclass(name = "BlockBasedOptions")]
 pub(crate) struct BlockBasedOptionsPy(pub(crate) BlockBasedOptions);
 
+/// Configuration of cuckoo-based storage.
 #[pyclass(name = "CuckooTableOptions")]
 pub(crate) struct CuckooTableOptionsPy(pub(crate) CuckooTableOptions);
 
+///
+/// Used with DBOptions::set_plain_table_factory.
+/// See official [wiki](https://github.com/facebook/rocksdb/wiki/PlainTable-Format) for more
+/// information.
+///
+/// Defaults:
+///  user_key_length: 0 (variable length)
+///  bloom_bits_per_key: 10
+///  hash_table_ratio: 0.75
+///  index_sparseness: 16
+///
 #[pyclass(name = "PlainTableFactoryOptions")]
 pub(crate) struct PlainTableFactoryOptionsPy {
     #[pyo3(get, set)]
@@ -62,11 +104,25 @@ pub(crate) struct DBPathPy {
     target_size: u64,
 }
 
+#[pyclass(name = "DBCompressionType")]
+#[derive(Clone)]
+pub(crate) struct DBCompressionTypePy(DBCompressionType);
+
+#[pyclass(name = "DBCompactionStyle")]
+#[derive(Clone)]
+pub(crate) struct DBCompactionStylePy(DBCompactionStyle);
+
+#[pyclass(name = "DBRecoveryMode")]
+#[derive(Clone)]
+pub(crate) struct DBRecoveryModePy(DBRecoveryMode);
+
 #[pymethods]
 impl OptionsPy {
     #[new]
     pub fn new() -> Self {
-        OptionsPy(Options::default())
+        let mut opt = Options::default();
+        opt.create_if_missing(true);
+        OptionsPy(opt)
     }
 
     pub fn increase_parallelism(&mut self, parallelism: i32) {
@@ -83,6 +139,7 @@ impl OptionsPy {
             .optimize_universal_style_compaction(memtable_memory_budget)
     }
 
+    /// default is changed to True.
     pub fn create_if_missing(&mut self, create_if_missing: bool) {
         self.0.create_if_missing(create_if_missing)
     }
@@ -117,13 +174,18 @@ impl OptionsPy {
     //     self.0.set_env(env)
     // }
 
-    // pub fn set_compression_type(&mut self, t: DBCompressionType) {
-    //     self.0.set_compression_type(t)
-    // }
+    pub fn set_compression_type(&mut self, t: PyRef<DBCompressionTypePy>) {
+        self.0.set_compression_type(t.0)
+    }
 
-    // pub fn set_compression_per_level(&mut self, level_types: &[DBCompressionType]) {
-    //     self.0.set_compression_per_level(level_types])
-    // }
+    pub fn set_compression_per_level(&mut self, level_types: &PyList) -> PyResult<()> {
+        let mut db_level_types = Vec::with_capacity(level_types.len());
+        for t in level_types.iter() {
+            let l_type: &PyCell<DBCompressionTypePy> = PyTryFrom::try_from(t)?;
+            db_level_types.push(l_type.borrow().0)
+        }
+        Ok(self.0.set_compression_per_level(&db_level_types))
+    }
 
     pub fn set_compression_options(
         &mut self,
@@ -320,10 +382,10 @@ impl OptionsPy {
         self.0.set_level_zero_stop_writes_trigger(n)
     }
 
-    // pub fn set_compaction_style(&mut self, style: DBCompactionStyle) {
-    //     self.0.set_compaction_style(style)
-    // }
-    //
+    pub fn set_compaction_style(&mut self, style: PyRef<DBCompactionStylePy>) {
+        self.0.set_compaction_style(style.0)
+    }
+
     // pub fn set_universal_compaction_options(&mut self, uco: &UniversalCompactOptions) {
     //     self.0.set_universal_compaction_options(uco)
     // }
@@ -412,7 +474,7 @@ impl OptionsPy {
     }
 
     pub fn set_plain_table_factory(&mut self, options: PyRef<PlainTableFactoryOptionsPy>) {
-        self.0.set_plain_table_factory(&options.to_rocks())
+        self.0.set_plain_table_factory(&options.to_rust())
     }
 
     pub fn set_min_level_to_compress(&mut self, lvl: c_int) {
@@ -427,9 +489,9 @@ impl OptionsPy {
         self.0.set_max_total_wal_size(size)
     }
 
-    // pub fn set_wal_recovery_mode(&mut self, mode: DBRecoveryMode) {
-    //     self.0.set_wal_recovery_mode(mode)
-    // }
+    pub fn set_wal_recovery_mode(&mut self, mode: PyRef<DBRecoveryModePy>) {
+        self.0.set_wal_recovery_mode(mode.0)
+    }
 
     pub fn enable_statistics(&mut self) {
         self.0.enable_statistics()
@@ -567,6 +629,302 @@ impl OptionsPy {
 
     pub fn set_memtable_whole_key_filtering(&mut self, whole_key_filter: bool) {
         self.0.set_memtable_whole_key_filtering(whole_key_filter)
+    }
+}
+
+#[pymethods]
+impl WriteOptionsPy {
+    #[new]
+    pub fn new() -> Self {
+        WriteOptionsPy {
+            sync: false,
+            disable_wal: false,
+            ignore_missing_column_families: false,
+            no_slowdown: false,
+            low_pri: false,
+            memtable_insert_hint_per_batch: false,
+        }
+    }
+
+    /// Sets the sync mode. If true, the write will be flushed
+    /// from the operating system buffer cache before the write is considered complete.
+    /// If this flag is true, writes will be slower.
+    ///
+    /// Default: false
+    pub fn set_sync(&mut self, sync: bool) {
+        self.sync = sync
+    }
+
+    /// Sets whether WAL should be active or not.
+    /// If true, writes will not first go to the write ahead log,
+    /// and the write may got lost after a crash.
+    ///
+    /// Default: false
+    pub fn disable_wal(&mut self, disable: bool) {
+        self.disable_wal = disable
+    }
+
+    /// If true and if user is trying to write to column families that don't exist (they were dropped),
+    /// ignore the write (don't return an error). If there are multiple writes in a WriteBatch,
+    /// other writes will succeed.
+    ///
+    /// Default: false
+    pub fn set_ignore_missing_column_families(&mut self, ignore: bool) {
+        self.ignore_missing_column_families = ignore
+    }
+
+    /// If true and we need to wait or sleep for the write request, fails
+    /// immediately with Status::Incomplete().
+    ///
+    /// Default: false
+    pub fn set_no_slowdown(&mut self, no_slowdown: bool) {
+        self.no_slowdown = no_slowdown
+    }
+
+    /// If true, this write request is of lower priority if compaction is
+    /// behind. In this case, no_slowdown = true, the request will be cancelled
+    /// immediately with Status::Incomplete() returned. Otherwise, it will be
+    /// slowed down. The slowdown value is determined by RocksDB to guarantee
+    /// it introduces minimum impacts to high priority writes.
+    ///
+    /// Default: false
+    pub fn set_low_pri(&mut self, v: bool) {
+        self.low_pri = v
+    }
+
+    /// If true, writebatch will maintain the last insert positions of each
+    /// memtable as hints in concurrent write. It can improve write performance
+    /// in concurrent writes if keys in one writebatch are sequential. In
+    /// non-concurrent writes (when concurrent_memtable_writes is false) this
+    /// option will be ignored.
+    ///
+    /// Default: false
+    pub fn set_memtable_insert_hint_per_batch(&mut self, v: bool) {
+        self.memtable_insert_hint_per_batch = v
+    }
+}
+
+impl WriteOptionsPy {
+    pub(crate) fn to_rust(&self) -> WriteOptions {
+        let mut opt = WriteOptions::default();
+        opt.set_sync(self.sync);
+        opt.disable_wal(self.disable_wal);
+        opt.set_ignore_missing_column_families(self.ignore_missing_column_families);
+        opt.set_low_pri(self.low_pri);
+        opt.set_memtable_insert_hint_per_batch(self.memtable_insert_hint_per_batch);
+        opt.set_no_slowdown(self.no_slowdown);
+        opt
+    }
+}
+
+#[pymethods]
+impl FlushOptionsPy {
+    #[new]
+    pub fn new() -> Self {
+        FlushOptionsPy { wait: true }
+    }
+
+    pub fn set_wait(&mut self, wait: bool) {
+        self.wait = wait
+    }
+}
+
+impl FlushOptionsPy {
+    pub(crate) fn to_rust(&self) -> FlushOptions {
+        let mut opt = FlushOptions::default();
+        opt.set_wait(self.wait);
+        opt
+    }
+}
+
+#[pymethods]
+impl ReadOptionsPy {
+    #[new]
+    pub fn default() -> Self {
+        ReadOptionsPy(Some(ReadOptions::default()))
+    }
+
+    /// Specify whether the "data block"/"index block"/"filter block"
+    /// read for this iteration should be cached in memory?
+    /// Callers may wish to set this field to false for bulk scans.
+    ///
+    /// Default: true
+    pub fn fill_cache(&mut self, v: bool) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.fill_cache(v))
+        } else {
+            Err(PyException::new_err(
+                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
+            ))
+        }
+    }
+
+    /// Sets the upper bound for an iterator.
+    /// The upper bound itself is not included on the iteration result.
+    pub fn set_iterate_upper_bound(&mut self, key: &PyAny) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_iterate_upper_bound(encode_value(key)?))
+        } else {
+            Err(PyException::new_err(
+                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
+            ))
+        }
+    }
+
+    /// Sets the lower bound for an iterator.
+    pub fn set_iterate_lower_bound(&mut self, key: &PyAny) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_iterate_lower_bound(encode_value(key)?))
+        } else {
+            Err(PyException::new_err(
+                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
+            ))
+        }
+    }
+
+    /// Enforce that the iterator only iterates over the same
+    /// prefix as the seek.
+    /// This option is effective only for prefix seeks, i.e. prefix_extractor is
+    /// non-null for the column family and total_order_seek is false.  Unlike
+    /// iterate_upper_bound, prefix_same_as_start only works within a prefix
+    /// but in both directions.
+    ///
+    /// Default: false
+    pub fn set_prefix_same_as_start(&mut self, v: bool) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_prefix_same_as_start(v))
+        } else {
+            Err(PyException::new_err(
+                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
+            ))
+        }
+    }
+
+    /// Enable a total order seek regardless of index format (e.g. hash index)
+    /// used in the table. Some table format (e.g. plain table) may not support
+    /// this option.
+    ///
+    /// If true when calling Get(), we also skip prefix bloom when reading from
+    /// block based table. It provides a way to read existing data after
+    /// changing implementation of prefix extractor.
+    pub fn set_total_order_seek(&mut self, v: bool) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_total_order_seek(v))
+        } else {
+            Err(PyException::new_err(
+                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
+            ))
+        }
+    }
+
+    /// Sets a threshold for the number of keys that can be skipped
+    /// before failing an iterator seek as incomplete. The default value of 0 should be used to
+    /// never fail a request as incomplete, even on skipping too many keys.
+    ///
+    /// Default: 0
+    pub fn set_max_skippable_internal_keys(&mut self, num: u64) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_max_skippable_internal_keys(num))
+        } else {
+            Err(PyException::new_err(
+                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
+            ))
+        }
+    }
+
+    /// If true, when PurgeObsoleteFile is called in CleanupIteratorState, we schedule a background job
+    /// in the flush job queue and delete obsolete files in background.
+    ///
+    /// Default: false
+    pub fn set_background_purge_on_interator_cleanup(&mut self, v: bool) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_background_purge_on_interator_cleanup(v))
+        } else {
+            Err(PyException::new_err(
+                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
+            ))
+        }
+    }
+
+    /// If true, keys deleted using the DeleteRange() API will be visible to
+    /// readers until they are naturally deleted during compaction. This improves
+    /// read performance in DBs with many range deletions.
+    ///
+    /// Default: false
+    pub fn set_ignore_range_deletions(&mut self, v: bool) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_ignore_range_deletions(v))
+        } else {
+            Err(PyException::new_err(
+                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
+            ))
+        }
+    }
+
+    /// If true, all data read from underlying storage will be
+    /// verified against corresponding checksums.
+    ///
+    /// Default: true
+    pub fn set_verify_checksums(&mut self, v: bool) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_verify_checksums(v))
+        } else {
+            Err(PyException::new_err(
+                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
+            ))
+        }
+    }
+
+    /// If non-zero, an iterator will create a new table reader which
+    /// performs reads of the given size. Using a large size (> 2MB) can
+    /// improve the performance of forward iteration on spinning disks.
+    /// Default: 0
+    ///
+    /// ```
+    /// use rocksdb::{ReadOptions};
+    ///
+    /// let mut opts = ReadOptions::default();
+    /// opts.set_readahead_size(4_194_304); // 4mb
+    /// ```
+    pub fn set_readahead_size(&mut self, v: usize) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_readahead_size(v))
+        } else {
+            Err(PyException::new_err(
+                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
+            ))
+        }
+    }
+
+    /// If true, create a tailing iterator. Note that tailing iterators
+    /// only support moving in the forward direction. Iterating in reverse
+    /// or seek_to_last are not supported.
+    pub fn set_tailing(&mut self, v: bool) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_tailing(v))
+        } else {
+            Err(PyException::new_err(
+                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
+            ))
+        }
+    }
+
+    /// Specifies the value of "pin_data". If true, it keeps the blocks
+    /// loaded by the iterator pinned in memory as long as the iterator is not deleted,
+    /// If used when reading from tables created with
+    /// BlockBasedTableOptions::use_delta_encoding = false,
+    /// Iterator's property "rocksdb.iterator.is-key-pinned" is guaranteed to
+    /// return 1.
+    ///
+    /// Default: false
+    pub fn set_pin_data(&mut self, v: bool) -> PyResult<()> {
+        if let Some(opt) = &mut self.0 {
+            Ok(opt.set_pin_data(v))
+        } else {
+            Err(PyException::new_err(
+                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
+            ))
+        }
     }
 }
 
@@ -738,16 +1096,7 @@ impl PlainTableFactoryOptionsPy {
 }
 
 impl PlainTableFactoryOptionsPy {
-    /// Used with DBOptions::set_plain_table_factory.
-    /// See official [wiki](https://github.com/facebook/rocksdb/wiki/PlainTable-Format) for more
-    /// information.
-    ///
-    /// Defaults:
-    ///  user_key_length: 0 (variable length)
-    ///  bloom_bits_per_key: 10
-    ///  hash_table_ratio: 0.75
-    ///  index_sparseness: 16
-    pub(crate) fn to_rocks(&self) -> PlainTableFactoryOptions {
+    pub(crate) fn to_rust(&self) -> PlainTableFactoryOptions {
         PlainTableFactoryOptions {
             // One extra byte for python object type
             user_key_length: if self.user_key_length > 0 {
@@ -859,6 +1208,74 @@ impl DBPathPy {
             path: PathBuf::from(path),
             target_size,
         }
+    }
+}
+
+#[pymethods]
+impl DBCompressionTypePy {
+    #[staticmethod]
+    pub fn none_type() -> Self {
+        DBCompressionTypePy(DBCompressionType::None)
+    }
+    #[staticmethod]
+    pub fn snappy_type() -> Self {
+        DBCompressionTypePy(DBCompressionType::Snappy)
+    }
+    #[staticmethod]
+    pub fn zlib_type() -> Self {
+        DBCompressionTypePy(DBCompressionType::Zlib)
+    }
+    #[staticmethod]
+    pub fn bz2_type() -> Self {
+        DBCompressionTypePy(DBCompressionType::Bz2)
+    }
+    #[staticmethod]
+    pub fn lz4_type() -> Self {
+        DBCompressionTypePy(DBCompressionType::Lz4)
+    }
+    #[staticmethod]
+    pub fn lz4hc_type() -> Self {
+        DBCompressionTypePy(DBCompressionType::Lz4hc)
+    }
+    #[staticmethod]
+    pub fn zstd_type() -> Self {
+        DBCompressionTypePy(DBCompressionType::Zstd)
+    }
+}
+
+#[pymethods]
+impl DBCompactionStylePy {
+    #[staticmethod]
+    pub fn level_style() -> Self {
+        DBCompactionStylePy(DBCompactionStyle::Level)
+    }
+    #[staticmethod]
+    pub fn universal_style() -> Self {
+        DBCompactionStylePy(DBCompactionStyle::Universal)
+    }
+    #[staticmethod]
+    pub fn fifo_style() -> Self {
+        DBCompactionStylePy(DBCompactionStyle::Fifo)
+    }
+}
+
+#[pymethods]
+impl DBRecoveryModePy {
+    #[staticmethod]
+    pub fn tolerate_corrupted_tail_records_mode() -> Self {
+        DBRecoveryModePy(DBRecoveryMode::TolerateCorruptedTailRecords)
+    }
+    #[staticmethod]
+    pub fn absolute_consistency_mode() -> Self {
+        DBRecoveryModePy(DBRecoveryMode::AbsoluteConsistency)
+    }
+    #[staticmethod]
+    pub fn point_in_time_mode() -> Self {
+        DBRecoveryModePy(DBRecoveryMode::PointInTime)
+    }
+    #[staticmethod]
+    pub fn skip_any_corrupted_record_mode() -> Self {
+        DBRecoveryModePy(DBRecoveryMode::SkipAnyCorruptedRecord)
     }
 }
 

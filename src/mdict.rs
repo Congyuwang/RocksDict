@@ -2,6 +2,7 @@ use crate::encoder::{decode_value, encode_value};
 use ahash::AHashMap;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
+use pyo3::types::PyList;
 use pyo3::{PyAny, PyObject, PyResult, Python};
 use std::ops::{Deref, DerefMut};
 
@@ -29,7 +30,19 @@ impl Mdict {
         Mdict(AHashMap::new())
     }
 
+    /// support get_batch
     fn __getitem__(&self, key: &PyAny, py: Python) -> PyResult<PyObject> {
+        if let Ok(keys) = <PyList as PyTryFrom>::try_from(key) {
+            let result = PyList::empty(py);
+            // type annotation
+            for key in keys {
+                match self.get(&encode_value(key)?) {
+                    None => result.append(py.None())?,
+                    Some(slice) => result.append(decode_value(py, slice.as_ref())?)?,
+                }
+            }
+            return Ok(result.to_object(py));
+        }
         let key = encode_value(key)?;
         match self.get(&key[..]) {
             None => Err(PyException::new_err("key not found")),
