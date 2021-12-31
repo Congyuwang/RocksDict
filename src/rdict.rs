@@ -7,6 +7,8 @@ use rocksdb::{ReadOptions, WriteOptions, DB};
 use std::fs::create_dir_all;
 use std::ops::Deref;
 use std::path::Path;
+use std::sync::Arc;
+// use librocksdb_sys;
 
 ///
 /// A persistent on-disk dictionary. Supports string, int, float, bytes as key, values.
@@ -28,7 +30,7 @@ use std::path::Path;
 #[pyclass(name = "RdictInner")]
 #[pyo3(text_signature = "(path, options)")]
 pub(crate) struct Rdict {
-    db: Option<DB>,
+    db: Option<Arc<DB>>,
     write_opt: WriteOptions,
     flush_opt: FlushOptionsPy,
     read_opt: ReadOptions,
@@ -43,7 +45,7 @@ impl Rdict {
         match create_dir_all(path) {
             Ok(_) => match DB::open(&options.borrow(py).0, &path) {
                 Ok(db) => Ok(Rdict {
-                    db: Some(db),
+                    db: Some(Arc::new(db)),
                     write_opt: WriteOptions::default(),
                     flush_opt: FlushOptionsPy::new(),
                     read_opt: ReadOptions::default(),
@@ -108,13 +110,8 @@ impl Rdict {
     }
 
     #[pyo3(text_signature = "($self, read_opt)")]
-    fn set_read_options(&mut self, read_opt: &mut ReadOptionsPy) -> PyResult<()> {
-        match read_opt.0.take() {
-            None => Err(PyException::new_err(
-                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
-            )),
-            Some(opt) => Ok(self.read_opt = opt),
-        }
+    fn set_read_options(&mut self, read_opt: &ReadOptionsPy) {
+        self.read_opt = read_opt.into()
     }
 
     ///

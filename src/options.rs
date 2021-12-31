@@ -120,7 +120,32 @@ pub(crate) struct FlushOptionsPy {
 
 #[pyclass(name = "ReadOptions")]
 #[pyo3(text_signature = "()")]
-pub(crate) struct ReadOptionsPy(pub(crate) Option<ReadOptions>);
+pub(crate) struct ReadOptionsPy {
+    fill_cache: bool,
+    iterate_upper_bound: Option<Box<[u8]>>,
+    iterate_lower_bound: Option<Box<[u8]>>,
+    prefix_same_as_start: bool,
+    total_order_seek: bool,
+    max_skippable_internal_keys: u64,
+    background_purge_on_interator_cleanup: bool,
+    ignore_range_deletions: bool,
+    verify_checksums: bool,
+    readahead_size: usize,
+    tailing: bool,
+    pin_data: bool,
+}
+
+pub(crate) struct ReadOpt(*mut librocksdb_sys::rocksdb_readoptions_t);
+
+unsafe impl Send for ReadOpt {}
+
+unsafe impl Sync for ReadOpt {}
+
+impl Drop for ReadOpt {
+    fn drop(&mut self) {
+        unsafe { librocksdb_sys::rocksdb_readoptions_destroy(self.0) }
+    }
+}
 
 /// Defines the underlying memtable implementation.
 /// See official [wiki](https://github.com/facebook/rocksdb/wiki/MemTable) for more information.
@@ -940,14 +965,14 @@ impl OptionsPy {
 
     /// Sets the options needed to support Universal Style compactions.
     #[pyo3(text_signature = "($self, uco)")]
-    pub fn set_universal_compaction_options(&mut self, uco: PyRef<UniversalCompactOptionsPy>) {
-        self.0.set_universal_compaction_options(&uco.deref().into())
+    pub fn set_universal_compaction_options(&mut self, uco: &UniversalCompactOptionsPy) {
+        self.0.set_universal_compaction_options(&uco.into())
     }
 
     /// Sets the options for FIFO compaction style.
     #[pyo3(text_signature = "($self, fco)")]
-    pub fn set_fifo_compaction_options(&mut self, fco: PyRef<FifoCompactOptionsPy>) {
-        self.0.set_fifo_compaction_options(&fco.deref().into())
+    pub fn set_fifo_compaction_options(&mut self, fco: &FifoCompactOptionsPy) {
+        self.0.set_fifo_compaction_options(&fco.into())
     }
 
     /// Sets unordered_write to true trades higher write throughput with
@@ -1245,8 +1270,8 @@ impl OptionsPy {
     /// opts.set_plain_table_factory(factory_opts)
     /// ```
     #[pyo3(text_signature = "($self, options)")]
-    pub fn set_plain_table_factory(&mut self, options: PyRef<PlainTableFactoryOptionsPy>) {
-        self.0.set_plain_table_factory(&options.deref().into())
+    pub fn set_plain_table_factory(&mut self, options: &PlainTableFactoryOptionsPy) {
+        self.0.set_plain_table_factory(&options.into())
     }
 
     /// Sets the start level to use compression.
@@ -1775,7 +1800,20 @@ impl From<&FlushOptionsPy> for FlushOptions {
 impl ReadOptionsPy {
     #[new]
     pub fn default() -> Self {
-        ReadOptionsPy(Some(ReadOptions::default()))
+        Self {
+            fill_cache: true,
+            iterate_upper_bound: None,
+            iterate_lower_bound: None,
+            prefix_same_as_start: false,
+            total_order_seek: false,
+            max_skippable_internal_keys: 0,
+            background_purge_on_interator_cleanup: false,
+            ignore_range_deletions: false,
+            verify_checksums: true,
+            readahead_size: 0,
+            tailing: false,
+            pin_data: false
+        }
     }
 
     /// Specify whether the "data block"/"index block"/"filter block"
@@ -1784,39 +1822,21 @@ impl ReadOptionsPy {
     ///
     /// Default: true
     #[pyo3(text_signature = "($self, v)")]
-    pub fn fill_cache(&mut self, v: bool) -> PyResult<()> {
-        if let Some(opt) = &mut self.0 {
-            Ok(opt.fill_cache(v))
-        } else {
-            Err(PyException::new_err(
-                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
-            ))
-        }
+    pub fn fill_cache(&mut self, v: bool) {
+        self.fill_cache = v
     }
 
     /// Sets the upper bound for an iterator.
     /// The upper bound itself is not included on the iteration result.
     #[pyo3(text_signature = "($self, key)")]
     pub fn set_iterate_upper_bound(&mut self, key: &PyAny) -> PyResult<()> {
-        if let Some(opt) = &mut self.0 {
-            Ok(opt.set_iterate_upper_bound(encode_value(key)?))
-        } else {
-            Err(PyException::new_err(
-                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
-            ))
-        }
+        Ok(self.iterate_upper_bound = Some(encode_value(key)?))
     }
 
     /// Sets the lower bound for an iterator.
     #[pyo3(text_signature = "($self, key)")]
     pub fn set_iterate_lower_bound(&mut self, key: &PyAny) -> PyResult<()> {
-        if let Some(opt) = &mut self.0 {
-            Ok(opt.set_iterate_lower_bound(encode_value(key)?))
-        } else {
-            Err(PyException::new_err(
-                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
-            ))
-        }
+        Ok(self.iterate_lower_bound = Some(encode_value(key)?))
     }
 
     /// Enforce that the iterator only iterates over the same
@@ -1828,14 +1848,8 @@ impl ReadOptionsPy {
     ///
     /// Default: false
     #[pyo3(text_signature = "($self, v)")]
-    pub fn set_prefix_same_as_start(&mut self, v: bool) -> PyResult<()> {
-        if let Some(opt) = &mut self.0 {
-            Ok(opt.set_prefix_same_as_start(v))
-        } else {
-            Err(PyException::new_err(
-                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
-            ))
-        }
+    pub fn set_prefix_same_as_start(&mut self, v: bool) {
+        self.prefix_same_as_start = v
     }
 
     /// Enable a total order seek regardless of index format (e.g. hash index)
@@ -1846,14 +1860,8 @@ impl ReadOptionsPy {
     /// block based table. It provides a way to read existing data after
     /// changing implementation of prefix extractor.
     #[pyo3(text_signature = "($self, v)")]
-    pub fn set_total_order_seek(&mut self, v: bool) -> PyResult<()> {
-        if let Some(opt) = &mut self.0 {
-            Ok(opt.set_total_order_seek(v))
-        } else {
-            Err(PyException::new_err(
-                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
-            ))
-        }
+    pub fn set_total_order_seek(&mut self, v: bool) {
+        self.total_order_seek = v
     }
 
     /// Sets a threshold for the number of keys that can be skipped
@@ -1862,14 +1870,8 @@ impl ReadOptionsPy {
     ///
     /// Default: 0
     #[pyo3(text_signature = "($self, num)")]
-    pub fn set_max_skippable_internal_keys(&mut self, num: u64) -> PyResult<()> {
-        if let Some(opt) = &mut self.0 {
-            Ok(opt.set_max_skippable_internal_keys(num))
-        } else {
-            Err(PyException::new_err(
-                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
-            ))
-        }
+    pub fn set_max_skippable_internal_keys(&mut self, num: u64) {
+        self.max_skippable_internal_keys = num
     }
 
     /// If true, when PurgeObsoleteFile is called in CleanupIteratorState, we schedule a background job
@@ -1877,14 +1879,8 @@ impl ReadOptionsPy {
     ///
     /// Default: false
     #[pyo3(text_signature = "($self, v)")]
-    pub fn set_background_purge_on_interator_cleanup(&mut self, v: bool) -> PyResult<()> {
-        if let Some(opt) = &mut self.0 {
-            Ok(opt.set_background_purge_on_interator_cleanup(v))
-        } else {
-            Err(PyException::new_err(
-                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
-            ))
-        }
+    pub fn set_background_purge_on_interator_cleanup(&mut self, v: bool) {
+        self.background_purge_on_interator_cleanup = v
     }
 
     /// If true, keys deleted using the DeleteRange() API will be visible to
@@ -1893,14 +1889,8 @@ impl ReadOptionsPy {
     ///
     /// Default: false
     #[pyo3(text_signature = "($self, v)")]
-    pub fn set_ignore_range_deletions(&mut self, v: bool) -> PyResult<()> {
-        if let Some(opt) = &mut self.0 {
-            Ok(opt.set_ignore_range_deletions(v))
-        } else {
-            Err(PyException::new_err(
-                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
-            ))
-        }
+    pub fn set_ignore_range_deletions(&mut self, v: bool) {
+        self.ignore_range_deletions = v
     }
 
     /// If true, all data read from underlying storage will be
@@ -1908,14 +1898,8 @@ impl ReadOptionsPy {
     ///
     /// Default: true
     #[pyo3(text_signature = "($self, v)")]
-    pub fn set_verify_checksums(&mut self, v: bool) -> PyResult<()> {
-        if let Some(opt) = &mut self.0 {
-            Ok(opt.set_verify_checksums(v))
-        } else {
-            Err(PyException::new_err(
-                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
-            ))
-        }
+    pub fn set_verify_checksums(&mut self, v: bool) {
+        self.verify_checksums = v
     }
 
     /// If non-zero, an iterator will create a new table reader which
@@ -1930,28 +1914,16 @@ impl ReadOptionsPy {
     /// opts.set_readahead_size(4_194_304) # 4mb
     /// ```
     #[pyo3(text_signature = "($self, v)")]
-    pub fn set_readahead_size(&mut self, v: usize) -> PyResult<()> {
-        if let Some(opt) = &mut self.0 {
-            Ok(opt.set_readahead_size(v))
-        } else {
-            Err(PyException::new_err(
-                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
-            ))
-        }
+    pub fn set_readahead_size(&mut self, v: usize) {
+        self.readahead_size = v
     }
 
     /// If true, create a tailing iterator. Note that tailing iterators
     /// only support moving in the forward direction. Iterating in reverse
     /// or seek_to_last are not supported.
     #[pyo3(text_signature = "($self, v)")]
-    pub fn set_tailing(&mut self, v: bool) -> PyResult<()> {
-        if let Some(opt) = &mut self.0 {
-            Ok(opt.set_tailing(v))
-        } else {
-            Err(PyException::new_err(
-                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
-            ))
-        }
+    pub fn set_tailing(&mut self, v: bool) {
+        self.tailing = v
     }
 
     /// Specifies the value of "pin_data". If true, it keeps the blocks
@@ -1963,14 +1935,31 @@ impl ReadOptionsPy {
     ///
     /// Default: false
     #[pyo3(text_signature = "($self, v)")]
-    pub fn set_pin_data(&mut self, v: bool) -> PyResult<()> {
-        if let Some(opt) = &mut self.0 {
-            Ok(opt.set_pin_data(v))
-        } else {
-            Err(PyException::new_err(
-                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
-            ))
+    pub fn set_pin_data(&mut self, v: bool) {
+        self.pin_data = v
+    }
+}
+
+impl From<&ReadOptionsPy> for ReadOptions {
+    fn from(r_opt: &ReadOptionsPy) -> Self {
+        let mut opt = ReadOptions::default();
+        opt.fill_cache(r_opt.fill_cache);
+        if let Some(lower_bound) = &r_opt.iterate_lower_bound {
+            opt.set_iterate_lower_bound(lower_bound.clone());
         }
+        if let Some(upper_bound) = &r_opt.iterate_upper_bound {
+            opt.set_iterate_upper_bound(upper_bound.clone());
+        }
+        opt.set_prefix_same_as_start(r_opt.prefix_same_as_start);
+        opt.set_total_order_seek(r_opt.total_order_seek);
+        opt.set_max_skippable_internal_keys(r_opt.max_skippable_internal_keys);
+        opt.set_background_purge_on_interator_cleanup(r_opt.background_purge_on_interator_cleanup);
+        opt.set_ignore_range_deletions(r_opt.ignore_range_deletions);
+        opt.set_verify_checksums(r_opt.verify_checksums);
+        opt.set_readahead_size(r_opt.readahead_size);
+        opt.set_tailing(r_opt.tailing);
+        opt.set_pin_data(r_opt.pin_data);
+        opt
     }
 }
 
