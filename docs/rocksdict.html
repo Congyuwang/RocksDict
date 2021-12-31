@@ -645,16 +645,16 @@
                                 <a class="function" href="#PlainTableFactoryOptions.__init__">PlainTableFactoryOptions</a>
                         </li>
                         <li>
-                                <a class="variable" href="#PlainTableFactoryOptions.index_sparseness">index_sparseness</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#PlainTableFactoryOptions.hash_table_ratio">hash_table_ratio</a>
+                                <a class="variable" href="#PlainTableFactoryOptions.bloom_bits_per_key">bloom_bits_per_key</a>
                         </li>
                         <li>
                                 <a class="variable" href="#PlainTableFactoryOptions.user_key_length">user_key_length</a>
                         </li>
                         <li>
-                                <a class="variable" href="#PlainTableFactoryOptions.bloom_bits_per_key">bloom_bits_per_key</a>
+                                <a class="variable" href="#PlainTableFactoryOptions.hash_table_ratio">hash_table_ratio</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#PlainTableFactoryOptions.index_sparseness">index_sparseness</a>
                         </li>
                 </ul>
 
@@ -750,19 +750,19 @@
                                 <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.max_size_amplification_percent">max_size_amplification_percent</a>
+                                <a class="variable" href="#UniversalCompactOptions.max_merge_width">max_merge_width</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.min_merge_width">min_merge_width</a>
+                                <a class="variable" href="#UniversalCompactOptions.max_size_amplification_percent">max_size_amplification_percent</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.compression_size_percent">compression_size_percent</a>
+                                <a class="variable" href="#UniversalCompactOptions.min_merge_width">min_merge_width</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.max_merge_width">max_merge_width</a>
+                                <a class="variable" href="#UniversalCompactOptions.compression_size_percent">compression_size_percent</a>
                         </li>
                 </ul>
 
@@ -807,19 +807,19 @@
                                 <a class="function" href="#WriteOptions.set_memtable_insert_hint_per_batch">set_memtable_insert_hint_per_batch</a>
                         </li>
                         <li>
+                                <a class="variable" href="#WriteOptions.low_pri">low_pri</a>
+                        </li>
+                        <li>
                                 <a class="variable" href="#WriteOptions.memtable_insert_hint_per_batch">memtable_insert_hint_per_batch</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
                         </li>
                         <li>
                                 <a class="variable" href="#WriteOptions.no_slowdown">no_slowdown</a>
                         </li>
                         <li>
                                 <a class="variable" href="#WriteOptions.sync">sync</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#WriteOptions.low_pri">low_pri</a>
                         </li>
                 </ul>
 
@@ -979,10 +979,8 @@ rocksdict    </h1>
 
 
 <span class="k">class</span> <span class="nc">RdictItems</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">_Rdict</span><span class="p">):</span>
-        <span class="n">r_opt</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">()</span>
-        <span class="n">r_opt</span><span class="o">.</span><span class="n">set_total_order_seek</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">r_opt</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">inner</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -998,10 +996,8 @@ rocksdict    </h1>
 
 
 <span class="k">class</span> <span class="nc">RdictKeys</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">_Rdict</span><span class="p">):</span>
-        <span class="n">r_opt</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">()</span>
-        <span class="n">r_opt</span><span class="o">.</span><span class="n">set_total_order_seek</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">r_opt</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">inner</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1016,10 +1012,8 @@ rocksdict    </h1>
 
 
 <span class="k">class</span> <span class="nc">RdictValues</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">_Rdict</span><span class="p">):</span>
-        <span class="n">r_opt</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">()</span>
-        <span class="n">r_opt</span><span class="o">.</span><span class="n">set_total_order_seek</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">r_opt</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">inner</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1078,7 +1072,7 @@ rocksdict    </h1>
     <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]:</span>
+    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.items().</span>
 
 <span class="sd">        Examples:</span>
@@ -1106,9 +1100,9 @@ rocksdict    </h1>
 <span class="sd">        Returns: Iterator</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">RdictItems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">RdictItems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]:</span>
+    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.values().</span>
 
 <span class="sd">        Examples:</span>
@@ -1135,9 +1129,9 @@ rocksdict    </h1>
 <span class="sd">        Returns: Iterator</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">RdictValues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">RdictValues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.keys().</span>
 
 <span class="sd">        Examples:</span>
@@ -1164,9 +1158,9 @@ rocksdict    </h1>
 <span class="sd">        Returns: Iterator</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">RdictKeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">RdictKeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RdictIter</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">RdictIter</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Iterator for iterating over keys and values.</span>
 
 <span class="sd">        Examples:</span>
@@ -4704,19 +4698,10 @@ information.</p>
     
 
                             </div>
-                            <div id="PlainTableFactoryOptions.index_sparseness" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.index_sparseness">#&nbsp;&nbsp</a>
+                            <div id="PlainTableFactoryOptions.bloom_bits_per_key" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.bloom_bits_per_key">#&nbsp;&nbsp</a>
 
-        <span class="name">index_sparseness</span>
-    </div>
-
-    
-
-                            </div>
-                            <div id="PlainTableFactoryOptions.hash_table_ratio" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.hash_table_ratio">#&nbsp;&nbsp</a>
-
-        <span class="name">hash_table_ratio</span>
+        <span class="name">bloom_bits_per_key</span>
     </div>
 
     
@@ -4731,10 +4716,19 @@ information.</p>
     
 
                             </div>
-                            <div id="PlainTableFactoryOptions.bloom_bits_per_key" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.bloom_bits_per_key">#&nbsp;&nbsp</a>
+                            <div id="PlainTableFactoryOptions.hash_table_ratio" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.hash_table_ratio">#&nbsp;&nbsp</a>
 
-        <span class="name">bloom_bits_per_key</span>
+        <span class="name">hash_table_ratio</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="PlainTableFactoryOptions.index_sparseness" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.index_sparseness">#&nbsp;&nbsp</a>
+
+        <span class="name">index_sparseness</span>
     </div>
 
     
@@ -5202,19 +5196,19 @@ will be compressed iff
     
 
                             </div>
-                            <div id="UniversalCompactOptions.max_size_amplification_percent" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_size_amplification_percent">#&nbsp;&nbsp</a>
+                            <div id="UniversalCompactOptions.max_merge_width" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_merge_width">#&nbsp;&nbsp</a>
 
-        <span class="name">max_size_amplification_percent</span>
+        <span class="name">max_merge_width</span>
     </div>
 
     
 
                             </div>
-                            <div id="UniversalCompactOptions.min_merge_width" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.min_merge_width">#&nbsp;&nbsp</a>
+                            <div id="UniversalCompactOptions.max_size_amplification_percent" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_size_amplification_percent">#&nbsp;&nbsp</a>
 
-        <span class="name">min_merge_width</span>
+        <span class="name">max_size_amplification_percent</span>
     </div>
 
     
@@ -5229,19 +5223,19 @@ will be compressed iff
     
 
                             </div>
-                            <div id="UniversalCompactOptions.compression_size_percent" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.compression_size_percent">#&nbsp;&nbsp</a>
+                            <div id="UniversalCompactOptions.min_merge_width" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.min_merge_width">#&nbsp;&nbsp</a>
 
-        <span class="name">compression_size_percent</span>
+        <span class="name">min_merge_width</span>
     </div>
 
     
 
                             </div>
-                            <div id="UniversalCompactOptions.max_merge_width" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_merge_width">#&nbsp;&nbsp</a>
+                            <div id="UniversalCompactOptions.compression_size_percent" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.compression_size_percent">#&nbsp;&nbsp</a>
 
-        <span class="name">max_merge_width</span>
+        <span class="name">compression_size_percent</span>
     </div>
 
     
@@ -5457,10 +5451,28 @@ option will be ignored.</p>
 
 
                             </div>
+                            <div id="WriteOptions.low_pri" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.low_pri">#&nbsp;&nbsp</a>
+
+        <span class="name">low_pri</span>
+    </div>
+
+    
+
+                            </div>
                             <div id="WriteOptions.memtable_insert_hint_per_batch" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#WriteOptions.memtable_insert_hint_per_batch">#&nbsp;&nbsp</a>
 
         <span class="name">memtable_insert_hint_per_batch</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="WriteOptions.ignore_missing_column_families" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.ignore_missing_column_families">#&nbsp;&nbsp</a>
+
+        <span class="name">ignore_missing_column_families</span>
     </div>
 
     
@@ -5479,24 +5491,6 @@ option will be ignored.</p>
                                             <div class="attr variable"><a class="headerlink" href="#WriteOptions.sync">#&nbsp;&nbsp</a>
 
         <span class="name">sync</span>
-    </div>
-
-    
-
-                            </div>
-                            <div id="WriteOptions.ignore_missing_column_families" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.ignore_missing_column_families">#&nbsp;&nbsp</a>
-
-        <span class="name">ignore_missing_column_families</span>
-    </div>
-
-    
-
-                            </div>
-                            <div id="WriteOptions.low_pri" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.low_pri">#&nbsp;&nbsp</a>
-
-        <span class="name">low_pri</span>
     </div>
 
     
@@ -5559,7 +5553,7 @@ option will be ignored.</p>
     <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]:</span>
+    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.items().</span>
 
 <span class="sd">        Examples:</span>
@@ -5587,9 +5581,9 @@ option will be ignored.</p>
 <span class="sd">        Returns: Iterator</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">RdictItems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">RdictItems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]:</span>
+    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.values().</span>
 
 <span class="sd">        Examples:</span>
@@ -5616,9 +5610,9 @@ option will be ignored.</p>
 <span class="sd">        Returns: Iterator</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">RdictValues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">RdictValues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.keys().</span>
 
 <span class="sd">        Examples:</span>
@@ -5645,9 +5639,9 @@ option will be ignored.</p>
 <span class="sd">        Returns: Iterator</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">RdictKeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">RdictKeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RdictIter</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">RdictIter</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Iterator for iterating over keys and values.</span>
 
 <span class="sd">        Examples:</span>
@@ -5828,12 +5822,15 @@ option will be ignored.</p>
 
         
             <span class="def">def</span>
-            <span class="name">items</span><span class="signature">(self) -&gt; Iterator[Tuple[Union[str, int, float, bytes], Any]]</span>:
+            <span class="name">items</span><span class="signature">(
+    self,
+    read_opt: ReadOptions = &lt;builtins.ReadOptions object&gt;
+) -&gt; Iterator[Tuple[Union[str, int, float, bytes], Any]]</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]:</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.items().</span>
 
 <span class="sd">        Examples:</span>
@@ -5861,7 +5858,7 @@ option will be ignored.</p>
 <span class="sd">        Returns: Iterator</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">RdictItems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">RdictItems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">))</span>
 </pre></div>
 
         </details>
@@ -5902,12 +5899,15 @@ option will be ignored.</p>
 
         
             <span class="def">def</span>
-            <span class="name">values</span><span class="signature">(self) -&gt; Iterator[Union[str, int, float, bytes]]</span>:
+            <span class="name">values</span><span class="signature">(
+    self,
+    read_opt: ReadOptions = &lt;builtins.ReadOptions object&gt;
+) -&gt; Iterator[Union[str, int, float, bytes]]</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]:</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.values().</span>
 
 <span class="sd">        Examples:</span>
@@ -5934,7 +5934,7 @@ option will be ignored.</p>
 <span class="sd">        Returns: Iterator</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">RdictValues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">RdictValues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">))</span>
 </pre></div>
 
         </details>
@@ -5974,12 +5974,15 @@ option will be ignored.</p>
 
         
             <span class="def">def</span>
-            <span class="name">keys</span><span class="signature">(self) -&gt; Iterator[Any]</span>:
+            <span class="name">keys</span><span class="signature">(
+    self,
+    read_opt: ReadOptions = &lt;builtins.ReadOptions object&gt;
+) -&gt; Iterator[Any]</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.keys().</span>
 
 <span class="sd">        Examples:</span>
@@ -6006,7 +6009,7 @@ option will be ignored.</p>
 <span class="sd">        Returns: Iterator</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">RdictKeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">RdictKeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">))</span>
 </pre></div>
 
         </details>
@@ -6046,12 +6049,15 @@ option will be ignored.</p>
 
         
             <span class="def">def</span>
-            <span class="name">iter</span><span class="signature">(self, read_opt: ReadOptions) -&gt; RdictIter</span>:
+            <span class="name">iter</span><span class="signature">(
+    self,
+    read_opt: ReadOptions = &lt;builtins.ReadOptions object&gt;
+) -&gt; RdictIter</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RdictIter</span><span class="p">:</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">RdictIter</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Iterator for iterating over keys and values.</span>
 
 <span class="sd">        Examples:</span>
@@ -6499,10 +6505,8 @@ seek to key that lexicographically precedes it instead.</p>
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">RdictItems</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">_Rdict</span><span class="p">):</span>
-        <span class="n">r_opt</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">()</span>
-        <span class="n">r_opt</span><span class="o">.</span><span class="n">set_total_order_seek</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">r_opt</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">inner</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -6544,15 +6548,13 @@ For example, a generic mapping type might be defined as::</p>
                                         <div class="attr function"><a class="headerlink" href="#RdictItems.__init__">#&nbsp;&nbsp</a>
 
         
-            <span class="name">RdictItems</span><span class="signature">(d: RdictInner)</span>
+            <span class="name">RdictItems</span><span class="signature">(inner: RdictIter)</span>
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">_Rdict</span><span class="p">):</span>
-        <span class="n">r_opt</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">()</span>
-        <span class="n">r_opt</span><span class="o">.</span><span class="n">set_total_order_seek</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">r_opt</span><span class="p">)</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">inner</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
 </pre></div>
 
@@ -6574,10 +6576,8 @@ For example, a generic mapping type might be defined as::</p>
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">RdictKeys</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">_Rdict</span><span class="p">):</span>
-        <span class="n">r_opt</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">()</span>
-        <span class="n">r_opt</span><span class="o">.</span><span class="n">set_total_order_seek</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">r_opt</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">inner</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -6618,15 +6618,13 @@ For example, a generic mapping type might be defined as::</p>
                                         <div class="attr function"><a class="headerlink" href="#RdictKeys.__init__">#&nbsp;&nbsp</a>
 
         
-            <span class="name">RdictKeys</span><span class="signature">(d: RdictInner)</span>
+            <span class="name">RdictKeys</span><span class="signature">(inner: RdictIter)</span>
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">_Rdict</span><span class="p">):</span>
-        <span class="n">r_opt</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">()</span>
-        <span class="n">r_opt</span><span class="o">.</span><span class="n">set_total_order_seek</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">r_opt</span><span class="p">)</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">inner</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
 </pre></div>
 
@@ -6648,10 +6646,8 @@ For example, a generic mapping type might be defined as::</p>
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">RdictValues</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">_Rdict</span><span class="p">):</span>
-        <span class="n">r_opt</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">()</span>
-        <span class="n">r_opt</span><span class="o">.</span><span class="n">set_total_order_seek</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">r_opt</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">inner</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -6692,15 +6688,13 @@ For example, a generic mapping type might be defined as::</p>
                                         <div class="attr function"><a class="headerlink" href="#RdictValues.__init__">#&nbsp;&nbsp</a>
 
         
-            <span class="name">RdictValues</span><span class="signature">(d: RdictInner)</span>
+            <span class="name">RdictValues</span><span class="signature">(inner: RdictIter)</span>
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">_Rdict</span><span class="p">):</span>
-        <span class="n">r_opt</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">()</span>
-        <span class="n">r_opt</span><span class="o">.</span><span class="n">set_total_order_seek</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">r_opt</span><span class="p">)</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">inner</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
 </pre></div>
 
