@@ -32,10 +32,8 @@ __all__ = ["DataBlockIndexType",
 
 
 class RdictItems(Iterator[Tuple[Union[str, int, float, bytes], Any]]):
-    def __init__(self, d: _Rdict):
-        r_opt = ReadOptions()
-        r_opt.set_total_order_seek(True)
-        self.inner = d.iter(r_opt)
+    def __init__(self, inner: RdictIter):
+        self.inner = inner
         self.inner.seek_to_first()
 
     def __iter__(self):
@@ -51,10 +49,8 @@ class RdictItems(Iterator[Tuple[Union[str, int, float, bytes], Any]]):
 
 
 class RdictKeys(Iterator[Union[str, int, float, bytes]]):
-    def __init__(self, d: _Rdict):
-        r_opt = ReadOptions()
-        r_opt.set_total_order_seek(True)
-        self.inner = d.iter(r_opt)
+    def __init__(self, inner: RdictIter):
+        self.inner = inner
         self.inner.seek_to_first()
 
     def __iter__(self):
@@ -69,10 +65,8 @@ class RdictKeys(Iterator[Union[str, int, float, bytes]]):
 
 
 class RdictValues(Iterator[Any]):
-    def __init__(self, d: _Rdict):
-        r_opt = ReadOptions()
-        r_opt.set_total_order_seek(True)
-        self.inner = d.iter(r_opt)
+    def __init__(self, inner: RdictIter):
+        self.inner = inner
         self.inner.seek_to_first()
 
     def __iter__(self):
@@ -131,7 +125,7 @@ class Rdict:
     def __delitem__(self, key: Union[str, int, float, bytes]) -> None:
         del self._inner[key]
 
-    def items(self) -> Iterator[Tuple[Union[str, int, float, bytes], Any]]:
+    def items(self, read_opt: ReadOptions = ReadOptions()) -> Iterator[Tuple[Union[str, int, float, bytes], Any]]:
         """Similar to dict.items().
 
         Examples:
@@ -159,9 +153,9 @@ class Rdict:
         Returns: Iterator
 
         """
-        return RdictItems(self._inner)
+        return RdictItems(self._inner.iter(read_opt))
 
-    def values(self) -> Iterator[Union[str, int, float, bytes]]:
+    def values(self, read_opt: ReadOptions = ReadOptions()) -> Iterator[Union[str, int, float, bytes]]:
         """Similar to dict.values().
 
         Examples:
@@ -188,9 +182,9 @@ class Rdict:
         Returns: Iterator
 
         """
-        return RdictValues(self._inner)
+        return RdictValues(self._inner.iter(read_opt))
 
-    def keys(self) -> Iterator[Any]:
+    def keys(self, read_opt: ReadOptions = ReadOptions()) -> Iterator[Any]:
         """Similar to dict.keys().
 
         Examples:
@@ -217,9 +211,9 @@ class Rdict:
         Returns: Iterator
 
         """
-        return RdictKeys(self._inner)
+        return RdictKeys(self._inner.iter(read_opt))
 
-    def iter(self, read_opt: ReadOptions) -> RdictIter:
+    def iter(self, read_opt: ReadOptions = ReadOptions()) -> RdictIter:
         """Iterator for iterating over keys and values.
 
         Examples:
