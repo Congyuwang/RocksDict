@@ -127,7 +127,7 @@ pub(crate) struct ReadOptionsPy {
     prefix_same_as_start: bool,
     total_order_seek: bool,
     max_skippable_internal_keys: u64,
-    background_purge_on_interator_cleanup: bool,
+    background_purge_on_iterator_cleanup: bool,
     ignore_range_deletions: bool,
     verify_checksums: bool,
     readahead_size: usize,
@@ -1807,7 +1807,7 @@ impl ReadOptionsPy {
             prefix_same_as_start: false,
             total_order_seek: false,
             max_skippable_internal_keys: 0,
-            background_purge_on_interator_cleanup: false,
+            background_purge_on_iterator_cleanup: false,
             ignore_range_deletions: false,
             verify_checksums: true,
             readahead_size: 0,
@@ -1879,8 +1879,8 @@ impl ReadOptionsPy {
     ///
     /// Default: false
     #[pyo3(text_signature = "($self, v)")]
-    pub fn set_background_purge_on_interator_cleanup(&mut self, v: bool) {
-        self.background_purge_on_interator_cleanup = v
+    pub fn set_background_purge_on_iterator_cleanup(&mut self, v: bool) {
+        self.background_purge_on_iterator_cleanup = v
     }
 
     /// If true, keys deleted using the DeleteRange() API will be visible to
@@ -1953,7 +1953,7 @@ impl From<&ReadOptionsPy> for ReadOptions {
         opt.set_prefix_same_as_start(r_opt.prefix_same_as_start);
         opt.set_total_order_seek(r_opt.total_order_seek);
         opt.set_max_skippable_internal_keys(r_opt.max_skippable_internal_keys);
-        opt.set_background_purge_on_interator_cleanup(r_opt.background_purge_on_interator_cleanup);
+        opt.set_background_purge_on_iterator_cleanup(r_opt.background_purge_on_iterator_cleanup);
         opt.set_ignore_range_deletions(r_opt.ignore_range_deletions);
         opt.set_verify_checksums(r_opt.verify_checksums);
         opt.set_readahead_size(r_opt.readahead_size);
