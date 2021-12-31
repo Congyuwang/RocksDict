@@ -12,30 +12,11 @@ def randbytes(n):
     return getrandbits(n * 8).to_bytes(n, 'little')
 
 
-def compare_int_dicts(test_case: unittest.TestCase,
-                      ref_dict: dict,
-                      test_dict: Rdict,
-                      lower: int,
-                      upper: int):
-    # assert that the keys are the same
-    keys_ref = list(ref_dict.keys())
-    keys_ref.sort()
-    keys_test = [k for k in range(lower, upper) if k in test_dict]
-    test_case.assertEqual(keys_ref, keys_test)
-
-    # assert that the values are the same
-    for k, v in ref_dict.items():
-        test_case.assertTrue(k in test_dict)
-        test_case.assertEqual(test_dict[k], v)
-
-
 def compare_dicts(test_case: unittest.TestCase,
                   ref_dict: dict,
                   test_dict: Rdict):
     # assert that the values are the same
-    for k, v in ref_dict.items():
-        test_case.assertTrue(k in test_dict)
-        test_case.assertEqual(test_dict[k], v)
+    test_case.assertEqual({k: v for k, v in test_dict.items()}, ref_dict)
 
 
 class TestInt(unittest.TestCase):
@@ -59,7 +40,7 @@ class TestInt(unittest.TestCase):
             self.ref_dict[key] = value
             self.test_dict[key] = value
 
-        compare_int_dicts(self, self.ref_dict, self.test_dict, 0, TEST_INT_RANGE_UPPER)
+        compare_dicts(self, self.ref_dict, self.test_dict)
 
     def test_delete_integer(self):
         for i in range(5000):
@@ -68,13 +49,12 @@ class TestInt(unittest.TestCase):
                 del self.ref_dict[key]
                 del self.test_dict[key]
 
-        compare_int_dicts(self, self.ref_dict, self.test_dict, 0, TEST_INT_RANGE_UPPER)
+        compare_dicts(self, self.ref_dict, self.test_dict)
 
     def test_reopen(self):
         self.test_dict.close()
-        self.test_dict = None
         test_dict = Rdict("./temp_int", self.opt)
-        compare_int_dicts(self, self.ref_dict, test_dict, 0, TEST_INT_RANGE_UPPER)
+        compare_dicts(self, self.ref_dict, test_dict)
 
     def test_get_batch(self):
         keys = list(self.ref_dict.keys())[:100]
@@ -82,7 +62,7 @@ class TestInt(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        Rdict("./temp_int", cls.opt).destroy(cls.opt)
+        Rdict.destroy("./temp_int", cls.opt)
 
 
 class TestFloat(unittest.TestCase):
@@ -117,7 +97,6 @@ class TestFloat(unittest.TestCase):
 
     def test_reopen(self):
         self.test_dict.close()
-        self.test_dict = None
         test_dict = Rdict("./temp_float", self.opt)
         compare_dicts(self, self.ref_dict, test_dict)
 
@@ -127,7 +106,7 @@ class TestFloat(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        Rdict("./temp_float", cls.opt).destroy(cls.opt)
+        Rdict.destroy("./temp_float", cls.opt)
 
 
 class TestBytes(unittest.TestCase):
@@ -173,7 +152,6 @@ class TestBytes(unittest.TestCase):
 
     def test_reopen(self):
         self.test_dict.close()
-        self.test_dict = None
         test_dict = Rdict("./temp_bytes", self.opt)
         compare_dicts(self, self.ref_dict, test_dict)
 
@@ -183,7 +161,7 @@ class TestBytes(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        Rdict("./temp_bytes", cls.opt).destroy(cls.opt)
+        Rdict.destroy("./temp_bytes", cls.opt)
 
 
 class TestString(unittest.TestCase):
@@ -211,7 +189,8 @@ class TestString(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.test_dict.destroy(cls.opt)
+        del cls.test_dict
+        Rdict.destroy("./temp_string", cls.opt)
 
 
 if __name__ == '__main__':

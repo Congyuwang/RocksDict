@@ -263,9 +263,14 @@ class Rdict:
         return self._inner.iter(read_opt)
 
     def close(self) -> None:
-        """Flush the database.
+        """Flush memory to disk, and drop the database.
 
         Notes:
+            Setting Rdict to `None` does not always immediately close
+            the database depending on the garbage collector of python.
+            Calling `close()` is a more reliable method to ensure
+            that the database is correctly closed.
+
             The database would not be usable after `close()` is called.
             Calling method after `close()` will throw exception.
 

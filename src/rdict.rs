@@ -180,7 +180,13 @@ impl Rdict {
         }
     }
 
-    /// flush mem-table, drop database
+    /// Flush mem-table to disk, and drop database
+    ///
+    /// Setting dict to None does not always immediately close the database
+    /// depending on the garbage collector of python.
+    ///
+    /// Calling close() is a more reliable method to ensure that the database
+    /// is correctly closed.
     #[pyo3(text_signature = "($self)")]
     fn close(&mut self) -> PyResult<()> {
         if let Some(db) = &self.db {
