@@ -1,5 +1,5 @@
 use crate::encoder::{decode_value, encode_value};
-use crate::{FlushOptionsPy, OptionsPy, ReadOptionsPy, WriteOptionsPy};
+use crate::{FlushOptionsPy, OptionsPy, RdictIter, ReadOpt, ReadOptionsPy, WriteOptionsPy};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
@@ -7,6 +7,8 @@ use rocksdb::{ReadOptions, WriteOptions, DB};
 use std::fs::create_dir_all;
 use std::ops::Deref;
 use std::path::Path;
+use std::sync::Arc;
+use rocksdb::db::DBAccess;
 
 ///
 /// A persistent on-disk dictionary. Supports string, int, float, bytes as key, values.
@@ -28,7 +30,7 @@ use std::path::Path;
 #[pyclass(name = "RdictInner")]
 #[pyo3(text_signature = "(path, options)")]
 pub(crate) struct Rdict {
-    db: Option<DB>,
+    db: Option<Arc<DB>>,
     write_opt: WriteOptions,
     flush_opt: FlushOptionsPy,
     read_opt: ReadOptions,
@@ -43,7 +45,7 @@ impl Rdict {
         match create_dir_all(path) {
             Ok(_) => match DB::open(&options.borrow(py).0, &path) {
                 Ok(db) => Ok(Rdict {
-                    db: Some(db),
+                    db: Some(Arc::new(db)),
                     write_opt: WriteOptions::default(),
                     flush_opt: FlushOptionsPy::new(),
                     read_opt: ReadOptions::default(),
@@ -63,7 +65,8 @@ impl Rdict {
     /// ```python
     /// from rocksdict import Rdict, Options, WriteBatch, WriteOptions
     ///
-    /// db = Rdict("_path_for_rocksdb_storageY1", Options())
+    /// path = "_path_for_rocksdb_storageY1"
+    /// db = Rdict(path, Options())
     ///
     /// # set write options
     /// write_options = WriteOptions()
@@ -77,7 +80,8 @@ impl Rdict {
     /// db["key3"] = "value3"
     ///
     /// # remove db
-    /// db.destroy(Options())
+    /// del db
+    /// Rdict.destroy(path, Options())
     /// ```
     #[pyo3(text_signature = "($self, write_opt)")]
     fn set_write_options(&mut self, write_opt: PyRef<WriteOptionsPy>) {
@@ -100,7 +104,8 @@ impl Rdict {
     /// flush_options.set_wait(True)
     ///
     /// db.flush_opt(flush_options)
-    /// db.destroy(Options())
+    /// del db
+    /// Rdict.destroy(path, Options())
     /// ```
     #[pyo3(text_signature = "($self, flush_opt)")]
     fn set_flush_options(&mut self, flush_opt: PyRef<FlushOptionsPy>) {
@@ -108,13 +113,8 @@ impl Rdict {
     }
 
     #[pyo3(text_signature = "($self, read_opt)")]
-    fn set_read_options(&mut self, read_opt: &mut ReadOptionsPy) -> PyResult<()> {
-        match read_opt.0.take() {
-            None => Err(PyException::new_err(
-                "this `ReadOptions` instance is already consumed, create a new ReadOptions()",
-            )),
-            Some(opt) => Ok(self.read_opt = opt),
-        }
+    fn set_read_options(&mut self, read_opt: &ReadOptionsPy) {
+        self.read_opt = read_opt.into()
     }
 
     ///
@@ -198,15 +198,66 @@ impl Rdict {
     }
 
     /// destroy database
-    #[pyo3(text_signature = "($self, options)")]
-    fn destroy(&mut self, options: PyRef<OptionsPy>) -> PyResult<()> {
+    #[staticmethod]
+    #[pyo3(text_signature = "(path, options)")]
+    fn destroy(path: &str, options: PyRef<OptionsPy>) -> PyResult<()> {
+        match DB::destroy(&options.0, path) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(PyException::new_err(e.to_string())),
+        }
+    }
+
+    /// Iterate Over the Key-Value pairs.
+    ///
+    /// # Examples
+    ///
+    /// ```python
+    /// from rocksdict import Rdict, Options, ReadOptions
+    ///
+    /// path = "_path_for_rocksdb_storage5"
+    /// db = Rdict(path, Options())
+    ///
+    /// for i in range(50):
+    ///     db[i] = i ** 2
+    ///
+    /// iter = db.iter(ReadOptions())
+    ///
+    /// # Iterate all keys from the start in lexicographic order
+    /// iter.seek_to_first()
+    ///
+    /// j = 0
+    /// while iter.valid():
+    ///     assert iter.key() == j
+    ///     assert iter.value() == j ** 2
+    ///     print(f"{iter.key()} {iter.value()}")
+    ///     iter.next()
+    ///     j += 1
+    ///
+    /// # Read just the first key
+    /// iter.seek_to_first();
+    /// assert iter.key() == 0
+    /// assert iter.value() == 0
+    /// print(f"{iter.key()} {iter.value()}")
+    ///
+    /// iter.seek(25)
+    /// assert iter.key() == 25
+    /// assert iter.value() == 625
+    /// print(f"{iter.key()} {iter.value()}")
+    ///
+    /// del iter, db
+    /// Rdict.destroy(path, Options())
+    /// ```
+    #[pyo3(text_signature = "($self, read_opt)")]
+    fn iter(&self, read_opt: &ReadOptionsPy) -> PyResult<RdictIter> {
         if let Some(db) = &self.db {
-            let path = db.path().to_owned();
-            drop(self.db.take().unwrap());
-            match DB::destroy(&options.0, path) {
-                Ok(_) => Ok(()),
-                Err(e) => Err(PyException::new_err(e.to_string())),
-            }
+            let readopts: ReadOpt = read_opt.into();
+            Ok(unsafe {
+                RdictIter {
+                    db: db.clone(),
+                    inner: librocksdb_sys::rocksdb_create_iterator(db.inner(), readopts.0),
+                    readopts,
+                }
+            })
         } else {
             Err(PyException::new_err("DB already closed"))
         }

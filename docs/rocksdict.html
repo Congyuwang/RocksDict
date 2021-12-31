@@ -648,13 +648,13 @@
                                 <a class="variable" href="#PlainTableFactoryOptions.index_sparseness">index_sparseness</a>
                         </li>
                         <li>
-                                <a class="variable" href="#PlainTableFactoryOptions.bloom_bits_per_key">bloom_bits_per_key</a>
-                        </li>
-                        <li>
                                 <a class="variable" href="#PlainTableFactoryOptions.hash_table_ratio">hash_table_ratio</a>
                         </li>
                         <li>
                                 <a class="variable" href="#PlainTableFactoryOptions.user_key_length">user_key_length</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#PlainTableFactoryOptions.bloom_bits_per_key">bloom_bits_per_key</a>
                         </li>
                 </ul>
 
@@ -684,7 +684,7 @@
                                 <a class="function" href="#ReadOptions.set_max_skippable_internal_keys">set_max_skippable_internal_keys</a>
                         </li>
                         <li>
-                                <a class="function" href="#ReadOptions.set_background_purge_on_interator_cleanup">set_background_purge_on_interator_cleanup</a>
+                                <a class="function" href="#ReadOptions.set_background_purge_on_iterator_cleanup">set_background_purge_on_iterator_cleanup</a>
                         </li>
                         <li>
                                 <a class="function" href="#ReadOptions.set_ignore_range_deletions">set_ignore_range_deletions</a>
@@ -747,22 +747,22 @@
                                 <a class="function" href="#UniversalCompactOptions.set_stop_style">set_stop_style</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
+                                <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#UniversalCompactOptions.max_size_amplification_percent">max_size_amplification_percent</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.min_merge_width">min_merge_width</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
+                                <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.compression_size_percent">compression_size_percent</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.max_merge_width">max_merge_width</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#UniversalCompactOptions.max_size_amplification_percent">max_size_amplification_percent</a>
                         </li>
                 </ul>
 
@@ -807,12 +807,6 @@
                                 <a class="function" href="#WriteOptions.set_memtable_insert_hint_per_batch">set_memtable_insert_hint_per_batch</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.low_pri">low_pri</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
-                        </li>
-                        <li>
                                 <a class="variable" href="#WriteOptions.memtable_insert_hint_per_batch">memtable_insert_hint_per_batch</a>
                         </li>
                         <li>
@@ -820,6 +814,12 @@
                         </li>
                         <li>
                                 <a class="variable" href="#WriteOptions.sync">sync</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#WriteOptions.low_pri">low_pri</a>
                         </li>
                 </ul>
 
@@ -840,10 +840,88 @@
                                 <a class="function" href="#Rdict.set_read_options">set_read_options</a>
                         </li>
                         <li>
+                                <a class="function" href="#Rdict.items">items</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Rdict.values">values</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Rdict.keys">keys</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Rdict.iter">iter</a>
+                        </li>
+                        <li>
                                 <a class="function" href="#Rdict.close">close</a>
                         </li>
                         <li>
                                 <a class="function" href="#Rdict.destroy">destroy</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
+                    <a class="class" href="#RdictIter">RdictIter</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#RdictIter.__init__">RdictIter</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#RdictIter.valid">valid</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#RdictIter.status">status</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#RdictIter.seek_to_first">seek_to_first</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#RdictIter.seek_to_last">seek_to_last</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#RdictIter.seek">seek</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#RdictIter.seek_for_prev">seek_for_prev</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#RdictIter.next">next</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#RdictIter.prev">prev</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#RdictIter.key">key</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#RdictIter.value">value</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
+                    <a class="class" href="#RdictItems">RdictItems</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#RdictItems.__init__">RdictItems</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
+                    <a class="class" href="#RdictKeys">RdictKeys</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#RdictKeys.__init__">RdictKeys</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
+                    <a class="class" href="#RdictValues">RdictValues</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#RdictValues.__init__">RdictValues</a>
                         </li>
                 </ul>
 
@@ -871,8 +949,7 @@ rocksdict    </h1>
 <span class="kn">from</span> <span class="nn">.rocksdict</span> <span class="kn">import</span> <span class="n">RdictInner</span> <span class="k">as</span> <span class="n">_Rdict</span>
 <span class="kn">from</span> <span class="nn">.rocksdict</span> <span class="kn">import</span> <span class="n">Pickle</span> <span class="k">as</span> <span class="n">_Pickle</span>
 <span class="kn">import</span> <span class="nn">pickle</span> <span class="k">as</span> <span class="nn">_pkl</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Any</span>
-
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Iterator</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;DataBlockIndexType&quot;</span><span class="p">,</span>
            <span class="s2">&quot;BlockBasedIndexType&quot;</span><span class="p">,</span>
@@ -894,7 +971,66 @@ rocksdict    </h1>
            <span class="s2">&quot;UniversalCompactOptions&quot;</span><span class="p">,</span>
            <span class="s2">&quot;UniversalCompactionStopStyle&quot;</span><span class="p">,</span>
            <span class="s2">&quot;WriteOptions&quot;</span><span class="p">,</span>
-           <span class="s2">&quot;Rdict&quot;</span><span class="p">]</span>
+           <span class="s2">&quot;Rdict&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;RdictIter&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;RdictItems&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;RdictKeys&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;RdictValues&quot;</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">RdictItems</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">_Rdict</span><span class="p">):</span>
+        <span class="n">r_opt</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">()</span>
+        <span class="n">r_opt</span><span class="o">.</span><span class="n">set_total_order_seek</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">r_opt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">valid</span><span class="p">():</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">key</span><span class="p">()</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span>
+        <span class="k">raise</span> <span class="ne">StopIteration</span>
+
+
+<span class="k">class</span> <span class="nc">RdictKeys</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">_Rdict</span><span class="p">):</span>
+        <span class="n">r_opt</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">()</span>
+        <span class="n">r_opt</span><span class="o">.</span><span class="n">set_total_order_seek</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">r_opt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">valid</span><span class="p">():</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">key</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">k</span>
+        <span class="k">raise</span> <span class="ne">StopIteration</span>
+
+
+<span class="k">class</span> <span class="nc">RdictValues</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">_Rdict</span><span class="p">):</span>
+        <span class="n">r_opt</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">()</span>
+        <span class="n">r_opt</span><span class="o">.</span><span class="n">set_total_order_seek</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">r_opt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">valid</span><span class="p">():</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">v</span>
+        <span class="k">raise</span> <span class="ne">StopIteration</span>
 
 
 <span class="k">class</span> <span class="nc">Rdict</span><span class="p">:</span>
@@ -929,20 +1065,157 @@ rocksdict    </h1>
             <span class="k">return</span> <span class="n">_pkl</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">value</span>
 
-    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">value_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">str</span> <span class="ow">or</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">int</span> <span class="ow">or</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">float</span> <span class="ow">or</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">bytes</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_Pickle</span><span class="p">(</span><span class="n">_pkl</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span>
 
-    <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Similar to dict.items().</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">            ```python</span>
+<span class="sd">            from rocksdict import Rdict, Options, ReadOptions</span>
+
+<span class="sd">            path = &quot;_path_for_rocksdb_storage5&quot;</span>
+<span class="sd">            db = Rdict(path, Options())</span>
+
+<span class="sd">            for i in range(50):</span>
+<span class="sd">                db[i] = i ** 2</span>
+
+<span class="sd">            count = 0</span>
+<span class="sd">            for k, v in db.items():</span>
+<span class="sd">                assert k == count</span>
+<span class="sd">                assert v == k ** 2</span>
+<span class="sd">                count += 1</span>
+
+<span class="sd">            del db</span>
+<span class="sd">            Rdict.destroy(path, Options())</span>
+<span class="sd">            ```</span>
+
+<span class="sd">        Returns: Iterator</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">RdictItems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Similar to dict.values().</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">            ```python</span>
+<span class="sd">            from rocksdict import Rdict, Options, ReadOptions</span>
+
+<span class="sd">            path = &quot;_path_for_rocksdb_storage5&quot;</span>
+<span class="sd">            db = Rdict(path, Options())</span>
+
+<span class="sd">            for i in range(50):</span>
+<span class="sd">                db[i] = i ** 2</span>
+
+<span class="sd">            count = 0</span>
+<span class="sd">            for v in db.values():</span>
+<span class="sd">                assert v == count ** 2</span>
+<span class="sd">                count += 1</span>
+
+<span class="sd">            del db</span>
+<span class="sd">            Rdict.destroy(path, Options())</span>
+<span class="sd">            ```</span>
+
+<span class="sd">        Returns: Iterator</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">RdictValues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Similar to dict.keys().</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">            ```python</span>
+<span class="sd">            from rocksdict import Rdict, Options, ReadOptions</span>
+
+<span class="sd">            path = &quot;_path_for_rocksdb_storage5&quot;</span>
+<span class="sd">            db = Rdict(path, Options())</span>
+
+<span class="sd">            for i in range(50):</span>
+<span class="sd">                db[i] = i ** 2</span>
+
+<span class="sd">            count = 0</span>
+<span class="sd">            for v in db.keys():</span>
+<span class="sd">                assert v == count</span>
+<span class="sd">                count += 1</span>
+
+<span class="sd">            del db</span>
+<span class="sd">            Rdict.destroy(path, Options())</span>
+<span class="sd">            ```</span>
+
+<span class="sd">        Returns: Iterator</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">RdictKeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RdictIter</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Iterator for iterating over keys and values.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">            ```python</span>
+<span class="sd">            from rocksdict import Rdict, Options, ReadOptions</span>
+
+<span class="sd">            path = &quot;_path_for_rocksdb_storage5&quot;</span>
+<span class="sd">            db = Rdict(path, Options())</span>
+
+<span class="sd">            for i in range(50):</span>
+<span class="sd">                db[i] = i ** 2</span>
+
+<span class="sd">            iter = db.iter(ReadOptions())</span>
+
+<span class="sd">            iter.seek_to_first()</span>
+
+<span class="sd">            j = 0</span>
+<span class="sd">            while iter.valid():</span>
+<span class="sd">                assert iter.key() == j</span>
+<span class="sd">                assert iter.value() == j ** 2</span>
+<span class="sd">                print(f&quot;{iter.key()} {iter.value()}&quot;)</span>
+<span class="sd">                iter.next()</span>
+<span class="sd">                j += 1</span>
+
+<span class="sd">            iter.seek_to_first();</span>
+<span class="sd">            assert iter.key() == 0</span>
+<span class="sd">            assert iter.value() == 0</span>
+<span class="sd">            print(f&quot;{iter.key()} {iter.value()}&quot;)</span>
+
+<span class="sd">            iter.seek(25)</span>
+<span class="sd">            assert iter.key() == 25</span>
+<span class="sd">            assert iter.value() == 625</span>
+<span class="sd">            print(f&quot;{iter.key()} {iter.value()}&quot;)</span>
+
+<span class="sd">            del iter, db</span>
+<span class="sd">            Rdict.destroy(path, Options())</span>
+<span class="sd">            ```</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            read_opt: ReadOptions</span>
+
+<span class="sd">        Returns: Iterator</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Flush the database.</span>
 
 <span class="sd">        Notes:</span>
@@ -952,14 +1225,16 @@ rocksdict    </h1>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">destroy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">Options</span><span class="p">):</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">destroy</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">Options</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Delete the database.</span>
 
 <span class="sd">        Args:</span>
+<span class="sd">            path (str): path to this database</span>
 <span class="sd">            options (rocksdict.Options): Rocksdb options object</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+        <span class="n">_Rdict</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
 </pre></div>
 
         </details>
@@ -2114,7 +2389,8 @@ table file</p>
 <span class="n">flush_options</span><span class="o">.</span><span class="n">set_wait</span><span class="p">(</span><span class="n">true</span><span class="p">)</span>
 
 <span class="n">db</span><span class="o">.</span><span class="n">flush_opt</span><span class="p">(</span><span class="n">flush_options</span><span class="p">)</span>
-<span class="n">db</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">Options</span><span class="p">())</span>
+<span class="k">del</span> <span class="n">db</span>
+<span class="n">Rdict</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Options</span><span class="p">())</span>
 </code></pre></div>
 </div>
 
@@ -4437,15 +4713,6 @@ information.</p>
     
 
                             </div>
-                            <div id="PlainTableFactoryOptions.bloom_bits_per_key" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.bloom_bits_per_key">#&nbsp;&nbsp</a>
-
-        <span class="name">bloom_bits_per_key</span>
-    </div>
-
-    
-
-                            </div>
                             <div id="PlainTableFactoryOptions.hash_table_ratio" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.hash_table_ratio">#&nbsp;&nbsp</a>
 
@@ -4459,6 +4726,15 @@ information.</p>
                                             <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.user_key_length">#&nbsp;&nbsp</a>
 
         <span class="name">user_key_length</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="PlainTableFactoryOptions.bloom_bits_per_key" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.bloom_bits_per_key">#&nbsp;&nbsp</a>
+
+        <span class="name">bloom_bits_per_key</span>
     </div>
 
     
@@ -4594,12 +4870,12 @@ never fail a request as incomplete, even on skipping too many keys.</p>
 
 
                             </div>
-                            <div id="ReadOptions.set_background_purge_on_interator_cleanup" class="classattr">
-                                        <div class="attr function"><a class="headerlink" href="#ReadOptions.set_background_purge_on_interator_cleanup">#&nbsp;&nbsp</a>
+                            <div id="ReadOptions.set_background_purge_on_iterator_cleanup" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#ReadOptions.set_background_purge_on_iterator_cleanup">#&nbsp;&nbsp</a>
 
         
             <span class="def">def</span>
-            <span class="name">set_background_purge_on_interator_cleanup</span><span class="signature">(self, /, v)</span>:
+            <span class="name">set_background_purge_on_iterator_cleanup</span><span class="signature">(self, /, v)</span>:
     </div>
 
         
@@ -4917,10 +5193,19 @@ will be compressed iff
 
 
                             </div>
-                            <div id="UniversalCompactOptions.stop_style" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.stop_style">#&nbsp;&nbsp</a>
+                            <div id="UniversalCompactOptions.size_ratio" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.size_ratio">#&nbsp;&nbsp</a>
 
-        <span class="name">stop_style</span>
+        <span class="name">size_ratio</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="UniversalCompactOptions.max_size_amplification_percent" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_size_amplification_percent">#&nbsp;&nbsp</a>
+
+        <span class="name">max_size_amplification_percent</span>
     </div>
 
     
@@ -4935,10 +5220,10 @@ will be compressed iff
     
 
                             </div>
-                            <div id="UniversalCompactOptions.size_ratio" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.size_ratio">#&nbsp;&nbsp</a>
+                            <div id="UniversalCompactOptions.stop_style" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.stop_style">#&nbsp;&nbsp</a>
 
-        <span class="name">size_ratio</span>
+        <span class="name">stop_style</span>
     </div>
 
     
@@ -4957,15 +5242,6 @@ will be compressed iff
                                             <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_merge_width">#&nbsp;&nbsp</a>
 
         <span class="name">max_merge_width</span>
-    </div>
-
-    
-
-                            </div>
-                            <div id="UniversalCompactOptions.max_size_amplification_percent" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_size_amplification_percent">#&nbsp;&nbsp</a>
-
-        <span class="name">max_size_amplification_percent</span>
     </div>
 
     
@@ -5038,7 +5314,8 @@ will be compressed iff
 
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">rocksdict</span> <span class="kn">import</span> <span class="n">Rdict</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">WriteBatch</span><span class="p">,</span> <span class="n">WriteOptions</span>
 
-<span class="n">db</span> <span class="o">=</span> <span class="n">Rdict</span><span class="p">(</span><span class="s2">&quot;_path_for_rocksdb_storageY1&quot;</span><span class="p">,</span> <span class="n">Options</span><span class="p">())</span>
+<span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;_path_for_rocksdb_storageY1&quot;</span>
+<span class="n">db</span> <span class="o">=</span> <span class="n">Rdict</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Options</span><span class="p">())</span>
 
 <span class="c1"># set write options</span>
 <span class="n">write_options</span> <span class="o">=</span> <span class="n">WriteOptions</span><span class="p">()</span>
@@ -5052,7 +5329,8 @@ will be compressed iff
 <span class="n">db</span><span class="p">[</span><span class="s2">&quot;key3&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;value3&quot;</span>
 
 <span class="c1"># remove db</span>
-<span class="n">db</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">Options</span><span class="p">())</span>
+<span class="k">del</span> <span class="n">db</span>
+<span class="n">Rdict</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Options</span><span class="p">())</span>
 </code></pre></div>
 </div>
 
@@ -5179,24 +5457,6 @@ option will be ignored.</p>
 
 
                             </div>
-                            <div id="WriteOptions.low_pri" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.low_pri">#&nbsp;&nbsp</a>
-
-        <span class="name">low_pri</span>
-    </div>
-
-    
-
-                            </div>
-                            <div id="WriteOptions.ignore_missing_column_families" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.ignore_missing_column_families">#&nbsp;&nbsp</a>
-
-        <span class="name">ignore_missing_column_families</span>
-    </div>
-
-    
-
-                            </div>
                             <div id="WriteOptions.memtable_insert_hint_per_batch" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#WriteOptions.memtable_insert_hint_per_batch">#&nbsp;&nbsp</a>
 
@@ -5219,6 +5479,24 @@ option will be ignored.</p>
                                             <div class="attr variable"><a class="headerlink" href="#WriteOptions.sync">#&nbsp;&nbsp</a>
 
         <span class="name">sync</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="WriteOptions.ignore_missing_column_families" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.ignore_missing_column_families">#&nbsp;&nbsp</a>
+
+        <span class="name">ignore_missing_column_families</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="WriteOptions.low_pri" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.low_pri">#&nbsp;&nbsp</a>
+
+        <span class="name">low_pri</span>
     </div>
 
     
@@ -5268,20 +5546,157 @@ option will be ignored.</p>
             <span class="k">return</span> <span class="n">_pkl</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">value</span>
 
-    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">value_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">str</span> <span class="ow">or</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">int</span> <span class="ow">or</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">float</span> <span class="ow">or</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">bytes</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_Pickle</span><span class="p">(</span><span class="n">_pkl</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span>
 
-    <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Similar to dict.items().</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">            ```python</span>
+<span class="sd">            from rocksdict import Rdict, Options, ReadOptions</span>
+
+<span class="sd">            path = &quot;_path_for_rocksdb_storage5&quot;</span>
+<span class="sd">            db = Rdict(path, Options())</span>
+
+<span class="sd">            for i in range(50):</span>
+<span class="sd">                db[i] = i ** 2</span>
+
+<span class="sd">            count = 0</span>
+<span class="sd">            for k, v in db.items():</span>
+<span class="sd">                assert k == count</span>
+<span class="sd">                assert v == k ** 2</span>
+<span class="sd">                count += 1</span>
+
+<span class="sd">            del db</span>
+<span class="sd">            Rdict.destroy(path, Options())</span>
+<span class="sd">            ```</span>
+
+<span class="sd">        Returns: Iterator</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">RdictItems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Similar to dict.values().</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">            ```python</span>
+<span class="sd">            from rocksdict import Rdict, Options, ReadOptions</span>
+
+<span class="sd">            path = &quot;_path_for_rocksdb_storage5&quot;</span>
+<span class="sd">            db = Rdict(path, Options())</span>
+
+<span class="sd">            for i in range(50):</span>
+<span class="sd">                db[i] = i ** 2</span>
+
+<span class="sd">            count = 0</span>
+<span class="sd">            for v in db.values():</span>
+<span class="sd">                assert v == count ** 2</span>
+<span class="sd">                count += 1</span>
+
+<span class="sd">            del db</span>
+<span class="sd">            Rdict.destroy(path, Options())</span>
+<span class="sd">            ```</span>
+
+<span class="sd">        Returns: Iterator</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">RdictValues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Similar to dict.keys().</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">            ```python</span>
+<span class="sd">            from rocksdict import Rdict, Options, ReadOptions</span>
+
+<span class="sd">            path = &quot;_path_for_rocksdb_storage5&quot;</span>
+<span class="sd">            db = Rdict(path, Options())</span>
+
+<span class="sd">            for i in range(50):</span>
+<span class="sd">                db[i] = i ** 2</span>
+
+<span class="sd">            count = 0</span>
+<span class="sd">            for v in db.keys():</span>
+<span class="sd">                assert v == count</span>
+<span class="sd">                count += 1</span>
+
+<span class="sd">            del db</span>
+<span class="sd">            Rdict.destroy(path, Options())</span>
+<span class="sd">            ```</span>
+
+<span class="sd">        Returns: Iterator</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">RdictKeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RdictIter</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Iterator for iterating over keys and values.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">            ```python</span>
+<span class="sd">            from rocksdict import Rdict, Options, ReadOptions</span>
+
+<span class="sd">            path = &quot;_path_for_rocksdb_storage5&quot;</span>
+<span class="sd">            db = Rdict(path, Options())</span>
+
+<span class="sd">            for i in range(50):</span>
+<span class="sd">                db[i] = i ** 2</span>
+
+<span class="sd">            iter = db.iter(ReadOptions())</span>
+
+<span class="sd">            iter.seek_to_first()</span>
+
+<span class="sd">            j = 0</span>
+<span class="sd">            while iter.valid():</span>
+<span class="sd">                assert iter.key() == j</span>
+<span class="sd">                assert iter.value() == j ** 2</span>
+<span class="sd">                print(f&quot;{iter.key()} {iter.value()}&quot;)</span>
+<span class="sd">                iter.next()</span>
+<span class="sd">                j += 1</span>
+
+<span class="sd">            iter.seek_to_first();</span>
+<span class="sd">            assert iter.key() == 0</span>
+<span class="sd">            assert iter.value() == 0</span>
+<span class="sd">            print(f&quot;{iter.key()} {iter.value()}&quot;)</span>
+
+<span class="sd">            iter.seek(25)</span>
+<span class="sd">            assert iter.key() == 25</span>
+<span class="sd">            assert iter.value() == 625</span>
+<span class="sd">            print(f&quot;{iter.key()} {iter.value()}&quot;)</span>
+
+<span class="sd">            del iter, db</span>
+<span class="sd">            Rdict.destroy(path, Options())</span>
+<span class="sd">            ```</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            read_opt: ReadOptions</span>
+
+<span class="sd">        Returns: Iterator</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Flush the database.</span>
 
 <span class="sd">        Notes:</span>
@@ -5291,14 +5706,16 @@ option will be ignored.</p>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">destroy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">Options</span><span class="p">):</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">destroy</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">Options</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Delete the database.</span>
 
 <span class="sd">        Args:</span>
+<span class="sd">            path (str): path to this database</span>
 <span class="sd">            options (rocksdict.Options): Rocksdb options object</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+        <span class="n">_Rdict</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
 </pre></div>
 
         </details>
@@ -5406,17 +5823,350 @@ option will be ignored.</p>
 
 
                             </div>
+                            <div id="Rdict.items" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.items">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">items</span><span class="signature">(self) -&gt; Iterator[Tuple[Union[str, int, float, bytes], Any]]</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Similar to dict.items().</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">            ```python</span>
+<span class="sd">            from rocksdict import Rdict, Options, ReadOptions</span>
+
+<span class="sd">            path = &quot;_path_for_rocksdb_storage5&quot;</span>
+<span class="sd">            db = Rdict(path, Options())</span>
+
+<span class="sd">            for i in range(50):</span>
+<span class="sd">                db[i] = i ** 2</span>
+
+<span class="sd">            count = 0</span>
+<span class="sd">            for k, v in db.items():</span>
+<span class="sd">                assert k == count</span>
+<span class="sd">                assert v == k ** 2</span>
+<span class="sd">                count += 1</span>
+
+<span class="sd">            del db</span>
+<span class="sd">            Rdict.destroy(path, Options())</span>
+<span class="sd">            ```</span>
+
+<span class="sd">        Returns: Iterator</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">RdictItems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">)</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Similar to dict.items().</p>
+
+<h6 id="examples">Examples</h6>
+
+<blockquote>
+  <p>::</p>
+  
+  <div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">rocksdict</span> <span class="kn">import</span> <span class="n">Rdict</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">ReadOptions</span>
+
+<span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;_path_for_rocksdb_storage5&quot;</span>
+<span class="n">db</span> <span class="o">=</span> <span class="n">Rdict</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Options</span><span class="p">())</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">50</span><span class="p">):</span>
+    <span class="n">db</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span> <span class="o">**</span> <span class="mi">2</span>
+
+<span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">db</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="k">assert</span> <span class="n">k</span> <span class="o">==</span> <span class="n">count</span>
+    <span class="k">assert</span> <span class="n">v</span> <span class="o">==</span> <span class="n">k</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="k">del</span> <span class="n">db</span>
+<span class="n">Rdict</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Options</span><span class="p">())</span>
+</code></pre></div>
+</blockquote>
+
+<p>Returns: Iterator</p>
+</div>
+
+
+                            </div>
+                            <div id="Rdict.values" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.values">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">values</span><span class="signature">(self) -&gt; Iterator[Union[str, int, float, bytes]]</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Similar to dict.values().</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">            ```python</span>
+<span class="sd">            from rocksdict import Rdict, Options, ReadOptions</span>
+
+<span class="sd">            path = &quot;_path_for_rocksdb_storage5&quot;</span>
+<span class="sd">            db = Rdict(path, Options())</span>
+
+<span class="sd">            for i in range(50):</span>
+<span class="sd">                db[i] = i ** 2</span>
+
+<span class="sd">            count = 0</span>
+<span class="sd">            for v in db.values():</span>
+<span class="sd">                assert v == count ** 2</span>
+<span class="sd">                count += 1</span>
+
+<span class="sd">            del db</span>
+<span class="sd">            Rdict.destroy(path, Options())</span>
+<span class="sd">            ```</span>
+
+<span class="sd">        Returns: Iterator</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">RdictValues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">)</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Similar to dict.values().</p>
+
+<h6 id="examples">Examples</h6>
+
+<blockquote>
+  <p>::</p>
+  
+  <div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">rocksdict</span> <span class="kn">import</span> <span class="n">Rdict</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">ReadOptions</span>
+
+<span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;_path_for_rocksdb_storage5&quot;</span>
+<span class="n">db</span> <span class="o">=</span> <span class="n">Rdict</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Options</span><span class="p">())</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">50</span><span class="p">):</span>
+    <span class="n">db</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span> <span class="o">**</span> <span class="mi">2</span>
+
+<span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">db</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+    <span class="k">assert</span> <span class="n">v</span> <span class="o">==</span> <span class="n">count</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="k">del</span> <span class="n">db</span>
+<span class="n">Rdict</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Options</span><span class="p">())</span>
+</code></pre></div>
+</blockquote>
+
+<p>Returns: Iterator</p>
+</div>
+
+
+                            </div>
+                            <div id="Rdict.keys" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.keys">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">keys</span><span class="signature">(self) -&gt; Iterator[Any]</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Similar to dict.keys().</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">            ```python</span>
+<span class="sd">            from rocksdict import Rdict, Options, ReadOptions</span>
+
+<span class="sd">            path = &quot;_path_for_rocksdb_storage5&quot;</span>
+<span class="sd">            db = Rdict(path, Options())</span>
+
+<span class="sd">            for i in range(50):</span>
+<span class="sd">                db[i] = i ** 2</span>
+
+<span class="sd">            count = 0</span>
+<span class="sd">            for v in db.keys():</span>
+<span class="sd">                assert v == count</span>
+<span class="sd">                count += 1</span>
+
+<span class="sd">            del db</span>
+<span class="sd">            Rdict.destroy(path, Options())</span>
+<span class="sd">            ```</span>
+
+<span class="sd">        Returns: Iterator</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">RdictKeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">)</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Similar to dict.keys().</p>
+
+<h6 id="examples">Examples</h6>
+
+<blockquote>
+  <p>::</p>
+  
+  <div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">rocksdict</span> <span class="kn">import</span> <span class="n">Rdict</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">ReadOptions</span>
+
+<span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;_path_for_rocksdb_storage5&quot;</span>
+<span class="n">db</span> <span class="o">=</span> <span class="n">Rdict</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Options</span><span class="p">())</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">50</span><span class="p">):</span>
+    <span class="n">db</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span> <span class="o">**</span> <span class="mi">2</span>
+
+<span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">db</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+    <span class="k">assert</span> <span class="n">v</span> <span class="o">==</span> <span class="n">count</span>
+    <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="k">del</span> <span class="n">db</span>
+<span class="n">Rdict</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Options</span><span class="p">())</span>
+</code></pre></div>
+</blockquote>
+
+<p>Returns: Iterator</p>
+</div>
+
+
+                            </div>
+                            <div id="Rdict.iter" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.iter">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">iter</span><span class="signature">(self, read_opt: ReadOptions) -&gt; RdictIter</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RdictIter</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Iterator for iterating over keys and values.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">            ```python</span>
+<span class="sd">            from rocksdict import Rdict, Options, ReadOptions</span>
+
+<span class="sd">            path = &quot;_path_for_rocksdb_storage5&quot;</span>
+<span class="sd">            db = Rdict(path, Options())</span>
+
+<span class="sd">            for i in range(50):</span>
+<span class="sd">                db[i] = i ** 2</span>
+
+<span class="sd">            iter = db.iter(ReadOptions())</span>
+
+<span class="sd">            iter.seek_to_first()</span>
+
+<span class="sd">            j = 0</span>
+<span class="sd">            while iter.valid():</span>
+<span class="sd">                assert iter.key() == j</span>
+<span class="sd">                assert iter.value() == j ** 2</span>
+<span class="sd">                print(f&quot;{iter.key()} {iter.value()}&quot;)</span>
+<span class="sd">                iter.next()</span>
+<span class="sd">                j += 1</span>
+
+<span class="sd">            iter.seek_to_first();</span>
+<span class="sd">            assert iter.key() == 0</span>
+<span class="sd">            assert iter.value() == 0</span>
+<span class="sd">            print(f&quot;{iter.key()} {iter.value()}&quot;)</span>
+
+<span class="sd">            iter.seek(25)</span>
+<span class="sd">            assert iter.key() == 25</span>
+<span class="sd">            assert iter.value() == 625</span>
+<span class="sd">            print(f&quot;{iter.key()} {iter.value()}&quot;)</span>
+
+<span class="sd">            del iter, db</span>
+<span class="sd">            Rdict.destroy(path, Options())</span>
+<span class="sd">            ```</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            read_opt: ReadOptions</span>
+
+<span class="sd">        Returns: Iterator</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">)</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Iterator for iterating over keys and values.</p>
+
+<h6 id="examples">Examples</h6>
+
+<blockquote>
+  <p>::</p>
+  
+  <div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">rocksdict</span> <span class="kn">import</span> <span class="n">Rdict</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">ReadOptions</span>
+
+<span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;_path_for_rocksdb_storage5&quot;</span>
+<span class="n">db</span> <span class="o">=</span> <span class="n">Rdict</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Options</span><span class="p">())</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">50</span><span class="p">):</span>
+    <span class="n">db</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span> <span class="o">**</span> <span class="mi">2</span>
+
+<span class="nb">iter</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">ReadOptions</span><span class="p">())</span>
+
+<span class="nb">iter</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+
+<span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">while</span> <span class="nb">iter</span><span class="o">.</span><span class="n">valid</span><span class="p">():</span>
+    <span class="k">assert</span> <span class="nb">iter</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">j</span>
+    <span class="k">assert</span> <span class="nb">iter</span><span class="o">.</span><span class="n">value</span><span class="p">()</span> <span class="o">==</span> <span class="n">j</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">iter</span><span class="o">.</span><span class="n">key</span><span class="p">()</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">iter</span><span class="o">.</span><span class="n">value</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">iter</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+    <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="nb">iter</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">();</span>
+<span class="k">assert</span> <span class="nb">iter</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span>
+<span class="k">assert</span> <span class="nb">iter</span><span class="o">.</span><span class="n">value</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">iter</span><span class="o">.</span><span class="n">key</span><span class="p">()</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">iter</span><span class="o">.</span><span class="n">value</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="nb">iter</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">iter</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="mi">25</span>
+<span class="k">assert</span> <span class="nb">iter</span><span class="o">.</span><span class="n">value</span><span class="p">()</span> <span class="o">==</span> <span class="mi">625</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">iter</span><span class="o">.</span><span class="n">key</span><span class="p">()</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">iter</span><span class="o">.</span><span class="n">value</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">del</span> <span class="nb">iter</span><span class="p">,</span> <span class="n">db</span>
+<span class="n">Rdict</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Options</span><span class="p">())</span>
+</code></pre></div>
+</blockquote>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>read_opt:</strong>  ReadOptions</li>
+</ul>
+
+<p>Returns: Iterator</p>
+</div>
+
+
+                            </div>
                             <div id="Rdict.close" class="classattr">
                                         <div class="attr function"><a class="headerlink" href="#Rdict.close">#&nbsp;&nbsp</a>
 
         
             <span class="def">def</span>
-            <span class="name">close</span><span class="signature">(self)</span>:
+            <span class="name">close</span><span class="signature">(self) -&gt; None</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Flush the database.</span>
 
 <span class="sd">        Notes:</span>
@@ -5444,21 +6194,24 @@ option will be ignored.</p>
                             <div id="Rdict.destroy" class="classattr">
                                         <div class="attr function"><a class="headerlink" href="#Rdict.destroy">#&nbsp;&nbsp</a>
 
-        
+                <div class="decorator">@staticmethod</div>
+
             <span class="def">def</span>
-            <span class="name">destroy</span><span class="signature">(self, options: Options)</span>:
+            <span class="name">destroy</span><span class="signature">(path: str, options: Options) -&gt; None</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">destroy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">Options</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">destroy</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">Options</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Delete the database.</span>
 
 <span class="sd">        Args:</span>
+<span class="sd">            path (str): path to this database</span>
 <span class="sd">            options (rocksdict.Options): Rocksdb options object</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+        <span class="n">_Rdict</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
 </pre></div>
 
         </details>
@@ -5468,10 +6221,492 @@ option will be ignored.</p>
 <h6 id="args">Args</h6>
 
 <ul>
+<li><strong>path (str):</strong>  path to this database</li>
 <li><strong>options (<a href="#Options">rocksdict.Options</a>):</strong>  Rocksdb options object</li>
 </ul>
 </div>
 
+
+                            </div>
+                </section>
+                <section id="RdictIter">
+                                <div class="attr class">
+        <a class="headerlink" href="#RdictIter">#&nbsp;&nbsp</a>
+
+        
+        <span class="def">class</span>
+        <span class="name">RdictIter</span>:
+    </div>
+
+        
+    
+
+                            <div id="RdictIter.__init__" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#RdictIter.__init__">#&nbsp;&nbsp</a>
+
+        
+            <span class="name">RdictIter</span><span class="signature">()</span>
+    </div>
+
+        
+    
+
+                            </div>
+                            <div id="RdictIter.valid" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#RdictIter.valid">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">valid</span><span class="signature">(self, /)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Returns <code>true</code> if the iterator is valid. An iterator is invalidated when
+it reaches the end of its defined range, or when it encounters an error.</p>
+
+<p>To check whether the iterator encountered an error after <code><a href="#RdictIter.valid">valid</a></code> has
+returned <code>false</code>, use the <a href="DBRawIteratorWithThreadMode::status"><code><a href="#RdictIter.status">status</a></code></a> method. <code><a href="#RdictIter.status">status</a></code> will never
+return an error when <code><a href="#RdictIter.valid">valid</a></code> is <code>true</code>.</p>
+</div>
+
+
+                            </div>
+                            <div id="RdictIter.status" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#RdictIter.status">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">status</span><span class="signature">(unknown)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Returns an error <code>Result</code> if the iterator has encountered an error
+during operation. When an error is encountered, the iterator is
+invalidated and <a href="DBRawIteratorWithThreadMode::valid"><code><a href="#RdictIter.valid">valid</a></code></a> will return <code>false</code> when called.</p>
+
+<p>Performing a seek will discard the current status.</p>
+</div>
+
+
+                            </div>
+                            <div id="RdictIter.seek_to_first" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#RdictIter.seek_to_first">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">seek_to_first</span><span class="signature">(unknown)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Seeks to the first key in the database.</p>
+
+<h1 id="examples">Examples</h1>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">rocksdict</span> <span class="kn">import</span> <span class="n">Rdict</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">ReadOptions</span>
+
+<span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;_path_for_rocksdb_storage5&quot;</span>
+<span class="n">db</span> <span class="o">=</span> <span class="n">Rdict</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Options</span><span class="p">())</span>
+<span class="nb">iter</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">ReadOptions</span><span class="p">())</span>
+
+<span class="c1"># Iterate all keys from the start in lexicographic order</span>
+<span class="nb">iter</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+
+<span class="k">while</span> <span class="nb">iter</span><span class="o">.</span><span class="n">valid</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">iter</span><span class="o">.</span><span class="n">key</span><span class="p">()</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">iter</span><span class="o">.</span><span class="n">value</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">iter</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+
+<span class="c1"># Read just the first key</span>
+<span class="nb">iter</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">();</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">iter</span><span class="o">.</span><span class="n">key</span><span class="p">()</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">iter</span><span class="o">.</span><span class="n">value</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">del</span> <span class="nb">iter</span><span class="p">,</span> <span class="n">db</span>
+<span class="n">Rdict</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Options</span><span class="p">())</span>
+</code></pre></div>
+</div>
+
+
+                            </div>
+                            <div id="RdictIter.seek_to_last" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#RdictIter.seek_to_last">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">seek_to_last</span><span class="signature">(unknown)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Seeks to the last key in the database.</p>
+
+<h1 id="examples">Examples</h1>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">rocksdict</span> <span class="kn">import</span> <span class="n">Rdict</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">ReadOptions</span>
+
+<span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;_path_for_rocksdb_storage6&quot;</span>
+<span class="n">db</span> <span class="o">=</span> <span class="n">Rdict</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Options</span><span class="p">())</span>
+<span class="nb">iter</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">ReadOptions</span><span class="p">())</span>
+
+<span class="c1"># Iterate all keys from the start in lexicographic order</span>
+<span class="nb">iter</span><span class="o">.</span><span class="n">seek_to_last</span><span class="p">()</span>
+
+<span class="k">while</span> <span class="nb">iter</span><span class="o">.</span><span class="n">valid</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">iter</span><span class="o">.</span><span class="n">key</span><span class="p">()</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">iter</span><span class="o">.</span><span class="n">value</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">iter</span><span class="o">.</span><span class="n">prev</span><span class="p">()</span>
+
+<span class="c1"># Read just the last key</span>
+<span class="nb">iter</span><span class="o">.</span><span class="n">seek_to_last</span><span class="p">();</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">iter</span><span class="o">.</span><span class="n">key</span><span class="p">()</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">iter</span><span class="o">.</span><span class="n">value</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">del</span> <span class="nb">iter</span><span class="p">,</span> <span class="n">db</span>
+<span class="n">Rdict</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Options</span><span class="p">())</span>
+</code></pre></div>
+</div>
+
+
+                            </div>
+                            <div id="RdictIter.seek" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#RdictIter.seek">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">seek</span><span class="signature">(unknown)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Seeks to the specified key or the first key that lexicographically follows it.</p>
+
+<p>This method will attempt to seek to the specified key. If that key does not exist, it will
+find and seek to the key that lexicographically follows it instead.</p>
+
+<h1 id="examples">Examples</h1>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">rocksdict</span> <span class="kn">import</span> <span class="n">Rdict</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">ReadOptions</span>
+
+<span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;_path_for_rocksdb_storage6&quot;</span>
+<span class="n">db</span> <span class="o">=</span> <span class="n">Rdict</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Options</span><span class="p">())</span>
+<span class="nb">iter</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">ReadOptions</span><span class="p">())</span>
+
+<span class="c1"># Read the first string key that starts with &#39;a&#39;</span>
+<span class="nb">iter</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">);</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">iter</span><span class="o">.</span><span class="n">key</span><span class="p">()</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">iter</span><span class="o">.</span><span class="n">value</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">del</span> <span class="nb">iter</span><span class="p">,</span> <span class="n">db</span>
+<span class="n">Rdict</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Options</span><span class="p">())</span>
+</code></pre></div>
+</div>
+
+
+                            </div>
+                            <div id="RdictIter.seek_for_prev" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#RdictIter.seek_for_prev">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">seek_for_prev</span><span class="signature">(unknown)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Seeks to the specified key, or the first key that lexicographically precedes it.</p>
+
+<p>Like <code>.seek()</code> this method will attempt to seek to the specified key.
+The difference with <code>.seek()</code> is that if the specified key do not exist, this method will
+seek to key that lexicographically precedes it instead.</p>
+
+<h1 id="examples">Examples</h1>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">rocksdict</span> <span class="kn">import</span> <span class="n">Rdict</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">ReadOptions</span>
+
+<span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;_path_for_rocksdb_storage6&quot;</span>
+<span class="n">db</span> <span class="o">=</span> <span class="n">Rdict</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Options</span><span class="p">())</span>
+<span class="nb">iter</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">ReadOptions</span><span class="p">())</span>
+
+<span class="c1"># Read the last key that starts with &#39;a&#39;</span>
+<span class="n">seek_for_prev</span><span class="p">(</span><span class="s2">&quot;b&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">iter</span><span class="o">.</span><span class="n">key</span><span class="p">()</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">iter</span><span class="o">.</span><span class="n">value</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">del</span> <span class="nb">iter</span><span class="p">,</span> <span class="n">db</span>
+<span class="n">Rdict</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Options</span><span class="p">())</span>
+</code></pre></div>
+</div>
+
+
+                            </div>
+                            <div id="RdictIter.next" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#RdictIter.next">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">next</span><span class="signature">(unknown)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Seeks to the next key.</p>
+</div>
+
+
+                            </div>
+                            <div id="RdictIter.prev" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#RdictIter.prev">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">prev</span><span class="signature">(unknown)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Seeks to the previous key.</p>
+</div>
+
+
+                            </div>
+                            <div id="RdictIter.key" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#RdictIter.key">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">key</span><span class="signature">(unknown)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Returns the current key.</p>
+</div>
+
+
+                            </div>
+                            <div id="RdictIter.value" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#RdictIter.value">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">value</span><span class="signature">(unknown)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Returns the current value.</p>
+</div>
+
+
+                            </div>
+                </section>
+                <section id="RdictItems">
+                                <div class="attr class">
+        <a class="headerlink" href="#RdictItems">#&nbsp;&nbsp</a>
+
+        
+        <span class="def">class</span>
+        <span class="name">RdictItems</span><wbr>(<span class="base">typing.Iterator[typing.Tuple[typing.Union[str, int, float, bytes], typing.Any]]</span>):
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">RdictItems</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">_Rdict</span><span class="p">):</span>
+        <span class="n">r_opt</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">()</span>
+        <span class="n">r_opt</span><span class="o">.</span><span class="n">set_total_order_seek</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">r_opt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">valid</span><span class="p">():</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">key</span><span class="p">()</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span>
+        <span class="k">raise</span> <span class="ne">StopIteration</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Abstract base class for generic types.</p>
+
+<p>A generic type is typically declared by inheriting from
+this class parameterized with one or more type variables.
+For example, a generic mapping type might be defined as::</p>
+
+<p>class Mapping(Generic[KT, VT]):
+      def __getitem__(self, key: KT) -> VT:
+          ...
+      # Etc.</p>
+
+<p>This class can then be used as follows::</p>
+
+<p>def lookup_name(mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
+      try:
+          return mapping[key]
+      except KeyError:
+          return default</p>
+</div>
+
+
+                            <div id="RdictItems.__init__" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#RdictItems.__init__">#&nbsp;&nbsp</a>
+
+        
+            <span class="name">RdictItems</span><span class="signature">(d: RdictInner)</span>
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">_Rdict</span><span class="p">):</span>
+        <span class="n">r_opt</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">()</span>
+        <span class="n">r_opt</span><span class="o">.</span><span class="n">set_total_order_seek</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">r_opt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+</pre></div>
+
+        </details>
+
+    
+
+                            </div>
+                </section>
+                <section id="RdictKeys">
+                                <div class="attr class">
+        <a class="headerlink" href="#RdictKeys">#&nbsp;&nbsp</a>
+
+        
+        <span class="def">class</span>
+        <span class="name">RdictKeys</span><wbr>(<span class="base">typing.Iterator[typing.Union[str, int, float, bytes]]</span>):
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">RdictKeys</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">_Rdict</span><span class="p">):</span>
+        <span class="n">r_opt</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">()</span>
+        <span class="n">r_opt</span><span class="o">.</span><span class="n">set_total_order_seek</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">r_opt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">valid</span><span class="p">():</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">key</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">k</span>
+        <span class="k">raise</span> <span class="ne">StopIteration</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Abstract base class for generic types.</p>
+
+<p>A generic type is typically declared by inheriting from
+this class parameterized with one or more type variables.
+For example, a generic mapping type might be defined as::</p>
+
+<p>class Mapping(Generic[KT, VT]):
+      def __getitem__(self, key: KT) -> VT:
+          ...
+      # Etc.</p>
+
+<p>This class can then be used as follows::</p>
+
+<p>def lookup_name(mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
+      try:
+          return mapping[key]
+      except KeyError:
+          return default</p>
+</div>
+
+
+                            <div id="RdictKeys.__init__" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#RdictKeys.__init__">#&nbsp;&nbsp</a>
+
+        
+            <span class="name">RdictKeys</span><span class="signature">(d: RdictInner)</span>
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">_Rdict</span><span class="p">):</span>
+        <span class="n">r_opt</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">()</span>
+        <span class="n">r_opt</span><span class="o">.</span><span class="n">set_total_order_seek</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">r_opt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+</pre></div>
+
+        </details>
+
+    
+
+                            </div>
+                </section>
+                <section id="RdictValues">
+                                <div class="attr class">
+        <a class="headerlink" href="#RdictValues">#&nbsp;&nbsp</a>
+
+        
+        <span class="def">class</span>
+        <span class="name">RdictValues</span><wbr>(<span class="base">typing.Iterator[typing.Any]</span>):
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">RdictValues</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">_Rdict</span><span class="p">):</span>
+        <span class="n">r_opt</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">()</span>
+        <span class="n">r_opt</span><span class="o">.</span><span class="n">set_total_order_seek</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">r_opt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">valid</span><span class="p">():</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">v</span>
+        <span class="k">raise</span> <span class="ne">StopIteration</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Abstract base class for generic types.</p>
+
+<p>A generic type is typically declared by inheriting from
+this class parameterized with one or more type variables.
+For example, a generic mapping type might be defined as::</p>
+
+<p>class Mapping(Generic[KT, VT]):
+      def __getitem__(self, key: KT) -> VT:
+          ...
+      # Etc.</p>
+
+<p>This class can then be used as follows::</p>
+
+<p>def lookup_name(mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
+      try:
+          return mapping[key]
+      except KeyError:
+          return default</p>
+</div>
+
+
+                            <div id="RdictValues.__init__" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#RdictValues.__init__">#&nbsp;&nbsp</a>
+
+        
+            <span class="name">RdictValues</span><span class="signature">(d: RdictInner)</span>
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">_Rdict</span><span class="p">):</span>
+        <span class="n">r_opt</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">()</span>
+        <span class="n">r_opt</span><span class="o">.</span><span class="n">set_total_order_seek</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">r_opt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+</pre></div>
+
+        </details>
+
+    
 
                             </div>
                 </section>
