@@ -36,8 +36,6 @@ use std::path::{Path, PathBuf};
 ///     opts.set_level_zero_stop_writes_trigger(2000)
 ///     opts.set_level_zero_slowdown_writes_trigger(0)
 ///     opts.set_compaction_style(DBCompactionStyle.universal())
-///     opts.set_max_background_compactions(4)
-///     opts.set_max_background_flushes(4)
 ///     opts.set_disable_auto_compactions(true)
 ///
 ///     return Rdict(path, opts)
