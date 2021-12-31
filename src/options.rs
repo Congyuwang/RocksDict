@@ -235,7 +235,7 @@ pub(crate) struct UniversalCompactionStopStylePy(UniversalCompactionStopStyle);
 #[pyclass(name = "FifoCompactOptions")]
 pub(crate) struct FifoCompactOptionsPy {
     #[pyo3(get, set)]
-    set_max_table_files_size: u64,
+    max_table_files_size: u64,
 }
 
 #[pymethods]
@@ -2688,6 +2688,13 @@ impl UniversalCompactionStopStylePy {
 
 #[pymethods]
 impl FifoCompactOptionsPy {
+    #[new]
+    pub fn new() -> Self {
+        FifoCompactOptionsPy {
+            max_table_files_size: 0x280000000,
+        }
+    }
+
     /// Sets the max table file size.
     ///
     /// Once the total sum of table files reaches this, we will delete the oldest
@@ -2696,14 +2703,14 @@ impl FifoCompactOptionsPy {
     /// Default: 1GB
     #[pyo3(text_signature = "($self, nbytes)")]
     pub fn set_max_table_files_size(&mut self, nbytes: u64) {
-        self.set_max_table_files_size = nbytes
+        self.max_table_files_size = nbytes
     }
 }
 
 impl From<&FifoCompactOptionsPy> for FifoCompactOptions {
     fn from(f_opt: &FifoCompactOptionsPy) -> Self {
         let mut opt = FifoCompactOptions::default();
-        opt.set_max_table_files_size(f_opt.set_max_table_files_size);
+        opt.set_max_table_files_size(f_opt.max_table_files_size);
         opt
     }
 }
