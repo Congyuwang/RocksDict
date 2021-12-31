@@ -87,11 +87,13 @@ class Rdict:
         """
         self._inner.close()
 
-    def destroy(self, options: Options):
+    @staticmethod
+    def destroy(path: str, options: Options):
         """Delete the database.
 
         Args:
+            path (str): path to this database
             options (rocksdict.Options): Rocksdb options object
 
         """
-        self._inner.destroy(options)
+        _Rdict.destroy(path, options)

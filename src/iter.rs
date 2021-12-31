@@ -76,7 +76,8 @@ impl RdictIter {
     /// iter.seek_to_first();
     /// print(f"{iter.key()} {iter.value()}")
     ///
-    /// db.destroy(Options())
+    /// del iter, db
+    /// Rdict.destroy(path, Options())
     /// ```
     pub fn seek_to_first(&mut self) {
         unsafe {
@@ -106,7 +107,8 @@ impl RdictIter {
     /// iter.seek_to_last();
     /// print(f"{iter.key()} {iter.value()}")
     ///
-    /// db.destroy(Options())
+    /// del iter, db
+    /// Rdict.destroy(path, Options())
     /// ```
     pub fn seek_to_last(&mut self) {
         unsafe {
@@ -132,7 +134,8 @@ impl RdictIter {
     /// iter.seek("a");
     /// print(f"{iter.key()} {iter.value()}")
     ///
-    /// db.destroy(Options())
+    /// del iter, db
+    /// Rdict.destroy(path, Options())
     /// ```
     pub fn seek(&mut self, key: &PyAny) -> PyResult<()> {
         let key = encode_value(key)?;
@@ -165,7 +168,8 @@ impl RdictIter {
     /// seek_for_prev("b")
     /// print(f"{iter.key()} {iter.value()}")
     ///
-    /// db.destroy(Options())
+    /// del iter, db
+    /// Rdict.destroy(path, Options())
     /// ```
     pub fn seek_for_prev(&mut self, key: &PyAny) -> PyResult<()> {
         let key = encode_value(key)?;

@@ -54,7 +54,8 @@ pub(crate) struct OptionsPy(pub(crate) Options);
 /// ```python
 /// from rocksdict import Rdict, Options, WriteBatch, WriteOptions
 ///
-/// db = Rdict("_path_for_rocksdb_storageY1", Options())
+/// path = "_path_for_rocksdb_storageY1"
+/// db = Rdict(path, Options())
 ///
 /// # set write options
 /// write_options = WriteOptions()
@@ -68,7 +69,8 @@ pub(crate) struct OptionsPy(pub(crate) Options);
 /// db["key3"] = "value3"
 ///
 /// # remove db
-/// db.destroy(Options())
+/// del db
+/// Rdict.destroy(path, Options())
 /// ```
 #[pyclass(name = "WriteOptions")]
 #[pyo3(text_signature = "()")]
@@ -108,7 +110,8 @@ pub(crate) struct WriteOptionsPy {
 /// flush_options.set_wait(true)
 ///
 /// db.flush_opt(flush_options)
-/// db.destroy(Options())
+/// del db
+/// Rdict.destroy(path, Options())
 /// ```
 #[pyclass(name = "FlushOptions")]
 #[derive(Copy, Clone)]
