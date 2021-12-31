@@ -156,12 +156,16 @@ impl Rdict {
     fn __contains__(&self, key: &PyAny) -> PyResult<bool> {
         if let Some(db) = &self.db {
             let key = encode_value(key)?;
-            match db.get_pinned_opt(&key[..], &self.read_opt) {
-                Ok(value) => match value {
-                    None => Ok(false),
-                    Some(_) => Ok(true),
-                },
-                Err(e) => Err(PyException::new_err(e.to_string())),
+            if db.key_may_exist_opt(&key[..], &self.read_opt) {
+                match db.get_pinned_opt(&key[..], &self.read_opt) {
+                    Ok(value) => match value {
+                        None => Ok(false),
+                        Some(_) => Ok(true),
+                    },
+                    Err(e) => Err(PyException::new_err(e.to_string())),
+                }
+            } else {
+                Ok(false)
             }
         } else {
             Err(PyException::new_err("DB already closed"))
