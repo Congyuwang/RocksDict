@@ -1,6 +1,6 @@
 [package]
 name = "RocksDict"
-version = "0.2.3"
+version = "0.2.4"
 edition = "2021"
 description = "On-disk Dict With RocksDB (dbm alternative)"
 
