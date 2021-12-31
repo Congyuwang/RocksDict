@@ -1,6 +1,31 @@
 from .rocksdict import *
+from .rocksdict import RdictInner as _Rdict
+from .rocksdict import Pickle as _Pickle
 import pickle as _pkl
-from typing import Union, List
+from typing import Union, List, Any
+
+
+__all__ = ["DataBlockIndexType",
+           "BlockBasedIndexType",
+           "BlockBasedOptions",
+           "Cache",
+           "CuckooTableOptions",
+           "DBCompactionStyle",
+           "DBCompressionType",
+           "DBPath",
+           "DBRecoveryMode",
+           "Env",
+           "FifoCompactOptions",
+           "FlushOptions",
+           "MemtableFactory",
+           "Options",
+           "PlainTableFactoryOptions",
+           "ReadOptions",
+           "SliceTransform",
+           "UniversalCompactOptions",
+           "UniversalCompactionStopStyle",
+           "WriteOptions",
+           "Rdict"]
 
 
 class Rdict:
@@ -17,19 +42,19 @@ class Rdict:
         """
         self._inner = _Rdict(path, options)
 
-    def set_write_options(self, write_opt: WriteOptions):
+    def set_write_options(self, write_opt: WriteOptions) -> None:
         """Configure Write Options."""
         self._inner.set_write_options(write_opt)
 
-    def set_flush_options(self, flush_opt: FlushOptions):
+    def set_flush_options(self, flush_opt: FlushOptions) -> None:
         """Configure Flush Options."""
         self._inner.set_flush_options(flush_opt)
 
-    def set_read_options(self, read_opt: ReadOptions):
+    def set_read_options(self, read_opt: ReadOptions) -> None:
         """Configure Read Options."""
         self._inner.set_read_options(read_opt)
 
-    def __getitem__(self, key: Union[str, int, float, bytes, List[Union[str, int, float, bytes]]]):
+    def __getitem__(self, key: Union[str, int, float, bytes, List[Union[str, int, float, bytes]]]) -> Any:
         value = self._inner[key]
         if type(value) is _Pickle:
             return _pkl.loads(value.data)

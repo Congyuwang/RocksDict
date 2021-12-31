@@ -3,7 +3,7 @@ use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyFloat, PyInt, PyString};
 
-#[pyclass(name = "_Pickle")]
+#[pyclass(name = "Pickle")]
 pub(crate) struct Pickle {
     data: Vec<u8>,
 }
