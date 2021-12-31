@@ -25,7 +25,8 @@ __all__ = ["DataBlockIndexType",
            "UniversalCompactOptions",
            "UniversalCompactionStopStyle",
            "WriteOptions",
-           "Rdict"]
+           "Rdict",
+           "RdictIter"]
 
 
 class Rdict:
@@ -72,6 +73,9 @@ class Rdict:
 
     def __delitem__(self, key: Union[str, int, float, bytes]):
         del self._inner[key]
+
+    def iter(self, read_opt: ReadOptions) -> RdictIter:
+        return self._inner.iter(read_opt)
 
     def close(self):
         """Flush the database.

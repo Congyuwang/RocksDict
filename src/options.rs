@@ -1,5 +1,5 @@
 use crate::encoder::encode_value;
-use libc::size_t;
+use libc::{c_char, c_uchar, size_t};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
@@ -135,17 +135,7 @@ pub(crate) struct ReadOptionsPy {
     pin_data: bool,
 }
 
-pub(crate) struct ReadOpt(*mut librocksdb_sys::rocksdb_readoptions_t);
-
-unsafe impl Send for ReadOpt {}
-
-unsafe impl Sync for ReadOpt {}
-
-impl Drop for ReadOpt {
-    fn drop(&mut self) {
-        unsafe { librocksdb_sys::rocksdb_readoptions_destroy(self.0) }
-    }
-}
+pub(crate) struct ReadOpt(pub(crate) *mut librocksdb_sys::rocksdb_readoptions_t);
 
 /// Defines the underlying memtable implementation.
 /// See official [wiki](https://github.com/facebook/rocksdb/wiki/MemTable) for more information.
@@ -1960,6 +1950,57 @@ impl From<&ReadOptionsPy> for ReadOptions {
         opt.set_tailing(r_opt.tailing);
         opt.set_pin_data(r_opt.pin_data);
         opt
+    }
+}
+
+impl From<&ReadOptionsPy> for ReadOpt {
+    fn from(r_opt: &ReadOptionsPy) -> Self {
+        let opt = unsafe { ReadOpt(librocksdb_sys::rocksdb_readoptions_create()) };
+        if let Some(lower_bound) = &r_opt.iterate_lower_bound {
+            let lower_bound = &lower_bound[..];
+
+            unsafe {
+                librocksdb_sys::rocksdb_readoptions_set_iterate_lower_bound(
+                    opt.0,
+                    lower_bound.as_ptr() as *const c_char,
+                    lower_bound.len() as size_t,
+                );
+            }
+        }
+        if let Some(upper_bound) = &r_opt.iterate_upper_bound {
+            let upper_bound = &upper_bound[..];
+
+            unsafe {
+                librocksdb_sys::rocksdb_readoptions_set_iterate_upper_bound(
+                    opt.0,
+                    upper_bound.as_ptr() as *const c_char,
+                    upper_bound.len() as size_t,
+                );
+            }
+        }
+        unsafe {
+            librocksdb_sys::rocksdb_readoptions_set_fill_cache(opt.0, r_opt.fill_cache as c_uchar);
+            librocksdb_sys::rocksdb_readoptions_set_prefix_same_as_start(opt.0, r_opt.prefix_same_as_start as c_uchar);
+            librocksdb_sys::rocksdb_readoptions_set_total_order_seek(opt.0, r_opt.total_order_seek as c_uchar);
+            librocksdb_sys::rocksdb_readoptions_set_max_skippable_internal_keys(opt.0, r_opt.max_skippable_internal_keys);
+            librocksdb_sys::rocksdb_readoptions_set_background_purge_on_iterator_cleanup(opt.0, r_opt.background_purge_on_iterator_cleanup as c_uchar);
+            librocksdb_sys::rocksdb_readoptions_set_ignore_range_deletions(opt.0, r_opt.ignore_range_deletions as c_uchar);
+            librocksdb_sys::rocksdb_readoptions_set_verify_checksums(opt.0, r_opt.verify_checksums as c_uchar);
+            librocksdb_sys::rocksdb_readoptions_set_readahead_size(opt.0, r_opt.readahead_size as size_t);
+            librocksdb_sys::rocksdb_readoptions_set_tailing(opt.0, r_opt.tailing as c_uchar);
+            librocksdb_sys::rocksdb_readoptions_set_pin_data(opt.0, r_opt.pin_data as c_uchar);
+        }
+        opt
+    }
+}
+
+unsafe impl Send for ReadOpt {}
+
+unsafe impl Sync for ReadOpt {}
+
+impl Drop for ReadOpt {
+    fn drop(&mut self) {
+        unsafe { librocksdb_sys::rocksdb_readoptions_destroy(self.0) }
     }
 }
 

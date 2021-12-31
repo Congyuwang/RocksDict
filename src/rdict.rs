@@ -1,5 +1,5 @@
 use crate::encoder::{decode_value, encode_value};
-use crate::{FlushOptionsPy, OptionsPy, ReadOptionsPy, WriteOptionsPy};
+use crate::{FlushOptionsPy, OptionsPy, RdictIter, ReadOpt, ReadOptionsPy, WriteOptionsPy};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
@@ -8,7 +8,7 @@ use std::fs::create_dir_all;
 use std::ops::Deref;
 use std::path::Path;
 use std::sync::Arc;
-// use librocksdb_sys;
+use rocksdb::db::DBAccess;
 
 ///
 /// A persistent on-disk dictionary. Supports string, int, float, bytes as key, values.
@@ -204,6 +204,46 @@ impl Rdict {
                 Ok(_) => Ok(()),
                 Err(e) => Err(PyException::new_err(e.to_string())),
             }
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
+
+    /// Iterate Over the Key-Value pairs.
+    ///
+    /// # Examples
+    ///
+    /// ```python
+    /// from rocksdict import Rdict, Options, ReadOptions
+    ///
+    /// path = "_path_for_rocksdb_storage5"
+    /// db = Rdict(path, Options())
+    /// iter = db.iter(ReadOptions())
+    ///
+    /// # Iterate all keys from the start in lexicographic order
+    /// iter.seek_to_first()
+    ///
+    /// while iter.valid():
+    ///     print(f"{iter.key()} {iter.value()}")
+    ///     iter.next()
+    ///
+    /// # Read just the first key
+    /// iter.seek_to_first();
+    /// print(f"{iter.key()} {iter.value()}")
+    ///
+    /// db.destroy(Options())
+    /// ```
+    #[pyo3(text_signature = "($self, read_opt)")]
+    fn iter(&self, read_opt: &ReadOptionsPy) -> PyResult<RdictIter> {
+        if let Some(db) = &self.db {
+            let readopts: ReadOpt = read_opt.into();
+            Ok(unsafe {
+                RdictIter {
+                    db: db.clone(),
+                    inner: librocksdb_sys::rocksdb_create_iterator(db.inner(), readopts.0),
+                    readopts,
+                }
+            })
         } else {
             Err(PyException::new_err("DB already closed"))
         }

@@ -1,11 +1,14 @@
 mod encoder;
 mod options;
 mod rdict;
+mod iter;
+mod util;
 
 use crate::encoder::Pickle;
 use crate::options::*;
 use crate::rdict::Rdict;
 use pyo3::prelude::*;
+use crate::iter::RdictIter;
 
 #[pymodule]
 fn rocksdict(_py: Python, m: &PyModule) -> PyResult<()> {
@@ -31,5 +34,6 @@ fn rocksdict(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<EnvPy>()?;
     m.add_class::<FifoCompactOptionsPy>()?;
     m.add_class::<Pickle>()?;
+    m.add_class::<RdictIter>()?;
     Ok(())
 }
