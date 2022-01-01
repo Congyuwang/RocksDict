@@ -645,16 +645,16 @@
                                 <a class="function" href="#PlainTableFactoryOptions.__init__">PlainTableFactoryOptions</a>
                         </li>
                         <li>
-                                <a class="variable" href="#PlainTableFactoryOptions.index_sparseness">index_sparseness</a>
+                                <a class="variable" href="#PlainTableFactoryOptions.bloom_bits_per_key">bloom_bits_per_key</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#PlainTableFactoryOptions.hash_table_ratio">hash_table_ratio</a>
                         </li>
                         <li>
                                 <a class="variable" href="#PlainTableFactoryOptions.user_key_length">user_key_length</a>
                         </li>
                         <li>
-                                <a class="variable" href="#PlainTableFactoryOptions.bloom_bits_per_key">bloom_bits_per_key</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#PlainTableFactoryOptions.hash_table_ratio">hash_table_ratio</a>
+                                <a class="variable" href="#PlainTableFactoryOptions.index_sparseness">index_sparseness</a>
                         </li>
                 </ul>
 
@@ -747,6 +747,15 @@
                                 <a class="function" href="#UniversalCompactOptions.set_stop_style">set_stop_style</a>
                         </li>
                         <li>
+                                <a class="variable" href="#UniversalCompactOptions.max_merge_width">max_merge_width</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#UniversalCompactOptions.max_size_amplification_percent">max_size_amplification_percent</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
+                        </li>
+                        <li>
                                 <a class="variable" href="#UniversalCompactOptions.compression_size_percent">compression_size_percent</a>
                         </li>
                         <li>
@@ -754,15 +763,6 @@
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#UniversalCompactOptions.max_size_amplification_percent">max_size_amplification_percent</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#UniversalCompactOptions.max_merge_width">max_merge_width</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
                         </li>
                 </ul>
 
@@ -807,13 +807,13 @@
                                 <a class="function" href="#WriteOptions.set_memtable_insert_hint_per_batch">set_memtable_insert_hint_per_batch</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
+                                <a class="variable" href="#WriteOptions.memtable_insert_hint_per_batch">memtable_insert_hint_per_batch</a>
                         </li>
                         <li>
                                 <a class="variable" href="#WriteOptions.no_slowdown">no_slowdown</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.memtable_insert_hint_per_batch">memtable_insert_hint_per_batch</a>
+                                <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
                         </li>
                         <li>
                                 <a class="variable" href="#WriteOptions.sync">sync</a>
@@ -947,8 +947,6 @@ rocksdict    </h1>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">.rocksdict</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">.rocksdict</span> <span class="kn">import</span> <span class="n">RdictInner</span> <span class="k">as</span> <span class="n">_Rdict</span>
-<span class="kn">from</span> <span class="nn">.rocksdict</span> <span class="kn">import</span> <span class="n">Pickle</span> <span class="k">as</span> <span class="n">_Pickle</span>
-<span class="kn">import</span> <span class="nn">pickle</span> <span class="k">as</span> <span class="nn">_pkl</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Reversible</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;DataBlockIndexType&quot;</span><span class="p">,</span>
@@ -981,7 +979,7 @@ rocksdict    </h1>
 <span class="k">class</span> <span class="nc">RdictItems</span><span class="p">(</span><span class="n">Reversible</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">,</span>
                  <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;A more convenient interface for iterating through Rdict.</span>
 
 <span class="sd">        Args:</span>
@@ -1027,7 +1025,7 @@ rocksdict    </h1>
 <span class="k">class</span> <span class="nc">RdictKeys</span><span class="p">(</span><span class="n">Reversible</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">,</span>
                  <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;A more convenient interface for iterating through Rdict.</span>
 
 <span class="sd">        Args:</span>
@@ -1072,7 +1070,7 @@ rocksdict    </h1>
 <span class="k">class</span> <span class="nc">RdictValues</span><span class="p">(</span><span class="n">Reversible</span><span class="p">[</span><span class="n">Any</span><span class="p">]):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">,</span>
                  <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;A more convenient interface for iterating through Rdict.</span>
 
 <span class="sd">        Args:</span>
@@ -1140,28 +1138,21 @@ rocksdict    </h1>
         <span class="sd">&quot;&quot;&quot;Configure Read Options.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">set_read_options</span><span class="p">(</span><span class="n">read_opt</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="n">_Pickle</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">_pkl</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">value</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">value_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">str</span> <span class="ow">or</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">int</span> <span class="ow">or</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">float</span> <span class="ow">or</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">bytes</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_Pickle</span><span class="p">(</span><span class="n">_pkl</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 
-    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span>
 
-    <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
               <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-              <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+              <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
               <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Reversible</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.items().</span>
 
@@ -1201,7 +1192,7 @@ rocksdict    </h1>
 
     <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-               <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+               <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Reversible</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.values().</span>
 
@@ -1241,7 +1232,7 @@ rocksdict    </h1>
     <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
              <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">(),</span>
              <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-             <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Reversible</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+             <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Reversible</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.keys().</span>
 
 <span class="sd">        Args:</span>
@@ -4820,10 +4811,19 @@ information.</p>
     
 
                             </div>
-                            <div id="PlainTableFactoryOptions.index_sparseness" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.index_sparseness">#&nbsp;&nbsp</a>
+                            <div id="PlainTableFactoryOptions.bloom_bits_per_key" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.bloom_bits_per_key">#&nbsp;&nbsp</a>
 
-        <span class="name">index_sparseness</span>
+        <span class="name">bloom_bits_per_key</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="PlainTableFactoryOptions.hash_table_ratio" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.hash_table_ratio">#&nbsp;&nbsp</a>
+
+        <span class="name">hash_table_ratio</span>
     </div>
 
     
@@ -4838,19 +4838,10 @@ information.</p>
     
 
                             </div>
-                            <div id="PlainTableFactoryOptions.bloom_bits_per_key" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.bloom_bits_per_key">#&nbsp;&nbsp</a>
+                            <div id="PlainTableFactoryOptions.index_sparseness" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.index_sparseness">#&nbsp;&nbsp</a>
 
-        <span class="name">bloom_bits_per_key</span>
-    </div>
-
-    
-
-                            </div>
-                            <div id="PlainTableFactoryOptions.hash_table_ratio" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.hash_table_ratio">#&nbsp;&nbsp</a>
-
-        <span class="name">hash_table_ratio</span>
+        <span class="name">index_sparseness</span>
     </div>
 
     
@@ -5309,6 +5300,33 @@ will be compressed iff
 
 
                             </div>
+                            <div id="UniversalCompactOptions.max_merge_width" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_merge_width">#&nbsp;&nbsp</a>
+
+        <span class="name">max_merge_width</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="UniversalCompactOptions.max_size_amplification_percent" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_size_amplification_percent">#&nbsp;&nbsp</a>
+
+        <span class="name">max_size_amplification_percent</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="UniversalCompactOptions.size_ratio" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.size_ratio">#&nbsp;&nbsp</a>
+
+        <span class="name">size_ratio</span>
+    </div>
+
+    
+
+                            </div>
                             <div id="UniversalCompactOptions.compression_size_percent" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.compression_size_percent">#&nbsp;&nbsp</a>
 
@@ -5331,33 +5349,6 @@ will be compressed iff
                                             <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.stop_style">#&nbsp;&nbsp</a>
 
         <span class="name">stop_style</span>
-    </div>
-
-    
-
-                            </div>
-                            <div id="UniversalCompactOptions.max_size_amplification_percent" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_size_amplification_percent">#&nbsp;&nbsp</a>
-
-        <span class="name">max_size_amplification_percent</span>
-    </div>
-
-    
-
-                            </div>
-                            <div id="UniversalCompactOptions.max_merge_width" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_merge_width">#&nbsp;&nbsp</a>
-
-        <span class="name">max_merge_width</span>
-    </div>
-
-    
-
-                            </div>
-                            <div id="UniversalCompactOptions.size_ratio" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.size_ratio">#&nbsp;&nbsp</a>
-
-        <span class="name">size_ratio</span>
     </div>
 
     
@@ -5573,10 +5564,10 @@ option will be ignored.</p>
 
 
                             </div>
-                            <div id="WriteOptions.ignore_missing_column_families" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.ignore_missing_column_families">#&nbsp;&nbsp</a>
+                            <div id="WriteOptions.memtable_insert_hint_per_batch" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.memtable_insert_hint_per_batch">#&nbsp;&nbsp</a>
 
-        <span class="name">ignore_missing_column_families</span>
+        <span class="name">memtable_insert_hint_per_batch</span>
     </div>
 
     
@@ -5591,10 +5582,10 @@ option will be ignored.</p>
     
 
                             </div>
-                            <div id="WriteOptions.memtable_insert_hint_per_batch" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.memtable_insert_hint_per_batch">#&nbsp;&nbsp</a>
+                            <div id="WriteOptions.ignore_missing_column_families" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.ignore_missing_column_families">#&nbsp;&nbsp</a>
 
-        <span class="name">memtable_insert_hint_per_batch</span>
+        <span class="name">ignore_missing_column_families</span>
     </div>
 
     
@@ -5656,28 +5647,21 @@ option will be ignored.</p>
         <span class="sd">&quot;&quot;&quot;Configure Read Options.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">set_read_options</span><span class="p">(</span><span class="n">read_opt</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="n">_Pickle</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">_pkl</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">value</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">value_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">str</span> <span class="ow">or</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">int</span> <span class="ow">or</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">float</span> <span class="ow">or</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">bytes</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_Pickle</span><span class="p">(</span><span class="n">_pkl</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 
-    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span>
 
-    <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
               <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-              <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+              <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
               <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Reversible</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.items().</span>
 
@@ -5717,7 +5701,7 @@ option will be ignored.</p>
 
     <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-               <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+               <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Reversible</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.values().</span>
 
@@ -5757,7 +5741,7 @@ option will be ignored.</p>
     <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
              <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">(),</span>
              <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-             <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Reversible</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+             <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Reversible</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.keys().</span>
 
 <span class="sd">        Args:</span>
@@ -5982,7 +5966,7 @@ option will be ignored.</p>
             <span class="name">items</span><span class="signature">(
     self,
     backward: bool = False,
-    from_key: Union[str, int, float, bytes, NoneType] = None,
+    from_key: Union[str, int, float, bytes, bool, NoneType] = None,
     read_opt: ReadOptions = &lt;builtins.ReadOptions object&gt;
 ) -&gt; Reversible[Tuple[Union[str, int, float, bytes], Any]]</span>:
     </div>
@@ -5991,7 +5975,7 @@ option will be ignored.</p>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
               <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-              <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+              <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
               <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Reversible</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.items().</span>
 
@@ -6081,7 +6065,7 @@ or the nearest next key for iteration
             <span class="name">values</span><span class="signature">(
     self,
     backward: bool = False,
-    from_key: Union[str, int, float, bytes, NoneType] = None,
+    from_key: Union[str, int, float, bytes, bool, NoneType] = None,
     read_opt: ReadOptions = &lt;builtins.ReadOptions object&gt;
 ) -&gt; Reversible[Union[str, int, float, bytes]]</span>:
     </div>
@@ -6090,7 +6074,7 @@ or the nearest next key for iteration
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-               <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+               <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Reversible</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.values().</span>
 
@@ -6179,7 +6163,7 @@ or the nearest next key for iteration
     self,
     read_opt: ReadOptions = &lt;builtins.ReadOptions object&gt;,
     backward: bool = False,
-    from_key: Union[str, int, float, bytes, NoneType] = None
+    from_key: Union[str, int, float, bytes, bool, NoneType] = None
 ) -&gt; Reversible[Any]</span>:
     </div>
 
@@ -6188,7 +6172,7 @@ or the nearest next key for iteration
             <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
              <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">(),</span>
              <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-             <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Reversible</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+             <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Reversible</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.keys().</span>
 
 <span class="sd">        Args:</span>
@@ -6740,7 +6724,7 @@ seek to key that lexicographically precedes it instead.</p>
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">RdictItems</span><span class="p">(</span><span class="n">Reversible</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">,</span>
                  <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;A more convenient interface for iterating through Rdict.</span>
 
 <span class="sd">        Args:</span>
@@ -6813,7 +6797,7 @@ For example, a generic mapping type might be defined as::</p>
             <span class="name">RdictItems</span><span class="signature">(
     inner: RdictIter,
     backward: bool = False,
-    from_key: Union[str, int, float, bytes, NoneType] = None
+    from_key: Union[str, int, float, bytes, bool, NoneType] = None
 )</span>
     </div>
 
@@ -6821,7 +6805,7 @@ For example, a generic mapping type might be defined as::</p>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">,</span>
                  <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;A more convenient interface for iterating through Rdict.</span>
 
 <span class="sd">        Args:</span>
@@ -6879,7 +6863,7 @@ or the nearest next key for iteration
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">RdictKeys</span><span class="p">(</span><span class="n">Reversible</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">,</span>
                  <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;A more convenient interface for iterating through Rdict.</span>
 
 <span class="sd">        Args:</span>
@@ -6951,7 +6935,7 @@ For example, a generic mapping type might be defined as::</p>
             <span class="name">RdictKeys</span><span class="signature">(
     inner: RdictIter,
     backward: bool = False,
-    from_key: Union[str, int, float, bytes, NoneType] = None
+    from_key: Union[str, int, float, bytes, bool, NoneType] = None
 )</span>
     </div>
 
@@ -6959,7 +6943,7 @@ For example, a generic mapping type might be defined as::</p>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">,</span>
                  <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;A more convenient interface for iterating through Rdict.</span>
 
 <span class="sd">        Args:</span>
@@ -7017,7 +7001,7 @@ or the nearest next key for iteration
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">RdictValues</span><span class="p">(</span><span class="n">Reversible</span><span class="p">[</span><span class="n">Any</span><span class="p">]):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">,</span>
                  <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;A more convenient interface for iterating through Rdict.</span>
 
 <span class="sd">        Args:</span>
@@ -7089,7 +7073,7 @@ For example, a generic mapping type might be defined as::</p>
             <span class="name">RdictValues</span><span class="signature">(
     inner: RdictIter,
     backward: bool = False,
-    from_key: Union[str, int, float, bytes, NoneType] = None
+    from_key: Union[str, int, float, bytes, bool, NoneType] = None
 )</span>
     </div>
 
@@ -7097,7 +7081,7 @@ For example, a generic mapping type might be defined as::</p>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">,</span>
                  <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;A more convenient interface for iterating through Rdict.</span>
 
 <span class="sd">        Args:</span>
