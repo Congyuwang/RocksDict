@@ -3,6 +3,7 @@ from sys import getrefcount
 from rocksdict import Rdict, Options, PlainTableFactoryOptions, SliceTransform, CuckooTableOptions
 from random import randint, random, getrandbits
 import os
+import sys
 
 
 TEST_INT_RANGE_UPPER = 999999
@@ -183,6 +184,10 @@ class TestBigInt(unittest.TestCase):
         self.test_dict[key] = value
         self.assertTrue(key in self.test_dict)
         self.assertEqual(self.test_dict[key], value)
+        self.test_dict[key] = True
+        self.assertTrue(self.test_dict[key])
+        self.test_dict[key] = False
+        self.assertFalse(self.test_dict[key])
         del self.test_dict[key]
         self.assertFalse(key in self.test_dict)
 
@@ -245,9 +250,11 @@ class TestBytes(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.opt = Options()
         cls.opt.create_if_missing(True)
-        cls.opt.set_cuckoo_table_factory(CuckooTableOptions())
-        cls.opt.set_allow_mmap_reads(True)
-        cls.opt.set_allow_mmap_writes(True)
+        # for the moment do not use CuckooTable on windows
+        if not sys.platform.startswith('win'):
+            cls.opt.set_cuckoo_table_factory(CuckooTableOptions())
+            cls.opt.set_allow_mmap_reads(True)
+            cls.opt.set_allow_mmap_writes(True)
         cls.test_dict = Rdict("./temp_bytes", cls.opt)
         cls.ref_dict = dict()
 
