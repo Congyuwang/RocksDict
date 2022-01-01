@@ -1,4 +1,4 @@
-use crate::encoder::{decode_value, encode_value};
+use crate::encoder::{decode_value, encode_key};
 use crate::util::error_message;
 use crate::ReadOpt;
 use core::slice;
@@ -22,6 +22,9 @@ pub(crate) struct RdictIter {
     /// inside `_readopts`. Storing this makes sure the upper bound is always alive when the
     /// iterator is being used.
     pub(crate) readopts: ReadOpt,
+
+    /// use pickle loads to convert bytes to pyobjects
+    pub(crate) pickle_loads: PyObject,
 }
 
 #[pymethods]
@@ -138,7 +141,7 @@ impl RdictIter {
     /// Rdict.destroy(path, Options())
     /// ```
     pub fn seek(&mut self, key: &PyAny) -> PyResult<()> {
-        let key = encode_value(key)?;
+        let key = encode_key(key)?;
 
         Ok(unsafe {
             librocksdb_sys::rocksdb_iter_seek(
@@ -172,7 +175,7 @@ impl RdictIter {
     /// Rdict.destroy(path, Options())
     /// ```
     pub fn seek_for_prev(&mut self, key: &PyAny) -> PyResult<()> {
-        let key = encode_value(key)?;
+        let key = encode_key(key)?;
 
         Ok(unsafe {
             librocksdb_sys::rocksdb_iter_seek_for_prev(
@@ -208,7 +211,7 @@ impl RdictIter {
                 let key_ptr =
                     librocksdb_sys::rocksdb_iter_key(self.inner, key_len_ptr) as *const c_uchar;
                 let key = slice::from_raw_parts(key_ptr, key_len as usize);
-                Ok(decode_value(py, key)?)
+                Ok(decode_value(py, key, &self.pickle_loads)?)
             }
         } else {
             Ok(py.None())
@@ -226,7 +229,7 @@ impl RdictIter {
                 let val_ptr =
                     librocksdb_sys::rocksdb_iter_value(self.inner, val_len_ptr) as *const c_uchar;
                 let value = slice::from_raw_parts(val_ptr, val_len as usize);
-                Ok(decode_value(py, value)?)
+                Ok(decode_value(py, value, &self.pickle_loads)?)
             }
         } else {
             Ok(py.None())

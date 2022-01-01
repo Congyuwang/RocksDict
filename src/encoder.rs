@@ -3,34 +3,13 @@ use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::{PyBool, PyBytes, PyFloat, PyInt, PyString};
 
-#[pyclass(name = "Pickle")]
-pub(crate) struct Pickle {
-    data: Vec<u8>,
-}
-
-#[pymethods]
-impl Pickle {
-    #[new]
-    fn new(bytes: &[u8]) -> Self {
-        Pickle {
-            data: bytes.to_vec(),
-        }
-    }
-
-    #[getter]
-    fn get_data(&self, py: Python) -> PyObject {
-        PyBytes::new(py, &self.data).to_object(py)
-    }
-}
-
-pub(crate) enum ValueTypes<'a> {
+pub(crate) enum ValueTypes<'a, 'b> {
     Bytes(&'a [u8]),
     String(String),
     Int(BigInt),
     Float(f64),
     Bool(bool),
-    Pickle(Vec<u8>),
-    Unsupported,
+    Any(&'b PyAny),
 }
 
 #[inline(always)]
@@ -41,8 +20,32 @@ pub(crate) fn encoding_byte(v_type: &ValueTypes) -> u8 {
         ValueTypes::Int(_) => 3,
         ValueTypes::Float(_) => 4,
         ValueTypes::Bool(_) => 5,
-        ValueTypes::Pickle(_) => 6,
-        ValueTypes::Unsupported => 0,
+        ValueTypes::Any(_) => 6,
+    }
+}
+
+#[inline(always)]
+pub(crate) fn encode_key(key: &PyAny) -> PyResult<Box<[u8]>> {
+    let bytes = py_to_value_types(key)?;
+    let type_encoding = encoding_byte(&bytes);
+    match bytes {
+        ValueTypes::Bytes(value) => Ok(concat_type_encoding(type_encoding, value)),
+        ValueTypes::String(value) => Ok(concat_type_encoding(type_encoding, value.as_bytes())),
+        ValueTypes::Int(value) => Ok(concat_type_encoding(
+            type_encoding,
+            &value.to_signed_bytes_be()[..],
+        )),
+        ValueTypes::Float(value) => Ok(concat_type_encoding(
+            type_encoding,
+            &value.to_be_bytes()[..],
+        )),
+        ValueTypes::Bool(value) => Ok(concat_type_encoding(
+            type_encoding,
+            if value { &[1u8] } else { &[0u8] },
+        )),
+        ValueTypes::Any(_) => Err(PyException::new_err(
+            "Only support `string`, `int`, `float`, `bool`, and `bytes` as keys",
+        )),
     }
 }
 
@@ -52,7 +55,11 @@ pub(crate) fn encoding_byte(v_type: &ValueTypes) -> u8 {
 /// The first byte is used for encoding value types
 ///
 #[inline(always)]
-pub(crate) fn encode_value(value: &PyAny) -> PyResult<Box<[u8]>> {
+pub(crate) fn encode_value(
+    value: &PyAny,
+    pickle_dumps: &PyObject,
+    py: Python,
+) -> PyResult<Box<[u8]>> {
     let bytes = py_to_value_types(value)?;
     let type_encoding = encoding_byte(&bytes);
     match bytes {
@@ -70,10 +77,10 @@ pub(crate) fn encode_value(value: &PyAny) -> PyResult<Box<[u8]>> {
             type_encoding,
             if value { &[1u8] } else { &[0u8] },
         )),
-        ValueTypes::Pickle(value) => Ok(concat_type_encoding(type_encoding, &value)),
-        ValueTypes::Unsupported => Err(PyException::new_err(
-            "Only support `string`, `int`, `float`, and `bytes` as keys / values",
-        )),
+        ValueTypes::Any(value) => {
+            let pickle_bytes: Vec<u8> = pickle_dumps.call1(py, (value,))?.extract(py)?;
+            Ok(concat_type_encoding(type_encoding, &pickle_bytes[..]))
+        }
     }
 }
 
@@ -94,14 +101,15 @@ fn py_to_value_types(value: &PyAny) -> PyResult<ValueTypes> {
     if let Ok(value) = <PyFloat as PyTryFrom>::try_from(value) {
         return Ok(ValueTypes::Float(value.extract()?));
     }
-    if let Ok(value) = <PyCell<Pickle> as PyTryFrom>::try_from(value) {
-        return Ok(ValueTypes::Pickle(value.borrow().data.clone()));
-    }
-    Ok(ValueTypes::Unsupported)
+    Ok(ValueTypes::Any(value))
 }
 
 #[inline(always)]
-pub(crate) fn decode_value(py: Python, bytes: &[u8]) -> PyResult<PyObject> {
+pub(crate) fn decode_value(
+    py: Python,
+    bytes: &[u8],
+    pickle_loads: &PyObject,
+) -> PyResult<PyObject> {
     match bytes.first() {
         None => Err(PyException::new_err("Unknown value type")),
         Some(byte) => match byte {
@@ -122,7 +130,7 @@ pub(crate) fn decode_value(py: Python, bytes: &[u8]) -> PyResult<PyObject> {
                 Ok(float.into_py(py))
             }
             5 => Ok((bytes[1] != 0).to_object(py)),
-            6 => Ok(Py::new(py, Pickle::new(&bytes[1..]))?.to_object(py)),
+            6 => pickle_loads.call1(py, (PyBytes::new(py, &bytes[1..]),)),
             _ => Err(PyException::new_err("Unknown value type")),
         },
     }

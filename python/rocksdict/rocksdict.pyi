@@ -21,7 +21,6 @@ __all__ = ["DataBlockIndexType",
            "UniversalCompactionStopStyle",
            "WriteOptions",
            "RdictInner",
-           "Pickle",
            "RdictIter"]
 
 class DataBlockIndexType:
@@ -361,11 +360,6 @@ class WriteOptions:
     def set_memtable_insert_hint_per_batch(self, v: bool) -> None: ...
     def set_no_slowdown(self, no_slowdown: bool) -> None: ...
     def set_sync(self, sync: bool) -> None: ...
-
-class Pickle:
-    @property
-    def data(self) -> bytes: ...
-    def __init__(self, data: bytes) -> Pickle: ...
 
 class RdictInner:
     def __init__(self, path: str, options: Options = Options()) -> RdictInner: ...

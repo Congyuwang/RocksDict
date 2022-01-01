@@ -1,7 +1,5 @@
 from .rocksdict import *
 from .rocksdict import RdictInner as _Rdict
-from .rocksdict import Pickle as _Pickle
-import pickle as _pkl
 from typing import Union, List, Any, Tuple, Reversible
 
 __all__ = ["DataBlockIndexType",
@@ -194,19 +192,10 @@ class Rdict:
         self._inner.set_read_options(read_opt)
 
     def __getitem__(self, key: Union[str, int, float, bytes, bool, List[Union[str, int, float, bytes, bool]]]) -> Any:
-        value = self._inner[key]
-        if type(value) is _Pickle:
-            return _pkl.loads(value.data)
-        if type(key) is list:
-            return [_pkl.loads(v.data) if type(v) is _Pickle else v for v in value]
-        return value
+        return self._inner[key]
 
     def __setitem__(self, key: Union[str, int, float, bytes, bool], value) -> None:
-        v_type = type(value)
-        if v_type is str or v_type is int or v_type is float or v_type is bytes or v_type is bool:
-            self._inner[key] = value
-        else:
-            self._inner[key] = _Pickle(_pkl.dumps(value))
+        self._inner[key] = value
 
     def __contains__(self, key: Union[str, int, float, bytes, bool]) -> bool:
         return key in self._inner

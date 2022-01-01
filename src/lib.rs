@@ -4,7 +4,6 @@ mod options;
 mod rdict;
 mod util;
 
-use crate::encoder::Pickle;
 use crate::iter::RdictIter;
 use crate::options::*;
 use crate::rdict::Rdict;
@@ -33,7 +32,6 @@ fn rocksdict(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<UniversalCompactionStopStylePy>()?;
     m.add_class::<EnvPy>()?;
     m.add_class::<FifoCompactOptionsPy>()?;
-    m.add_class::<Pickle>()?;
     m.add_class::<RdictIter>()?;
     Ok(())
 }

@@ -1,4 +1,4 @@
-use crate::encoder::{decode_value, encode_value};
+use crate::encoder::{decode_value, encode_key, encode_value};
 use crate::{FlushOptionsPy, OptionsPy, RdictIter, ReadOpt, ReadOptionsPy, WriteOptionsPy};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
@@ -34,6 +34,8 @@ pub(crate) struct Rdict {
     write_opt: WriteOptions,
     flush_opt: FlushOptionsPy,
     read_opt: ReadOptions,
+    pickle_loads: PyObject,
+    pickle_dumps: PyObject,
 }
 
 #[pymethods]
@@ -42,6 +44,7 @@ impl Rdict {
     #[args(options = "Python::with_gil(|py| Py::new(py, OptionsPy::new()).unwrap())")]
     fn new(path: &str, options: Py<OptionsPy>, py: Python) -> PyResult<Self> {
         let path = Path::new(path);
+        let pickle = PyModule::import(py, "pickle")?.to_object(py);
         match create_dir_all(path) {
             Ok(_) => match DB::open(&options.borrow(py).0, &path) {
                 Ok(db) => Ok(Rdict {
@@ -49,6 +52,8 @@ impl Rdict {
                     write_opt: WriteOptions::default(),
                     flush_opt: FlushOptionsPy::new(),
                     read_opt: ReadOptions::default(),
+                    pickle_loads: pickle.getattr(py, "loads")?,
+                    pickle_dumps: pickle.getattr(py, "dumps")?,
                 }),
                 Err(e) => Err(PyException::new_err(e.to_string())),
             },
@@ -124,14 +129,17 @@ impl Rdict {
         if let Some(db) = &self.db {
             // batch_get
             if let Ok(keys) = PyTryFrom::try_from(key) {
-                return Ok(get_batch_inner(db, keys, py, &self.read_opt)?.to_object(py));
+                return Ok(
+                    get_batch_inner(db, keys, py, &self.read_opt, &self.pickle_loads)?
+                        .to_object(py),
+                );
             }
             // single get
-            let key = encode_value(key)?;
+            let key = encode_key(key)?;
             match db.get_pinned_opt(&key[..], &self.read_opt) {
                 Ok(value) => match value {
                     None => Err(PyException::new_err("key not found")),
-                    Some(slice) => decode_value(py, slice.as_ref()),
+                    Some(slice) => decode_value(py, slice.as_ref(), &self.pickle_loads),
                 },
                 Err(e) => Err(PyException::new_err(e.to_string())),
             }
@@ -140,10 +148,10 @@ impl Rdict {
         }
     }
 
-    fn __setitem__(&self, key: &PyAny, value: &PyAny) -> PyResult<()> {
+    fn __setitem__(&self, key: &PyAny, value: &PyAny, py: Python) -> PyResult<()> {
         if let Some(db) = &self.db {
-            let key = encode_value(key)?;
-            let value = encode_value(value)?;
+            let key = encode_key(key)?;
+            let value = encode_value(value, &self.pickle_dumps, py)?;
             match db.put_opt(&key[..], value, &self.write_opt) {
                 Ok(_) => Ok(()),
                 Err(e) => Err(PyException::new_err(e.to_string())),
@@ -155,7 +163,7 @@ impl Rdict {
 
     fn __contains__(&self, key: &PyAny) -> PyResult<bool> {
         if let Some(db) = &self.db {
-            let key = encode_value(key)?;
+            let key = encode_key(key)?;
             if db.key_may_exist_opt(&key[..], &self.read_opt) {
                 match db.get_pinned_opt(&key[..], &self.read_opt) {
                     Ok(value) => match value {
@@ -174,7 +182,7 @@ impl Rdict {
 
     fn __delitem__(&self, key: &PyAny) -> PyResult<()> {
         if let Some(db) = &self.db {
-            let key = encode_value(key)?;
+            let key = encode_key(key)?;
             match db.delete_opt(&key[..], &self.write_opt) {
                 Ok(_) => Ok(()),
                 Err(e) => Err(PyException::new_err(e.to_string())),
@@ -266,6 +274,7 @@ impl Rdict {
                     db: db.clone(),
                     inner: librocksdb_sys::rocksdb_create_iterator(db.inner(), readopts.0),
                     readopts,
+                    pickle_loads: self.pickle_loads.clone(),
                 }
             })
         } else {
@@ -280,10 +289,11 @@ fn get_batch_inner<'a>(
     keys: &'a PyList,
     py: Python<'a>,
     read_opt: &ReadOptions,
+    pickle_loads: &PyObject,
 ) -> PyResult<&'a PyList> {
     let mut keys_batch = Vec::new();
     for key in keys {
-        keys_batch.push(encode_value(key)?);
+        keys_batch.push(encode_key(key)?);
     }
     let values = db.multi_get_opt(keys_batch, read_opt);
     let result = PyList::empty(py);
@@ -291,7 +301,7 @@ fn get_batch_inner<'a>(
         match v {
             Ok(value) => match value {
                 None => result.append(py.None())?,
-                Some(slice) => result.append(decode_value(py, slice.as_ref())?)?,
+                Some(slice) => result.append(decode_value(py, slice.as_ref(), pickle_loads)?)?,
             },
             Err(e) => return Err(PyException::new_err(e.to_string())),
         }

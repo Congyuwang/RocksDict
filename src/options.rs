@@ -136,6 +136,7 @@ pub(crate) struct ReadOptionsPy {
     readahead_size: usize,
     tailing: bool,
     pin_data: bool,
+    pickle_dumps: PyObject,
 }
 
 pub(crate) struct ReadOpt(pub(crate) *mut librocksdb_sys::rocksdb_readoptions_t);
@@ -1792,8 +1793,11 @@ impl From<&FlushOptionsPy> for FlushOptions {
 #[pymethods]
 impl ReadOptionsPy {
     #[new]
-    pub fn default() -> Self {
-        Self {
+    pub fn default(py: Python) -> PyResult<Self> {
+        let pickle_dumps = PyModule::import(py, "pickle")?
+            .to_object(py)
+            .getattr(py, "dumps")?;
+        Ok(Self {
             fill_cache: true,
             iterate_upper_bound: None,
             iterate_lower_bound: None,
@@ -1806,7 +1810,8 @@ impl ReadOptionsPy {
             readahead_size: 0,
             tailing: false,
             pin_data: false,
-        }
+            pickle_dumps,
+        })
     }
 
     /// Specify whether the "data block"/"index block"/"filter block"
@@ -1822,14 +1827,14 @@ impl ReadOptionsPy {
     /// Sets the upper bound for an iterator.
     /// The upper bound itself is not included on the iteration result.
     #[pyo3(text_signature = "($self, key)")]
-    pub fn set_iterate_upper_bound(&mut self, key: &PyAny) -> PyResult<()> {
-        Ok(self.iterate_upper_bound = Some(encode_value(key)?))
+    pub fn set_iterate_upper_bound(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
+        Ok(self.iterate_upper_bound = Some(encode_value(key, &self.pickle_dumps, py)?))
     }
 
     /// Sets the lower bound for an iterator.
     #[pyo3(text_signature = "($self, key)")]
-    pub fn set_iterate_lower_bound(&mut self, key: &PyAny) -> PyResult<()> {
-        Ok(self.iterate_lower_bound = Some(encode_value(key)?))
+    pub fn set_iterate_lower_bound(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
+        Ok(self.iterate_lower_bound = Some(encode_value(key, &self.pickle_dumps, py)?))
     }
 
     /// Enforce that the iterator only iterates over the same
