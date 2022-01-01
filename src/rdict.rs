@@ -237,7 +237,7 @@ impl Rdict {
     ///     from_key: iterate from key, first seek to this key
     ///         or the nearest next key for iteration
     ///         (depending on iteration direction).
-    #[pyo3(text_signature = "($self, backwards, from_key, read_opt")]
+    #[pyo3(text_signature = "($self, backwards, from_key, read_opt)")]
     #[args(
         backwards = "false",
         from_key = "_py.None().into_ref(_py)",
@@ -270,7 +270,7 @@ impl Rdict {
     ///     from_key: iterate from key, first seek to this key
     ///         or the nearest next key for iteration
     ///         (depending on iteration direction).
-    #[pyo3(text_signature = "($self, backwards, from_key, read_opt")]
+    #[pyo3(text_signature = "($self, backwards, from_key, read_opt)")]
     #[args(
         backwards = "false",
         from_key = "_py.None().into_ref(_py)",
@@ -303,7 +303,7 @@ impl Rdict {
     ///     from_key: iterate from key, first seek to this key
     ///         or the nearest next key for iteration
     ///         (depending on iteration direction).
-    #[pyo3(text_signature = "($self, backwards, from_key, read_opt")]
+    #[pyo3(text_signature = "($self, backwards, from_key, read_opt)")]
     #[args(
         backwards = "false",
         from_key = "_py.None().into_ref(_py)",
