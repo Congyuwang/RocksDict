@@ -54,7 +54,7 @@ class TestIterBytes(unittest.TestCase):
         key = randbytes(20)
         ref_list = [k for k in self.ref_dict.keys() if k <= key]
         ref_list.sort(reverse=True)
-        self.assertEqual([k for k in reversed(self.test_dict.keys(from_key=key))], ref_list)
+        self.assertEqual([k for k in self.test_dict.keys(from_key=key, backwards=True)], ref_list)
 
     def test_seek_forward(self):
         key = randbytes(20)
@@ -63,7 +63,7 @@ class TestIterBytes(unittest.TestCase):
 
     def test_seek_backward(self):
         key = randbytes(20)
-        self.assertEqual({k: v for k, v in reversed(self.test_dict.items(from_key=key))},
+        self.assertEqual({k: v for k, v in self.test_dict.items(from_key=key, backwards=True)},
                          {k: v for k, v in self.ref_dict.items() if k <= key})
 
     @classmethod
@@ -102,7 +102,7 @@ class TestIterInt(unittest.TestCase):
     def test_seek_backward_key(self):
         key = randint(0, TEST_INT_RANGE_UPPER - 1)
         ref_list = [k for k in self.ref_dict.keys() if k <= key]
-        test_list = [key for key in reversed(self.test_dict.keys(from_key=key))]
+        test_list = [key for key in self.test_dict.keys(from_key=key, backwards=True)]
         # this is due to characteristic of VarInt encoding
         self.assertTrue(all(key in ref_list for key in test_list))
 
@@ -111,7 +111,7 @@ class TestIterInt(unittest.TestCase):
                          {k: v for k, v in self.ref_dict.items()})
 
     def test_seek_backward(self):
-        self.assertEqual({k: v for k, v in reversed(self.test_dict.items())},
+        self.assertEqual({k: v for k, v in self.test_dict.items(backwards=True)},
                          {k: v for k, v in self.ref_dict.items()})
 
     @classmethod

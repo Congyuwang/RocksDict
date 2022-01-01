@@ -6,6 +6,8 @@ use libc::{c_char, c_uchar, size_t};
 use librocksdb_sys;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
+use pyo3::PyIterProtocol;
+use rocksdb::db::DBAccess;
 use rocksdb::DB;
 use std::ptr::null_mut;
 use std::sync::Arc;
@@ -25,6 +27,37 @@ pub(crate) struct RdictIter {
 
     /// use pickle loads to convert bytes to pyobjects
     pub(crate) pickle_loads: PyObject,
+}
+
+#[pyclass]
+pub(crate) struct RdictItems {
+    inner: RdictIter,
+    backwards: bool,
+}
+
+#[pyclass]
+pub(crate) struct RdictKeys {
+    inner: RdictIter,
+    backwards: bool,
+}
+
+#[pyclass]
+pub(crate) struct RdictValues {
+    inner: RdictIter,
+    backwards: bool,
+}
+
+impl RdictIter {
+    pub(crate) fn new(db: &Arc<DB>, readopts: ReadOpt, pickle_loads: &PyObject) -> Self {
+        unsafe {
+            RdictIter {
+                db: db.clone(),
+                inner: librocksdb_sys::rocksdb_create_iterator(db.inner(), readopts.0),
+                readopts,
+                pickle_loads: pickle_loads.clone(),
+            }
+        }
+    }
 }
 
 #[pymethods]
@@ -242,3 +275,53 @@ impl Drop for RdictIter {
 }
 
 unsafe impl Send for RdictIter {}
+
+macro_rules! impl_iter {
+    ($iter_name: ident, $($field: ident),*) => {
+        #[pyproto]
+        impl PyIterProtocol for $iter_name {
+            fn __iter__(slf: PyRef<Self>) -> PyRef<Self> {
+                slf
+            }
+
+            fn __next__(mut slf: PyRefMut<Self>) -> PyResult<Option<PyObject>> {
+                if slf.inner.valid() {
+                    $(let $field = Python::with_gil(|py| slf.inner.$field(py))?;)*
+                    if slf.backwards {
+                        slf.inner.prev();
+                    } else {
+                        slf.inner.next();
+                    }
+                    Ok(Some(Python::with_gil(|py| ($($field),*).to_object(py))))
+                } else {
+                    Ok(None)
+                }
+            }
+        }
+
+        impl $iter_name {
+            pub(crate) fn new(inner: RdictIter, backwards: bool, from_key: &PyAny) -> PyResult<Self> {
+                let mut inner = inner;
+                if from_key.is_none() {
+                    if backwards {
+                        inner.seek_to_last();
+                    } else {
+                        inner.seek_to_first();
+                    }
+                } else if backwards {
+                    inner.seek_for_prev(from_key)?;
+                } else {
+                    inner.seek(from_key)?;
+                }
+                Ok(Self {
+                    inner,
+                    backwards,
+                })
+            }
+        }
+    };
+}
+
+impl_iter!(RdictKeys, key);
+impl_iter!(RdictValues, value);
+impl_iter!(RdictItems, key, value);

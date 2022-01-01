@@ -17,7 +17,7 @@ and query from, this is the package for you.
 
 ### Installation
 
-This packakge is built for MacOS (x86/arm), Windows 64/32, and Linux x86.
+This package is built for macOS (x86/arm), Windows 64/32, and Linux x86.
 It can be installed from pypi with `pip install rocksdict`.
 
 ## Introduction
@@ -34,7 +34,7 @@ Below is a code example that shows how to do the following:
 - Delete storage
 
 ```python
-from rocksdict import Rdict, Options
+from rocksdict import Rdict
 
 path = str("./test_dict")
 
@@ -85,8 +85,8 @@ print(db[["good", "bad", 1.0]])
 # [True, False, 1]
  
 # delete Rdict from dict
-del db
-Rdict.destroy(path, Options())
+db.close()
+Rdict.destroy(path)
 ```
 
 Supported types:
@@ -104,6 +104,7 @@ most of rocksdb options are supported:
 
 ```python
 from rocksdict import Rdict, Options, SliceTransform, PlainTableFactoryOptions
+import os
 
 def db_options():
     opt = Options()
@@ -126,5 +127,5 @@ def db_options():
     opt.set_plain_table_factory(PlainTableFactoryOptions())
     return opt
 
-db = Rdict("./some_path", db_options())
+db = Rdict(str("./some_path"), db_options())
 ```

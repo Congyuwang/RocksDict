@@ -1,10 +1,10 @@
 use crate::encoder::{decode_value, encode_key, encode_value};
-use crate::{FlushOptionsPy, OptionsPy, RdictIter, ReadOpt, ReadOptionsPy, WriteOptionsPy};
+use crate::iter::{RdictItems, RdictKeys, RdictValues};
+use crate::{FlushOptionsPy, OptionsPy, RdictIter, ReadOptionsPy, WriteOptionsPy};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
-use rocksdb::db::DBAccess;
-use rocksdb::{ReadOptions, WriteOptions, DB};
+use rocksdb::{FlushOptions, ReadOptions, WriteOptions, DB};
 use std::fs::create_dir_all;
 use std::ops::Deref;
 use std::path::Path;
@@ -25,7 +25,7 @@ use std::sync::Arc;
 ///         db = Rdict("./test_dir")
 ///         assert(db[0] == 1)
 ///
-#[pyclass(name = "RdictInner", subclass)]
+#[pyclass(name = "Rdict", subclass)]
 #[pyo3(text_signature = "(path, options)")]
 pub(crate) struct Rdict {
     db: Option<Arc<DB>>,
@@ -44,7 +44,7 @@ impl Rdict {
     ///     path: path to the database
     ///     options: Options object
     #[new]
-    #[args(options = "Python::with_gil(|py| Py::new(py, OptionsPy::new()).unwrap())")]
+    #[args(options = "Py::new(_py, OptionsPy::new())?")]
     fn new(path: &str, options: Py<OptionsPy>, py: Python) -> PyResult<Self> {
         let path = Path::new(path);
         let pickle = PyModule::import(py, "pickle")?.to_object(py);
@@ -72,7 +72,7 @@ impl Rdict {
     ///         from rocksdict import Rdict, Options, WriteBatch, WriteOptions
     ///
     ///         path = "_path_for_rocksdb_storageY1"
-    ///         db = Rdict(path, Options())
+    ///         db = Rdict(path)
     ///
     ///         # set write options
     ///         write_options = WriteOptions()
@@ -87,41 +87,19 @@ impl Rdict {
     ///
     ///         # remove db
     ///         del db
-    ///         Rdict.destroy(path, Options())
+    ///         Rdict.destroy(path)
     #[pyo3(text_signature = "($self, write_opt)")]
     fn set_write_options(&mut self, write_opt: PyRef<WriteOptionsPy>) {
         self.write_opt = write_opt.deref().into()
     }
 
-    /// Optionally wait for the memtable flush to be performed.
-    ///
-    /// Example:
-    ///     ::
-    ///
-    ///         from rocksdb import Rdict, Options, FlushOptions
-    ///
-    ///         path = "_path_for_rocksdb_storageY2"
-    ///         db = Rdict(path, Options())
-    ///
-    ///         flush_options = FlushOptions()
-    ///         flush_options.set_wait(True)
-    ///
-    ///         db.flush_opt(flush_options)
-    ///         del db
-    ///         Rdict.destroy(path, Options())
-    ///
-    #[pyo3(text_signature = "($self, flush_opt)")]
-    fn set_flush_options(&mut self, flush_opt: PyRef<FlushOptionsPy>) {
-        self.flush_opt = *flush_opt.deref()
-    }
-
-    /// Configure Read Options.
+    /// Configure Read Options for all the get operations.
     #[pyo3(text_signature = "($self, read_opt)")]
     fn set_read_options(&mut self, read_opt: &ReadOptionsPy) {
         self.read_opt = read_opt.into()
     }
 
-    /// Supports batch get:
+    /// Parse list for batch get.
     fn __getitem__(&self, key: &PyAny, py: Python) -> PyResult<PyObject> {
         if let Some(db) = &self.db {
             // batch_get
@@ -189,6 +167,187 @@ impl Rdict {
         }
     }
 
+    /// Reversible for iterating over keys and values.
+    ///
+    /// Examples:
+    ///     ::
+    ///
+    ///         from rocksdict import Rdict, Options, ReadOptions
+    ///
+    ///         path = "_path_for_rocksdb_storage5"
+    ///         db = Rdict(path)
+    ///
+    ///         for i in range(50):
+    ///             db[i] = i ** 2
+    ///
+    ///         iter = db.iter()
+    ///
+    ///         iter.seek_to_first()
+    ///
+    ///         j = 0
+    ///         while iter.valid():
+    ///             assert iter.key() == j
+    ///             assert iter.value() == j ** 2
+    ///             print(f"{iter.key()} {iter.value()}")
+    ///             iter.next()
+    ///             j += 1
+    ///
+    ///         iter.seek_to_first();
+    ///         assert iter.key() == 0
+    ///         assert iter.value() == 0
+    ///         print(f"{iter.key()} {iter.value()}")
+    ///
+    ///         iter.seek(25)
+    ///         assert iter.key() == 25
+    ///         assert iter.value() == 625
+    ///         print(f"{iter.key()} {iter.value()}")
+    ///
+    ///         del iter, db
+    ///         Rdict.destroy(path)
+    ///
+    /// Args:
+    ///     read_opt: ReadOptions
+    ///
+    /// Returns: Reversible
+    #[pyo3(text_signature = "($self, read_opt)")]
+    #[args(read_opt = "Py::new(_py, ReadOptionsPy::default(_py)?)?")]
+    fn iter(&self, read_opt: Py<ReadOptionsPy>, py: Python) -> PyResult<RdictIter> {
+        if let Some(db) = &self.db {
+            Ok(RdictIter::new(
+                db,
+                read_opt.borrow(py).deref().into(),
+                &self.pickle_loads,
+            ))
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
+
+    /// Iterate through all keys and values pairs.
+    ///
+    /// Examples:
+    ///     ::
+    ///
+    ///         for k, v in db.items():
+    ///             print(f"{k} -> {v}")
+    ///
+    /// Args:
+    ///     inner: the inner Rdict
+    ///     backwards: iteration direction, forward if `False`.
+    ///     from_key: iterate from key, first seek to this key
+    ///         or the nearest next key for iteration
+    ///         (depending on iteration direction).
+    #[pyo3(text_signature = "($self, backwards, from_key, read_opt")]
+    #[args(
+        backwards = "false",
+        from_key = "_py.None().into_ref(_py)",
+        read_opt = "Py::new(_py, ReadOptionsPy::default(_py)?)?"
+    )]
+    fn items(
+        &self,
+        backwards: bool,
+        from_key: &PyAny,
+        read_opt: Py<ReadOptionsPy>,
+        py: Python,
+    ) -> PyResult<RdictItems> {
+        Ok(RdictItems::new(
+            self.iter(read_opt, py)?,
+            backwards,
+            from_key,
+        )?)
+    }
+
+    /// Iterate through all keys.
+    ///
+    /// Examples:
+    ///     ::
+    ///
+    ///         all_keys = [k for k in db.keys()]
+    ///
+    /// Args:
+    ///     inner: the inner Rdict
+    ///     backwards: iteration direction, forward if `False`.
+    ///     from_key: iterate from key, first seek to this key
+    ///         or the nearest next key for iteration
+    ///         (depending on iteration direction).
+    #[pyo3(text_signature = "($self, backwards, from_key, read_opt")]
+    #[args(
+        backwards = "false",
+        from_key = "_py.None().into_ref(_py)",
+        read_opt = "Py::new(_py, ReadOptionsPy::default(_py)?)?"
+    )]
+    fn keys(
+        &self,
+        backwards: bool,
+        from_key: &PyAny,
+        read_opt: Py<ReadOptionsPy>,
+        py: Python,
+    ) -> PyResult<RdictKeys> {
+        Ok(RdictKeys::new(
+            self.iter(read_opt, py)?,
+            backwards,
+            from_key,
+        )?)
+    }
+
+    /// Iterate through all values.
+    ///
+    /// Examples:
+    ///     ::
+    ///
+    ///         all_keys = [v for v in db.values()]
+    ///
+    /// Args:
+    ///     inner: the inner Rdict
+    ///     backwards: iteration direction, forward if `False`.
+    ///     from_key: iterate from key, first seek to this key
+    ///         or the nearest next key for iteration
+    ///         (depending on iteration direction).
+    #[pyo3(text_signature = "($self, backwards, from_key, read_opt")]
+    #[args(
+        backwards = "false",
+        from_key = "_py.None().into_ref(_py)",
+        read_opt = "Py::new(_py, ReadOptionsPy::default(_py)?)?"
+    )]
+    fn values(
+        &self,
+        backwards: bool,
+        from_key: &PyAny,
+        read_opt: Py<ReadOptionsPy>,
+        py: Python,
+    ) -> PyResult<RdictValues> {
+        Ok(RdictValues::new(
+            self.iter(read_opt, py)?,
+            backwards,
+            from_key,
+        )?)
+    }
+
+    /// Manually flush all memory to disk.
+    ///
+    /// Notes:
+    ///     Manually call mem-table flush.
+    ///     It is recommended to call flush() or close() before
+    ///     stopping the python program, to ensure that all written
+    ///     key-value pairs have been flushed to the disk.
+    ///
+    /// Args:
+    ///     wait (bool): whether to wait for the flush to finish.
+    #[pyo3(text_signature = "($self, wait)")]
+    #[args(wait = "true")]
+    fn flush(&self, wait: bool) -> PyResult<()> {
+        if let Some(db) = &self.db {
+            let mut f_opt = FlushOptions::new();
+            f_opt.set_wait(wait);
+            match db.flush_opt(&f_opt) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(PyException::new_err(e.into_string())),
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
+
     /// Flush memory to disk, and drop the database.
     ///
     /// Notes:
@@ -222,69 +381,11 @@ impl Rdict {
     ///     options (rocksdict.Options): Rocksdb options object
     #[staticmethod]
     #[pyo3(text_signature = "(path, options)")]
-    fn destroy(path: &str, options: PyRef<OptionsPy>) -> PyResult<()> {
-        match DB::destroy(&options.0, path) {
+    #[args(options = "Py::new(_py, OptionsPy::new())?")]
+    fn destroy(path: &str, options: Py<OptionsPy>, py: Python) -> PyResult<()> {
+        match DB::destroy(&options.borrow(py).0, path) {
             Ok(_) => Ok(()),
             Err(e) => Err(PyException::new_err(e.to_string())),
-        }
-    }
-
-    /// Reversible for iterating over keys and values.
-    ///
-    /// Examples:
-    ///     ::
-    ///
-    ///         from rocksdict import Rdict, Options, ReadOptions
-    ///
-    ///         path = "_path_for_rocksdb_storage5"
-    ///         db = Rdict(path, Options())
-    ///
-    ///         for i in range(50):
-    ///             db[i] = i ** 2
-    ///
-    ///         iter = db.iter(ReadOptions())
-    ///
-    ///         iter.seek_to_first()
-    ///
-    ///         j = 0
-    ///         while iter.valid():
-    ///             assert iter.key() == j
-    ///             assert iter.value() == j ** 2
-    ///             print(f"{iter.key()} {iter.value()}")
-    ///             iter.next()
-    ///             j += 1
-    ///
-    ///         iter.seek_to_first();
-    ///         assert iter.key() == 0
-    ///         assert iter.value() == 0
-    ///         print(f"{iter.key()} {iter.value()}")
-    ///
-    ///         iter.seek(25)
-    ///         assert iter.key() == 25
-    ///         assert iter.value() == 625
-    ///         print(f"{iter.key()} {iter.value()}")
-    ///
-    ///         del iter, db
-    ///         Rdict.destroy(path, Options())
-    ///
-    /// Args:
-    ///     read_opt: ReadOptions
-    ///
-    /// Returns: Reversible
-    #[pyo3(text_signature = "($self, read_opt)")]
-    fn iter(&self, read_opt: &ReadOptionsPy) -> PyResult<RdictIter> {
-        if let Some(db) = &self.db {
-            let readopts: ReadOpt = read_opt.into();
-            Ok(unsafe {
-                RdictIter {
-                    db: db.clone(),
-                    inner: librocksdb_sys::rocksdb_create_iterator(db.inner(), readopts.0),
-                    readopts,
-                    pickle_loads: self.pickle_loads.clone(),
-                }
-            })
-        } else {
-            Err(PyException::new_err("DB already closed"))
         }
     }
 }

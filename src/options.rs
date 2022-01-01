@@ -203,12 +203,65 @@ pub(crate) struct DBPathPy {
     target_size: u64,
 }
 
+/// This is to be treated as an enum.
+///
+/// Calling the corresponding functions of each
+/// to get one of the following.
+/// - None
+/// - Snappy
+/// - Zlib
+/// - Bz2
+/// - Lz4
+/// - Lz4hc
+/// - Zstd
+///
+/// Below is an example to set compression type to Snappy.
+///
+/// Example:
+///     ::
+///
+///         opt = Options()
+///         opt.set_compression_type(DBCompressionType.snappy())
+///
 #[pyclass(name = "DBCompressionType")]
 pub(crate) struct DBCompressionTypePy(DBCompressionType);
 
+/// This is to be treated as an enum.
+///
+/// Calling the corresponding functions of each
+/// to get one of the following.
+/// - Level
+/// - Universal
+/// - Fifo
+///
+/// Below is an example to set compaction style to Fifo.
+///
+/// Example:
+///     ::
+///
+///         opt = Options()
+///         opt.set_compaction_style(DBCompactionStyle.fifo())
+///
 #[pyclass(name = "DBCompactionStyle")]
 pub(crate) struct DBCompactionStylePy(DBCompactionStyle);
 
+/// This is to be treated as an enum.
+///
+/// Calling the corresponding functions of each
+/// to get one of the following.
+/// - TolerateCorruptedTailRecords
+/// - AbsoluteConsistency
+/// - PointInTime
+/// - SkipAnyCorruptedRecord
+///
+/// Below is an example to set recovery mode to PointInTime.
+///
+/// Example:
+///     ::
+///
+///         opt = Options()
+///         opt.set_wal_recovery_mode(DBRecoveryMode.point_in_time())
+///
 #[pyclass(name = "DBRecoveryMode")]
 pub(crate) struct DBRecoveryModePy(DBRecoveryMode);
 
@@ -380,7 +433,7 @@ impl OptionsPy {
     ///
     /// Default: empty
     ///
-        ///     from rocksdict import Options, DBPath
+    ///     from rocksdict import Options, DBPath
     ///
     ///     opt = Options()
     ///     flash_path = DBPath("/flash_path", 10 * 1024 * 1024 * 1024) # 10 GB
@@ -941,7 +994,7 @@ impl OptionsPy {
 
     /// Sets the compaction style.
     ///
-    /// Default: DBCompactionStyle::Level
+    /// Default: DBCompactionStyle.level()
     #[pyo3(text_signature = "($self, style)")]
     pub fn set_compaction_style(&mut self, style: PyRef<DBCompactionStylePy>) {
         self.0.set_compaction_style(style.0)
@@ -962,7 +1015,7 @@ impl OptionsPy {
     /// Sets unordered_write to true trades higher write throughput with
     /// relaxing the immutability guarantee of snapshots. This violates the
     /// repeatability one expects from ::Get from a snapshot, as well as
-///:MultiGet and Iterator's consistent-point-in-time view property.
+    ///:MultiGet and Iterator's consistent-point-in-time view property.
     /// If the application cannot tolerate the relaxed guarantees, it can implement
     /// its own mechanisms to work around that and yet benefit from the higher
     /// throughput. Using TransactionDB with WRITE_PREPARED write policy and
@@ -1886,7 +1939,7 @@ impl ReadOptionsPy {
     /// improve the performance of forward iteration on spinning disks.
     /// Default: 0
     ///
-        /// from rocksdict import ReadOptions
+    /// from rocksdict import ReadOptions
     ///
     /// opts = ReadOptions()
     /// opts.set_readahead_size(4_194_304) # 4mb
@@ -2475,19 +2528,19 @@ impl DBCompressionTypePy {
 impl DBCompactionStylePy {
     #[staticmethod]
     #[pyo3(text_signature = "()")]
-    pub fn level_style() -> Self {
+    pub fn level() -> Self {
         DBCompactionStylePy(DBCompactionStyle::Level)
     }
 
     #[staticmethod]
     #[pyo3(text_signature = "()")]
-    pub fn universal_style() -> Self {
+    pub fn universal() -> Self {
         DBCompactionStylePy(DBCompactionStyle::Universal)
     }
 
     #[staticmethod]
     #[pyo3(text_signature = "()")]
-    pub fn fifo_style() -> Self {
+    pub fn fifo() -> Self {
         DBCompactionStylePy(DBCompactionStyle::Fifo)
     }
 }
@@ -2496,25 +2549,25 @@ impl DBCompactionStylePy {
 impl DBRecoveryModePy {
     #[staticmethod]
     #[pyo3(text_signature = "()")]
-    pub fn tolerate_corrupted_tail_records_mode() -> Self {
+    pub fn tolerate_corrupted_tail_records() -> Self {
         DBRecoveryModePy(DBRecoveryMode::TolerateCorruptedTailRecords)
     }
 
     #[staticmethod]
     #[pyo3(text_signature = "()")]
-    pub fn absolute_consistency_mode() -> Self {
+    pub fn absolute_consistency() -> Self {
         DBRecoveryModePy(DBRecoveryMode::AbsoluteConsistency)
     }
 
     #[staticmethod]
     #[pyo3(text_signature = "()")]
-    pub fn point_in_time_mode() -> Self {
+    pub fn point_in_time() -> Self {
         DBRecoveryModePy(DBRecoveryMode::PointInTime)
     }
 
     #[staticmethod]
     #[pyo3(text_signature = "()")]
-    pub fn skip_any_corrupted_record_mode() -> Self {
+    pub fn skip_any_corrupted_record() -> Self {
         DBRecoveryModePy(DBRecoveryMode::SkipAnyCorruptedRecord)
     }
 }
