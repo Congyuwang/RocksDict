@@ -3,12 +3,12 @@ use crate::{FlushOptionsPy, OptionsPy, RdictIter, ReadOpt, ReadOptionsPy, WriteO
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
+use rocksdb::db::DBAccess;
 use rocksdb::{ReadOptions, WriteOptions, DB};
 use std::fs::create_dir_all;
 use std::ops::Deref;
 use std::path::Path;
 use std::sync::Arc;
-use rocksdb::db::DBAccess;
 
 ///
 /// A persistent on-disk dictionary. Supports string, int, float, bytes as key, values.

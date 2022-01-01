@@ -1,14 +1,14 @@
 mod encoder;
+mod iter;
 mod options;
 mod rdict;
-mod iter;
 mod util;
 
 use crate::encoder::Pickle;
+use crate::iter::RdictIter;
 use crate::options::*;
 use crate::rdict::Rdict;
 use pyo3::prelude::*;
-use crate::iter::RdictIter;
 
 #[pymodule]
 fn rocksdict(_py: Python, m: &PyModule) -> PyResult<()> {

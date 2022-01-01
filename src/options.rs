@@ -1805,7 +1805,7 @@ impl ReadOptionsPy {
             verify_checksums: true,
             readahead_size: 0,
             tailing: false,
-            pin_data: false
+            pin_data: false,
         }
     }
 
@@ -1983,13 +1983,34 @@ impl From<&ReadOptionsPy> for ReadOpt {
         }
         unsafe {
             librocksdb_sys::rocksdb_readoptions_set_fill_cache(opt.0, r_opt.fill_cache as c_uchar);
-            librocksdb_sys::rocksdb_readoptions_set_prefix_same_as_start(opt.0, r_opt.prefix_same_as_start as c_uchar);
-            librocksdb_sys::rocksdb_readoptions_set_total_order_seek(opt.0, r_opt.total_order_seek as c_uchar);
-            librocksdb_sys::rocksdb_readoptions_set_max_skippable_internal_keys(opt.0, r_opt.max_skippable_internal_keys);
-            librocksdb_sys::rocksdb_readoptions_set_background_purge_on_iterator_cleanup(opt.0, r_opt.background_purge_on_iterator_cleanup as c_uchar);
-            librocksdb_sys::rocksdb_readoptions_set_ignore_range_deletions(opt.0, r_opt.ignore_range_deletions as c_uchar);
-            librocksdb_sys::rocksdb_readoptions_set_verify_checksums(opt.0, r_opt.verify_checksums as c_uchar);
-            librocksdb_sys::rocksdb_readoptions_set_readahead_size(opt.0, r_opt.readahead_size as size_t);
+            librocksdb_sys::rocksdb_readoptions_set_prefix_same_as_start(
+                opt.0,
+                r_opt.prefix_same_as_start as c_uchar,
+            );
+            librocksdb_sys::rocksdb_readoptions_set_total_order_seek(
+                opt.0,
+                r_opt.total_order_seek as c_uchar,
+            );
+            librocksdb_sys::rocksdb_readoptions_set_max_skippable_internal_keys(
+                opt.0,
+                r_opt.max_skippable_internal_keys,
+            );
+            librocksdb_sys::rocksdb_readoptions_set_background_purge_on_iterator_cleanup(
+                opt.0,
+                r_opt.background_purge_on_iterator_cleanup as c_uchar,
+            );
+            librocksdb_sys::rocksdb_readoptions_set_ignore_range_deletions(
+                opt.0,
+                r_opt.ignore_range_deletions as c_uchar,
+            );
+            librocksdb_sys::rocksdb_readoptions_set_verify_checksums(
+                opt.0,
+                r_opt.verify_checksums as c_uchar,
+            );
+            librocksdb_sys::rocksdb_readoptions_set_readahead_size(
+                opt.0,
+                r_opt.readahead_size as size_t,
+            );
             librocksdb_sys::rocksdb_readoptions_set_tailing(opt.0, r_opt.tailing as c_uchar);
             librocksdb_sys::rocksdb_readoptions_set_pin_data(opt.0, r_opt.pin_data as c_uchar);
         }

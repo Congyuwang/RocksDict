@@ -1,15 +1,14 @@
+use crate::encoder::{decode_value, encode_value};
+use crate::util::error_message;
+use crate::ReadOpt;
 use core::slice;
-use std::ptr::null_mut;
-use std::sync::Arc;
 use libc::{c_char, c_uchar, size_t};
 use librocksdb_sys;
 use pyo3::exceptions::PyException;
-use rocksdb::DB;
 use pyo3::prelude::*;
-use crate::encoder::{decode_value, encode_value};
-use crate::ReadOpt;
-use crate::util::error_message;
-
+use rocksdb::DB;
+use std::ptr::null_mut;
+use std::sync::Arc;
 
 #[pyclass]
 #[allow(dead_code)]
@@ -27,7 +26,6 @@ pub(crate) struct RdictIter {
 
 #[pymethods]
 impl RdictIter {
-
     /// Returns `true` if the iterator is valid. An iterator is invalidated when
     /// it reaches the end of its defined range, or when it encounters an error.
     ///
@@ -46,7 +44,9 @@ impl RdictIter {
     /// Performing a seek will discard the current status.
     pub fn status(&self) -> PyResult<()> {
         let mut err: *mut c_char = null_mut();
-        unsafe { librocksdb_sys::rocksdb_iter_get_error(self.inner, &mut err); }
+        unsafe {
+            librocksdb_sys::rocksdb_iter_get_error(self.inner, &mut err);
+        }
         if !err.is_null() {
             Err(PyException::new_err(error_message(err)))
         } else {
@@ -205,7 +205,8 @@ impl RdictIter {
             unsafe {
                 let mut key_len: size_t = 0;
                 let key_len_ptr: *mut size_t = &mut key_len;
-                let key_ptr = librocksdb_sys::rocksdb_iter_key(self.inner, key_len_ptr) as *const c_uchar;
+                let key_ptr =
+                    librocksdb_sys::rocksdb_iter_key(self.inner, key_len_ptr) as *const c_uchar;
                 let key = slice::from_raw_parts(key_ptr, key_len as usize);
                 Ok(decode_value(py, key)?)
             }
@@ -222,7 +223,8 @@ impl RdictIter {
             unsafe {
                 let mut val_len: size_t = 0;
                 let val_len_ptr: *mut size_t = &mut val_len;
-                let val_ptr = librocksdb_sys::rocksdb_iter_value(self.inner, val_len_ptr) as *const c_uchar;
+                let val_ptr =
+                    librocksdb_sys::rocksdb_iter_value(self.inner, val_len_ptr) as *const c_uchar;
                 let value = slice::from_raw_parts(val_ptr, val_len as usize);
                 Ok(decode_value(py, value)?)
             }

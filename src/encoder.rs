@@ -121,7 +121,7 @@ pub(crate) fn decode_value(py: Python, bytes: &[u8]) -> PyResult<PyObject> {
                 let float: f64 = f64::from_be_bytes(bytes[1..].try_into().unwrap());
                 Ok(float.into_py(py))
             }
-            5 => Ok(PyBool::new( py, bytes[1] != 0).to_object(py)),
+            5 => Ok(PyBool::new(py, bytes[1] != 0).to_object(py)),
             6 => Ok(Py::new(py, Pickle::new(&bytes[1..]))?.to_object(py)),
             _ => Err(PyException::new_err("Unknown value type")),
         },

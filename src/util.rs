@@ -1,5 +1,5 @@
-use std::ffi::CStr;
 use libc::{c_char, c_void};
+use std::ffi::CStr;
 
 pub(crate) fn error_message(ptr: *const c_char) -> String {
     unsafe {
