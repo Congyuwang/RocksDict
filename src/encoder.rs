@@ -1,4 +1,4 @@
-use integer_encoding::VarInt;
+use num_bigint::BigInt;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyFloat, PyInt, PyString};
@@ -26,7 +26,7 @@ impl Pickle {
 pub(crate) enum ValueTypes<'a> {
     Bytes(&'a [u8]),
     String(String),
-    Int(i64),
+    Int(BigInt),
     Float(f64),
     Pickle(Vec<u8>),
     Unsupported,
@@ -58,7 +58,7 @@ pub(crate) fn encode_value(value: &PyAny) -> PyResult<Box<[u8]>> {
         ValueTypes::String(value) => Ok(concat_type_encoding(type_encoding, value.as_bytes())),
         ValueTypes::Int(value) => Ok(concat_type_encoding(
             type_encoding,
-            &value.encode_var_vec()[..],
+            &value.to_signed_bytes_be()[..],
         )),
         ValueTypes::Float(value) => Ok(concat_type_encoding(
             type_encoding,
@@ -105,11 +105,8 @@ pub(crate) fn decode_value(py: Python, bytes: &[u8]) -> PyResult<PyObject> {
                 Ok(string.into_py(py))
             }
             3 => {
-                if let Some((int, _)) = i64::decode_var(&bytes[1..]) {
-                    Ok(int.into_py(py))
-                } else {
-                    Err(PyException::new_err("varint decoding error"))
-                }
+                let big_int = BigInt::from_signed_bytes_be(&bytes[1..]);
+                Ok(big_int.to_object(py))
             }
             4 => {
                 let float: f64 = f64::from_be_bytes(bytes[1..].try_into().unwrap());
