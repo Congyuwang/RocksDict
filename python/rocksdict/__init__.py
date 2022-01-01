@@ -196,7 +196,6 @@ class Rdict(RdictInner):
     Examples:
         ::
 
-            ```python
             from rocksdict import Rdict, Options
 
             path = str("./test_dict")
@@ -250,7 +249,6 @@ class Rdict(RdictInner):
             # delete Rdict from dict
             del db
             Rdict.destroy(path, Options())
-            ```
 
     Supported types:
 
@@ -276,7 +274,6 @@ class Rdict(RdictInner):
         Examples:
             ::
 
-                ```python
                 from rocksdict import Rdict, Options, ReadOptions
 
                 path = "_path_for_rocksdb_storage5"
@@ -293,7 +290,6 @@ class Rdict(RdictInner):
 
                 del db
                 Rdict.destroy(path, Options())
-                ```
 
         Returns: Reversible
 
@@ -316,7 +312,6 @@ class Rdict(RdictInner):
         Examples:
             ::
 
-                ```python
                 from rocksdict import Rdict, Options, ReadOptions
 
                 path = "_path_for_rocksdb_storage5"
@@ -332,7 +327,6 @@ class Rdict(RdictInner):
 
                 del db
                 Rdict.destroy(path, Options())
-                ```
 
         Returns: Reversible
 
@@ -355,7 +349,6 @@ class Rdict(RdictInner):
         Examples:
             ::
 
-                ```python
                 from rocksdict import Rdict, Options, ReadOptions
 
                 path = "_path_for_rocksdb_storage5"
@@ -371,7 +364,6 @@ class Rdict(RdictInner):
 
                 del db
                 Rdict.destroy(path, Options())
-                ```
 
         Returns: Reversible
 
@@ -389,6 +381,52 @@ class Rdict(RdictInner):
     def set_read_options(self, read_opt: ReadOptions) -> None:
         """Configure Read Options."""
         super(Rdict, self).set_read_options(read_opt)
+
+    def iter(self, read_opt: ReadOptions) -> RdictIter:
+        """Reversible for iterating over keys and values.
+
+        Examples:
+            ::
+
+                from rocksdict import Rdict, Options, ReadOptions
+
+                path = "_path_for_rocksdb_storage5"
+                db = Rdict(path, Options())
+
+                for i in range(50):
+                    db[i] = i ** 2
+
+                iter = db.iter(ReadOptions())
+
+                iter.seek_to_first()
+
+                j = 0
+                while iter.valid():
+                    assert iter.key() == j
+                    assert iter.value() == j ** 2
+                    print(f"{iter.key()} {iter.value()}")
+                    iter.next()
+                    j += 1
+
+                iter.seek_to_first();
+                assert iter.key() == 0
+                assert iter.value() == 0
+                print(f"{iter.key()} {iter.value()}")
+
+                iter.seek(25)
+                assert iter.key() == 25
+                assert iter.value() == 625
+                print(f"{iter.key()} {iter.value()}")
+
+                del iter, db
+                Rdict.destroy(path, Options())
+
+        Args:
+            read_opt: ReadOptions
+
+        Returns: Reversible
+        """
+        return super(Rdict, self).iter(read_opt)
 
     def close(self) -> None:
         """Flush memory to disk, and drop the database.
