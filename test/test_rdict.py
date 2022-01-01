@@ -92,20 +92,6 @@ class TestIterInt(unittest.TestCase):
                 del cls.ref_dict[key]
                 del cls.test_dict[key]
 
-    def test_seek_forward_key(self):
-        key = randint(0, TEST_INT_RANGE_UPPER - 1)
-        ref_list = [k for k in self.ref_dict.keys() if k >= key]
-        test_list = set(key for key in self.test_dict.keys(from_key=key))
-        # this is due to characteristic of VarInt encoding
-        self.assertTrue(all(key in test_list for key in ref_list))
-
-    def test_seek_backward_key(self):
-        key = randint(0, TEST_INT_RANGE_UPPER - 1)
-        ref_list = [k for k in self.ref_dict.keys() if k <= key]
-        test_list = [key for key in self.test_dict.keys(from_key=key, backwards=True)]
-        # this is due to characteristic of VarInt encoding
-        self.assertTrue(all(key in ref_list for key in test_list))
-
     def test_seek_forward(self):
         self.assertEqual({k: v for k, v in self.test_dict.items()},
                          {k: v for k, v in self.ref_dict.items()})
