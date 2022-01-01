@@ -79,6 +79,9 @@ pub(crate) fn encode_value(value: &PyAny) -> PyResult<Box<[u8]>> {
 
 #[inline(always)]
 fn py_to_value_types(value: &PyAny) -> PyResult<ValueTypes> {
+    if let Ok(value) = <PyBool as PyTryFrom>::try_from(value) {
+        return Ok(ValueTypes::Bool(value.extract()?));
+    }
     if let Ok(value) = <PyBytes as PyTryFrom>::try_from(value) {
         return Ok(ValueTypes::Bytes(value.as_bytes()));
     }
@@ -91,9 +94,6 @@ fn py_to_value_types(value: &PyAny) -> PyResult<ValueTypes> {
     if let Ok(value) = <PyFloat as PyTryFrom>::try_from(value) {
         return Ok(ValueTypes::Float(value.extract()?));
     }
-    if let Ok(value) = <PyBool as PyTryFrom>::try_from(value) {
-        return Ok(ValueTypes::Bool(value.extract()?));
-    }
     if let Ok(value) = <PyCell<Pickle> as PyTryFrom>::try_from(value) {
         return Ok(ValueTypes::Pickle(value.borrow().data.clone()));
     }
@@ -102,7 +102,7 @@ fn py_to_value_types(value: &PyAny) -> PyResult<ValueTypes> {
 
 #[inline(always)]
 pub(crate) fn decode_value(py: Python, bytes: &[u8]) -> PyResult<PyObject> {
-    match bytes.get(0) {
+    match bytes.first() {
         None => Err(PyException::new_err("Unknown value type")),
         Some(byte) => match byte {
             1 => Ok(PyBytes::new(py, &bytes[1..]).to_object(py)),
@@ -121,7 +121,7 @@ pub(crate) fn decode_value(py: Python, bytes: &[u8]) -> PyResult<PyObject> {
                 let float: f64 = f64::from_be_bytes(bytes[1..].try_into().unwrap());
                 Ok(float.into_py(py))
             }
-            5 => Ok(PyBool::new(py, bytes[1] != 0).to_object(py)),
+            5 => Ok((bytes[1] != 0).to_object(py)),
             6 => Ok(Py::new(py, Pickle::new(&bytes[1..]))?.to_object(py)),
             _ => Err(PyException::new_err("Unknown value type")),
         },

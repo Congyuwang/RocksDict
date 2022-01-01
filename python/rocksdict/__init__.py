@@ -34,7 +34,7 @@ __all__ = ["DataBlockIndexType",
 class RdictItems(Reversible[Tuple[Union[str, int, float, bytes], Any]]):
     def __init__(self, inner: RdictIter,
                  backward: bool = False,
-                 from_key: Union[str, int, float, bytes, None] = None):
+                 from_key: Union[str, int, float, bytes, bool, None] = None):
         """A more convenient interface for iterating through Rdict.
 
         Args:
@@ -80,7 +80,7 @@ class RdictItems(Reversible[Tuple[Union[str, int, float, bytes], Any]]):
 class RdictKeys(Reversible[Union[str, int, float, bytes]]):
     def __init__(self, inner: RdictIter,
                  backward: bool = False,
-                 from_key: Union[str, int, float, bytes, None] = None):
+                 from_key: Union[str, int, float, bytes, bool, None] = None):
         """A more convenient interface for iterating through Rdict.
 
         Args:
@@ -125,7 +125,7 @@ class RdictKeys(Reversible[Union[str, int, float, bytes]]):
 class RdictValues(Reversible[Any]):
     def __init__(self, inner: RdictIter,
                  backward: bool = False,
-                 from_key: Union[str, int, float, bytes, None] = None):
+                 from_key: Union[str, int, float, bytes, bool, None] = None):
         """A more convenient interface for iterating through Rdict.
 
         Args:
@@ -193,28 +193,30 @@ class Rdict:
         """Configure Read Options."""
         self._inner.set_read_options(read_opt)
 
-    def __getitem__(self, key: Union[str, int, float, bytes, List[Union[str, int, float, bytes]]]) -> Any:
+    def __getitem__(self, key: Union[str, int, float, bytes, bool, List[Union[str, int, float, bytes, bool]]]) -> Any:
         value = self._inner[key]
         if type(value) is _Pickle:
             return _pkl.loads(value.data)
+        if type(key) is list:
+            return [_pkl.loads(v.data) if type(v) is _Pickle else v for v in value]
         return value
 
-    def __setitem__(self, key: Union[str, int, float, bytes], value) -> None:
-        value_type = type(value)
-        if value_type is str or value_type is int or value_type is float or value_type is bytes:
+    def __setitem__(self, key: Union[str, int, float, bytes, bool], value) -> None:
+        v_type = type(value)
+        if v_type is str or v_type is int or v_type is float or v_type is bytes or v_type is bool:
             self._inner[key] = value
         else:
             self._inner[key] = _Pickle(_pkl.dumps(value))
 
-    def __contains__(self, key: Union[str, int, float, bytes]) -> bool:
+    def __contains__(self, key: Union[str, int, float, bytes, bool]) -> bool:
         return key in self._inner
 
-    def __delitem__(self, key: Union[str, int, float, bytes]) -> None:
+    def __delitem__(self, key: Union[str, int, float, bytes, bool]) -> None:
         del self._inner[key]
 
     def items(self,
               backward: bool = False,
-              from_key: Union[str, int, float, bytes, None] = None,
+              from_key: Union[str, int, float, bytes, bool, None] = None,
               read_opt: ReadOptions = ReadOptions()) -> Reversible[Tuple[Union[str, int, float, bytes], Any]]:
         """Similar to dict.items().
 
@@ -254,7 +256,7 @@ class Rdict:
 
     def values(self,
                backward: bool = False,
-               from_key: Union[str, int, float, bytes, None] = None,
+               from_key: Union[str, int, float, bytes, bool, None] = None,
                read_opt: ReadOptions = ReadOptions()) -> Reversible[Union[str, int, float, bytes]]:
         """Similar to dict.values().
 
@@ -294,7 +296,7 @@ class Rdict:
     def keys(self,
              read_opt: ReadOptions = ReadOptions(),
              backward: bool = False,
-             from_key: Union[str, int, float, bytes, None] = None) -> Reversible[Any]:
+             from_key: Union[str, int, float, bytes, bool, None] = None) -> Reversible[Any]:
         """Similar to dict.keys().
 
         Args:
