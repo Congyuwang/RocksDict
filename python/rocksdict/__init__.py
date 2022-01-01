@@ -2,7 +2,7 @@ from .rocksdict import *
 from .rocksdict import RdictInner as _Rdict
 from .rocksdict import Pickle as _Pickle
 import pickle as _pkl
-from typing import Union, List, Any, Tuple, Iterator
+from typing import Union, List, Any, Tuple, Reversible
 
 __all__ = ["DataBlockIndexType",
            "BlockBasedIndexType",
@@ -31,51 +31,138 @@ __all__ = ["DataBlockIndexType",
            "RdictValues"]
 
 
-class RdictItems(Iterator[Tuple[Union[str, int, float, bytes], Any]]):
-    def __init__(self, inner: RdictIter):
+class RdictItems(Reversible[Tuple[Union[str, int, float, bytes], Any]]):
+    def __init__(self, inner: RdictIter,
+                 backward: bool = False,
+                 from_key: Union[str, int, float, bytes, None] = None):
+        """A more convenient interface for iterating through Rdict.
+
+        Args:
+            inner: the inner Rdict
+            backward: iteration direction, forward if `False`.
+            from_key: iterate from key, first seek to this key
+                or the nearest next key for iteration
+                (depending on iteration direction).
+        """
         self.inner = inner
-        self.inner.seek_to_first()
+        self.from_key = from_key
+        if from_key:
+            self.backward = backward
+            if backward:
+                self.inner.seek_for_prev(from_key)
+            else:
+                self.inner.seek(from_key)
+        elif backward:
+            self.inner.seek_to_last()
+            self.backward = True
+        else:
+            self.inner.seek_to_first()
+            self.backward = False
 
     def __iter__(self):
         return self
+
+    def __reversed__(self):
+        return RdictItems(self.inner, not self.backward, self.from_key)
 
     def __next__(self) -> Tuple[Union[str, int, float, bytes], Any]:
         if self.inner.valid():
             k = self.inner.key()
             v = self.inner.value()
-            self.inner.next()
+            if self.backward:
+                self.inner.prev()
+            else:
+                self.inner.next()
             return k, v
         raise StopIteration
 
 
-class RdictKeys(Iterator[Union[str, int, float, bytes]]):
-    def __init__(self, inner: RdictIter):
+class RdictKeys(Reversible[Union[str, int, float, bytes]]):
+    def __init__(self, inner: RdictIter,
+                 backward: bool = False,
+                 from_key: Union[str, int, float, bytes, None] = None):
+        """A more convenient interface for iterating through Rdict.
+
+        Args:
+            inner: the inner Rdict
+            backward: iteration direction, forward if `False`.
+            from_key: iterate from key, first seek to this key
+                or the nearest next key for iteration
+                (depending on iteration direction).
+        """
         self.inner = inner
-        self.inner.seek_to_first()
+        self.from_key = from_key
+        if from_key:
+            self.backward = backward
+            if backward:
+                self.inner.seek_for_prev(from_key)
+            else:
+                self.inner.seek(from_key)
+        elif backward:
+            self.inner.seek_to_last()
+            self.backward = True
+        else:
+            self.inner.seek_to_first()
+            self.backward = False
 
     def __iter__(self):
         return self
+
+    def __reversed__(self):
+        return RdictKeys(self.inner, not self.backward, self.from_key)
 
     def __next__(self) -> Union[str, int, float, bytes]:
         if self.inner.valid():
             k = self.inner.key()
-            self.inner.next()
+            if self.backward:
+                self.inner.prev()
+            else:
+                self.inner.next()
             return k
         raise StopIteration
 
 
-class RdictValues(Iterator[Any]):
-    def __init__(self, inner: RdictIter):
+class RdictValues(Reversible[Any]):
+    def __init__(self, inner: RdictIter,
+                 backward: bool = False,
+                 from_key: Union[str, int, float, bytes, None] = None):
+        """A more convenient interface for iterating through Rdict.
+
+        Args:
+            inner: the inner Rdict
+            backward: iteration direction, forward if `False`.
+            from_key: iterate from key, first seek to this key
+                or the nearest next key for iteration
+                (depending on iteration direction).
+        """
         self.inner = inner
-        self.inner.seek_to_first()
+        self.from_key = from_key
+        if from_key:
+            self.backward = backward
+            if backward:
+                self.inner.seek_for_prev(from_key)
+            else:
+                self.inner.seek(from_key)
+        elif backward:
+            self.inner.seek_to_last()
+            self.backward = True
+        else:
+            self.inner.seek_to_first()
+            self.backward = False
 
     def __iter__(self):
         return self
 
+    def __reversed__(self):
+        return RdictValues(self.inner, not self.backward, self.from_key)
+
     def __next__(self) -> Any:
         if self.inner.valid():
             v = self.inner.value()
-            self.inner.next()
+            if self.backward:
+                self.inner.prev()
+            else:
+                self.inner.next()
             return v
         raise StopIteration
 
@@ -125,8 +212,18 @@ class Rdict:
     def __delitem__(self, key: Union[str, int, float, bytes]) -> None:
         del self._inner[key]
 
-    def items(self, read_opt: ReadOptions = ReadOptions()) -> Iterator[Tuple[Union[str, int, float, bytes], Any]]:
+    def items(self,
+              backward: bool = False,
+              from_key: Union[str, int, float, bytes, None] = None,
+              read_opt: ReadOptions = ReadOptions()) -> Reversible[Tuple[Union[str, int, float, bytes], Any]]:
         """Similar to dict.items().
+
+        Args:
+            backward: iteration direction, forward if `False`.
+            from_key: iterate from key, first seek to this key
+                or the nearest next key for iteration
+                (depending on iteration direction).
+            read_opt: read options, which can be used to set iterator boundaries
 
         Examples:
             ::
@@ -150,13 +247,23 @@ class Rdict:
             Rdict.destroy(path, Options())
             ```
 
-        Returns: Iterator
+        Returns: Reversible
 
         """
-        return RdictItems(self._inner.iter(read_opt))
+        return RdictItems(self._inner.iter(read_opt), backward, from_key)
 
-    def values(self, read_opt: ReadOptions = ReadOptions()) -> Iterator[Union[str, int, float, bytes]]:
+    def values(self,
+               backward: bool = False,
+               from_key: Union[str, int, float, bytes, None] = None,
+               read_opt: ReadOptions = ReadOptions()) -> Reversible[Union[str, int, float, bytes]]:
         """Similar to dict.values().
+
+        Args:
+            backward: iteration direction, forward if `False`.
+            from_key: iterate from key, first seek to this key
+                or the nearest next key for iteration
+                (depending on iteration direction).
+            read_opt: read options, which can be used to set iterator boundaries
 
         Examples:
             ::
@@ -179,13 +286,23 @@ class Rdict:
             Rdict.destroy(path, Options())
             ```
 
-        Returns: Iterator
+        Returns: Reversible
 
         """
-        return RdictValues(self._inner.iter(read_opt))
+        return RdictValues(self._inner.iter(read_opt), backward, from_key)
 
-    def keys(self, read_opt: ReadOptions = ReadOptions()) -> Iterator[Any]:
+    def keys(self,
+             read_opt: ReadOptions = ReadOptions(),
+             backward: bool = False,
+             from_key: Union[str, int, float, bytes, None] = None) -> Reversible[Any]:
         """Similar to dict.keys().
+
+        Args:
+            backward: iteration direction, forward if `False`.
+            from_key: iterate from key, first seek to this key
+                or the nearest next key for iteration
+                (depending on iteration direction).
+            read_opt: read options, which can be used to set iterator boundaries
 
         Examples:
             ::
@@ -208,13 +325,13 @@ class Rdict:
             Rdict.destroy(path, Options())
             ```
 
-        Returns: Iterator
+        Returns: Reversible
 
         """
-        return RdictKeys(self._inner.iter(read_opt))
+        return RdictKeys(self._inner.iter(read_opt), backward, from_key)
 
     def iter(self, read_opt: ReadOptions = ReadOptions()) -> RdictIter:
-        """Iterator for iterating over keys and values.
+        """Reversible for iterating over keys and values.
 
         Examples:
             ::
@@ -257,7 +374,7 @@ class Rdict:
         Args:
             read_opt: ReadOptions
 
-        Returns: Iterator
+        Returns: Reversible
 
         """
         return self._inner.iter(read_opt)

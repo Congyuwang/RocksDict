@@ -645,10 +645,10 @@
                                 <a class="function" href="#PlainTableFactoryOptions.__init__">PlainTableFactoryOptions</a>
                         </li>
                         <li>
-                                <a class="variable" href="#PlainTableFactoryOptions.user_key_length">user_key_length</a>
+                                <a class="variable" href="#PlainTableFactoryOptions.index_sparseness">index_sparseness</a>
                         </li>
                         <li>
-                                <a class="variable" href="#PlainTableFactoryOptions.index_sparseness">index_sparseness</a>
+                                <a class="variable" href="#PlainTableFactoryOptions.user_key_length">user_key_length</a>
                         </li>
                         <li>
                                 <a class="variable" href="#PlainTableFactoryOptions.bloom_bits_per_key">bloom_bits_per_key</a>
@@ -747,19 +747,19 @@
                                 <a class="function" href="#UniversalCompactOptions.set_stop_style">set_stop_style</a>
                         </li>
                         <li>
+                                <a class="variable" href="#UniversalCompactOptions.compression_size_percent">compression_size_percent</a>
+                        </li>
+                        <li>
                                 <a class="variable" href="#UniversalCompactOptions.min_merge_width">min_merge_width</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.max_merge_width">max_merge_width</a>
+                                <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.max_size_amplification_percent">max_size_amplification_percent</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.compression_size_percent">compression_size_percent</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
+                                <a class="variable" href="#UniversalCompactOptions.max_merge_width">max_merge_width</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
@@ -807,16 +807,16 @@
                                 <a class="function" href="#WriteOptions.set_memtable_insert_hint_per_batch">set_memtable_insert_hint_per_batch</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.sync">sync</a>
+                                <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
+                                <a class="variable" href="#WriteOptions.no_slowdown">no_slowdown</a>
                         </li>
                         <li>
                                 <a class="variable" href="#WriteOptions.memtable_insert_hint_per_batch">memtable_insert_hint_per_batch</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.no_slowdown">no_slowdown</a>
+                                <a class="variable" href="#WriteOptions.sync">sync</a>
                         </li>
                         <li>
                                 <a class="variable" href="#WriteOptions.low_pri">low_pri</a>
@@ -949,7 +949,7 @@ rocksdict    </h1>
 <span class="kn">from</span> <span class="nn">.rocksdict</span> <span class="kn">import</span> <span class="n">RdictInner</span> <span class="k">as</span> <span class="n">_Rdict</span>
 <span class="kn">from</span> <span class="nn">.rocksdict</span> <span class="kn">import</span> <span class="n">Pickle</span> <span class="k">as</span> <span class="n">_Pickle</span>
 <span class="kn">import</span> <span class="nn">pickle</span> <span class="k">as</span> <span class="nn">_pkl</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Iterator</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Reversible</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;DataBlockIndexType&quot;</span><span class="p">,</span>
            <span class="s2">&quot;BlockBasedIndexType&quot;</span><span class="p">,</span>
@@ -978,51 +978,138 @@ rocksdict    </h1>
            <span class="s2">&quot;RdictValues&quot;</span><span class="p">]</span>
 
 
-<span class="k">class</span> <span class="nc">RdictItems</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">RdictItems</span><span class="p">(</span><span class="n">Reversible</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">,</span>
+                 <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A more convenient interface for iterating through Rdict.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inner: the inner Rdict</span>
+<span class="sd">            backward: iteration direction, forward if `False`.</span>
+<span class="sd">            from_key: iterate from key, first seek to this key</span>
+<span class="sd">                or the nearest next key for iteration</span>
+<span class="sd">                (depending on iteration direction).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">inner</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">from_key</span> <span class="o">=</span> <span class="n">from_key</span>
+        <span class="k">if</span> <span class="n">from_key</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="n">backward</span>
+            <span class="k">if</span> <span class="n">backward</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_for_prev</span><span class="p">(</span><span class="n">from_key</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">from_key</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">backward</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_last</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__reversed__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RdictItems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="p">,</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">backward</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_key</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">valid</span><span class="p">():</span>
             <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">key</span><span class="p">()</span>
             <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backward</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">prev</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span>
         <span class="k">raise</span> <span class="ne">StopIteration</span>
 
 
-<span class="k">class</span> <span class="nc">RdictKeys</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">RdictKeys</span><span class="p">(</span><span class="n">Reversible</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">,</span>
+                 <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A more convenient interface for iterating through Rdict.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inner: the inner Rdict</span>
+<span class="sd">            backward: iteration direction, forward if `False`.</span>
+<span class="sd">            from_key: iterate from key, first seek to this key</span>
+<span class="sd">                or the nearest next key for iteration</span>
+<span class="sd">                (depending on iteration direction).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">inner</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">from_key</span> <span class="o">=</span> <span class="n">from_key</span>
+        <span class="k">if</span> <span class="n">from_key</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="n">backward</span>
+            <span class="k">if</span> <span class="n">backward</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_for_prev</span><span class="p">(</span><span class="n">from_key</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">from_key</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">backward</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_last</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__reversed__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RdictKeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="p">,</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">backward</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_key</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">valid</span><span class="p">():</span>
             <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">key</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backward</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">prev</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">k</span>
         <span class="k">raise</span> <span class="ne">StopIteration</span>
 
 
-<span class="k">class</span> <span class="nc">RdictValues</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">RdictValues</span><span class="p">(</span><span class="n">Reversible</span><span class="p">[</span><span class="n">Any</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">,</span>
+                 <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A more convenient interface for iterating through Rdict.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inner: the inner Rdict</span>
+<span class="sd">            backward: iteration direction, forward if `False`.</span>
+<span class="sd">            from_key: iterate from key, first seek to this key</span>
+<span class="sd">                or the nearest next key for iteration</span>
+<span class="sd">                (depending on iteration direction).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">inner</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">from_key</span> <span class="o">=</span> <span class="n">from_key</span>
+        <span class="k">if</span> <span class="n">from_key</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="n">backward</span>
+            <span class="k">if</span> <span class="n">backward</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_for_prev</span><span class="p">(</span><span class="n">from_key</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">from_key</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">backward</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_last</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span>
 
+    <span class="k">def</span> <span class="fm">__reversed__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RdictValues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="p">,</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">backward</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_key</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">valid</span><span class="p">():</span>
             <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backward</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">prev</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">v</span>
         <span class="k">raise</span> <span class="ne">StopIteration</span>
 
@@ -1072,8 +1159,18 @@ rocksdict    </h1>
     <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]:</span>
+    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+              <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+              <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+              <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Reversible</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.items().</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            backward: iteration direction, forward if `False`.</span>
+<span class="sd">            from_key: iterate from key, first seek to this key</span>
+<span class="sd">                or the nearest next key for iteration</span>
+<span class="sd">                (depending on iteration direction).</span>
+<span class="sd">            read_opt: read options, which can be used to set iterator boundaries</span>
 
 <span class="sd">        Examples:</span>
 <span class="sd">            ::</span>
@@ -1097,13 +1194,23 @@ rocksdict    </h1>
 <span class="sd">            Rdict.destroy(path, Options())</span>
 <span class="sd">            ```</span>
 
-<span class="sd">        Returns: Iterator</span>
+<span class="sd">        Returns: Reversible</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">RdictItems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">RdictItems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">),</span> <span class="n">backward</span><span class="p">,</span> <span class="n">from_key</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]:</span>
+    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+               <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+               <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+               <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Reversible</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.values().</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            backward: iteration direction, forward if `False`.</span>
+<span class="sd">            from_key: iterate from key, first seek to this key</span>
+<span class="sd">                or the nearest next key for iteration</span>
+<span class="sd">                (depending on iteration direction).</span>
+<span class="sd">            read_opt: read options, which can be used to set iterator boundaries</span>
 
 <span class="sd">        Examples:</span>
 <span class="sd">            ::</span>
@@ -1126,13 +1233,23 @@ rocksdict    </h1>
 <span class="sd">            Rdict.destroy(path, Options())</span>
 <span class="sd">            ```</span>
 
-<span class="sd">        Returns: Iterator</span>
+<span class="sd">        Returns: Reversible</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">RdictValues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">RdictValues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">),</span> <span class="n">backward</span><span class="p">,</span> <span class="n">from_key</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+             <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">(),</span>
+             <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+             <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Reversible</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.keys().</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            backward: iteration direction, forward if `False`.</span>
+<span class="sd">            from_key: iterate from key, first seek to this key</span>
+<span class="sd">                or the nearest next key for iteration</span>
+<span class="sd">                (depending on iteration direction).</span>
+<span class="sd">            read_opt: read options, which can be used to set iterator boundaries</span>
 
 <span class="sd">        Examples:</span>
 <span class="sd">            ::</span>
@@ -1155,13 +1272,13 @@ rocksdict    </h1>
 <span class="sd">            Rdict.destroy(path, Options())</span>
 <span class="sd">            ```</span>
 
-<span class="sd">        Returns: Iterator</span>
+<span class="sd">        Returns: Reversible</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">RdictKeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">RdictKeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">),</span> <span class="n">backward</span><span class="p">,</span> <span class="n">from_key</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">RdictIter</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Iterator for iterating over keys and values.</span>
+        <span class="sd">&quot;&quot;&quot;Reversible for iterating over keys and values.</span>
 
 <span class="sd">        Examples:</span>
 <span class="sd">            ::</span>
@@ -1204,7 +1321,7 @@ rocksdict    </h1>
 <span class="sd">        Args:</span>
 <span class="sd">            read_opt: ReadOptions</span>
 
-<span class="sd">        Returns: Iterator</span>
+<span class="sd">        Returns: Reversible</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">)</span>
@@ -4703,19 +4820,19 @@ information.</p>
     
 
                             </div>
-                            <div id="PlainTableFactoryOptions.user_key_length" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.user_key_length">#&nbsp;&nbsp</a>
+                            <div id="PlainTableFactoryOptions.index_sparseness" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.index_sparseness">#&nbsp;&nbsp</a>
 
-        <span class="name">user_key_length</span>
+        <span class="name">index_sparseness</span>
     </div>
 
     
 
                             </div>
-                            <div id="PlainTableFactoryOptions.index_sparseness" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.index_sparseness">#&nbsp;&nbsp</a>
+                            <div id="PlainTableFactoryOptions.user_key_length" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.user_key_length">#&nbsp;&nbsp</a>
 
-        <span class="name">index_sparseness</span>
+        <span class="name">user_key_length</span>
     </div>
 
     
@@ -5192,6 +5309,15 @@ will be compressed iff
 
 
                             </div>
+                            <div id="UniversalCompactOptions.compression_size_percent" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.compression_size_percent">#&nbsp;&nbsp</a>
+
+        <span class="name">compression_size_percent</span>
+    </div>
+
+    
+
+                            </div>
                             <div id="UniversalCompactOptions.min_merge_width" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.min_merge_width">#&nbsp;&nbsp</a>
 
@@ -5201,10 +5327,10 @@ will be compressed iff
     
 
                             </div>
-                            <div id="UniversalCompactOptions.max_merge_width" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_merge_width">#&nbsp;&nbsp</a>
+                            <div id="UniversalCompactOptions.stop_style" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.stop_style">#&nbsp;&nbsp</a>
 
-        <span class="name">max_merge_width</span>
+        <span class="name">stop_style</span>
     </div>
 
     
@@ -5219,19 +5345,10 @@ will be compressed iff
     
 
                             </div>
-                            <div id="UniversalCompactOptions.compression_size_percent" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.compression_size_percent">#&nbsp;&nbsp</a>
+                            <div id="UniversalCompactOptions.max_merge_width" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_merge_width">#&nbsp;&nbsp</a>
 
-        <span class="name">compression_size_percent</span>
-    </div>
-
-    
-
-                            </div>
-                            <div id="UniversalCompactOptions.stop_style" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.stop_style">#&nbsp;&nbsp</a>
-
-        <span class="name">stop_style</span>
+        <span class="name">max_merge_width</span>
     </div>
 
     
@@ -5456,19 +5573,19 @@ option will be ignored.</p>
 
 
                             </div>
-                            <div id="WriteOptions.sync" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.sync">#&nbsp;&nbsp</a>
+                            <div id="WriteOptions.ignore_missing_column_families" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.ignore_missing_column_families">#&nbsp;&nbsp</a>
 
-        <span class="name">sync</span>
+        <span class="name">ignore_missing_column_families</span>
     </div>
 
     
 
                             </div>
-                            <div id="WriteOptions.ignore_missing_column_families" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.ignore_missing_column_families">#&nbsp;&nbsp</a>
+                            <div id="WriteOptions.no_slowdown" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.no_slowdown">#&nbsp;&nbsp</a>
 
-        <span class="name">ignore_missing_column_families</span>
+        <span class="name">no_slowdown</span>
     </div>
 
     
@@ -5483,10 +5600,10 @@ option will be ignored.</p>
     
 
                             </div>
-                            <div id="WriteOptions.no_slowdown" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.no_slowdown">#&nbsp;&nbsp</a>
+                            <div id="WriteOptions.sync" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.sync">#&nbsp;&nbsp</a>
 
-        <span class="name">no_slowdown</span>
+        <span class="name">sync</span>
     </div>
 
     
@@ -5558,8 +5675,18 @@ option will be ignored.</p>
     <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]:</span>
+    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+              <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+              <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+              <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Reversible</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.items().</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            backward: iteration direction, forward if `False`.</span>
+<span class="sd">            from_key: iterate from key, first seek to this key</span>
+<span class="sd">                or the nearest next key for iteration</span>
+<span class="sd">                (depending on iteration direction).</span>
+<span class="sd">            read_opt: read options, which can be used to set iterator boundaries</span>
 
 <span class="sd">        Examples:</span>
 <span class="sd">            ::</span>
@@ -5583,13 +5710,23 @@ option will be ignored.</p>
 <span class="sd">            Rdict.destroy(path, Options())</span>
 <span class="sd">            ```</span>
 
-<span class="sd">        Returns: Iterator</span>
+<span class="sd">        Returns: Reversible</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">RdictItems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">RdictItems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">),</span> <span class="n">backward</span><span class="p">,</span> <span class="n">from_key</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]:</span>
+    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+               <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+               <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+               <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Reversible</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.values().</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            backward: iteration direction, forward if `False`.</span>
+<span class="sd">            from_key: iterate from key, first seek to this key</span>
+<span class="sd">                or the nearest next key for iteration</span>
+<span class="sd">                (depending on iteration direction).</span>
+<span class="sd">            read_opt: read options, which can be used to set iterator boundaries</span>
 
 <span class="sd">        Examples:</span>
 <span class="sd">            ::</span>
@@ -5612,13 +5749,23 @@ option will be ignored.</p>
 <span class="sd">            Rdict.destroy(path, Options())</span>
 <span class="sd">            ```</span>
 
-<span class="sd">        Returns: Iterator</span>
+<span class="sd">        Returns: Reversible</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">RdictValues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">RdictValues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">),</span> <span class="n">backward</span><span class="p">,</span> <span class="n">from_key</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+             <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">(),</span>
+             <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+             <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Reversible</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.keys().</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            backward: iteration direction, forward if `False`.</span>
+<span class="sd">            from_key: iterate from key, first seek to this key</span>
+<span class="sd">                or the nearest next key for iteration</span>
+<span class="sd">                (depending on iteration direction).</span>
+<span class="sd">            read_opt: read options, which can be used to set iterator boundaries</span>
 
 <span class="sd">        Examples:</span>
 <span class="sd">            ::</span>
@@ -5641,13 +5788,13 @@ option will be ignored.</p>
 <span class="sd">            Rdict.destroy(path, Options())</span>
 <span class="sd">            ```</span>
 
-<span class="sd">        Returns: Iterator</span>
+<span class="sd">        Returns: Reversible</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">RdictKeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">RdictKeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">),</span> <span class="n">backward</span><span class="p">,</span> <span class="n">from_key</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">RdictIter</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Iterator for iterating over keys and values.</span>
+        <span class="sd">&quot;&quot;&quot;Reversible for iterating over keys and values.</span>
 
 <span class="sd">        Examples:</span>
 <span class="sd">            ::</span>
@@ -5690,7 +5837,7 @@ option will be ignored.</p>
 <span class="sd">        Args:</span>
 <span class="sd">            read_opt: ReadOptions</span>
 
-<span class="sd">        Returns: Iterator</span>
+<span class="sd">        Returns: Reversible</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">)</span>
@@ -5834,14 +5981,26 @@ option will be ignored.</p>
             <span class="def">def</span>
             <span class="name">items</span><span class="signature">(
     self,
+    backward: bool = False,
+    from_key: Union[str, int, float, bytes, NoneType] = None,
     read_opt: ReadOptions = &lt;builtins.ReadOptions object&gt;
-) -&gt; Iterator[Tuple[Union[str, int, float, bytes], Any]]</span>:
+) -&gt; Reversible[Tuple[Union[str, int, float, bytes], Any]]</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]:</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+              <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+              <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+              <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Reversible</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.items().</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            backward: iteration direction, forward if `False`.</span>
+<span class="sd">            from_key: iterate from key, first seek to this key</span>
+<span class="sd">                or the nearest next key for iteration</span>
+<span class="sd">                (depending on iteration direction).</span>
+<span class="sd">            read_opt: read options, which can be used to set iterator boundaries</span>
 
 <span class="sd">        Examples:</span>
 <span class="sd">            ::</span>
@@ -5865,15 +6024,25 @@ option will be ignored.</p>
 <span class="sd">            Rdict.destroy(path, Options())</span>
 <span class="sd">            ```</span>
 
-<span class="sd">        Returns: Iterator</span>
+<span class="sd">        Returns: Reversible</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">RdictItems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">RdictItems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">),</span> <span class="n">backward</span><span class="p">,</span> <span class="n">from_key</span><span class="p">)</span>
 </pre></div>
 
         </details>
 
             <div class="docstring"><p>Similar to dict.items().</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>backward:</strong>  iteration direction, forward if <code>False</code>.</li>
+<li><strong>from_key:</strong>  iterate from key, first seek to this key
+or the nearest next key for iteration
+(depending on iteration direction).</li>
+<li><strong>read_opt:</strong>  read options, which can be used to set iterator boundaries</li>
+</ul>
 
 <h6 id="examples">Examples</h6>
 
@@ -5899,7 +6068,7 @@ option will be ignored.</p>
 </code></pre></div>
 </blockquote>
 
-<p>Returns: Iterator</p>
+<p>Returns: Reversible</p>
 </div>
 
 
@@ -5911,14 +6080,26 @@ option will be ignored.</p>
             <span class="def">def</span>
             <span class="name">values</span><span class="signature">(
     self,
+    backward: bool = False,
+    from_key: Union[str, int, float, bytes, NoneType] = None,
     read_opt: ReadOptions = &lt;builtins.ReadOptions object&gt;
-) -&gt; Iterator[Union[str, int, float, bytes]]</span>:
+) -&gt; Reversible[Union[str, int, float, bytes]]</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]:</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+               <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+               <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+               <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Reversible</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.values().</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            backward: iteration direction, forward if `False`.</span>
+<span class="sd">            from_key: iterate from key, first seek to this key</span>
+<span class="sd">                or the nearest next key for iteration</span>
+<span class="sd">                (depending on iteration direction).</span>
+<span class="sd">            read_opt: read options, which can be used to set iterator boundaries</span>
 
 <span class="sd">        Examples:</span>
 <span class="sd">            ::</span>
@@ -5941,15 +6122,25 @@ option will be ignored.</p>
 <span class="sd">            Rdict.destroy(path, Options())</span>
 <span class="sd">            ```</span>
 
-<span class="sd">        Returns: Iterator</span>
+<span class="sd">        Returns: Reversible</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">RdictValues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">RdictValues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">),</span> <span class="n">backward</span><span class="p">,</span> <span class="n">from_key</span><span class="p">)</span>
 </pre></div>
 
         </details>
 
             <div class="docstring"><p>Similar to dict.values().</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>backward:</strong>  iteration direction, forward if <code>False</code>.</li>
+<li><strong>from_key:</strong>  iterate from key, first seek to this key
+or the nearest next key for iteration
+(depending on iteration direction).</li>
+<li><strong>read_opt:</strong>  read options, which can be used to set iterator boundaries</li>
+</ul>
 
 <h6 id="examples">Examples</h6>
 
@@ -5974,7 +6165,7 @@ option will be ignored.</p>
 </code></pre></div>
 </blockquote>
 
-<p>Returns: Iterator</p>
+<p>Returns: Reversible</p>
 </div>
 
 
@@ -5986,14 +6177,26 @@ option will be ignored.</p>
             <span class="def">def</span>
             <span class="name">keys</span><span class="signature">(
     self,
-    read_opt: ReadOptions = &lt;builtins.ReadOptions object&gt;
-) -&gt; Iterator[Any]</span>:
+    read_opt: ReadOptions = &lt;builtins.ReadOptions object&gt;,
+    backward: bool = False,
+    from_key: Union[str, int, float, bytes, NoneType] = None
+) -&gt; Reversible[Any]</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+             <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">(),</span>
+             <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+             <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Reversible</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Similar to dict.keys().</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            backward: iteration direction, forward if `False`.</span>
+<span class="sd">            from_key: iterate from key, first seek to this key</span>
+<span class="sd">                or the nearest next key for iteration</span>
+<span class="sd">                (depending on iteration direction).</span>
+<span class="sd">            read_opt: read options, which can be used to set iterator boundaries</span>
 
 <span class="sd">        Examples:</span>
 <span class="sd">            ::</span>
@@ -6016,15 +6219,25 @@ option will be ignored.</p>
 <span class="sd">            Rdict.destroy(path, Options())</span>
 <span class="sd">            ```</span>
 
-<span class="sd">        Returns: Iterator</span>
+<span class="sd">        Returns: Reversible</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">RdictKeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">RdictKeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">),</span> <span class="n">backward</span><span class="p">,</span> <span class="n">from_key</span><span class="p">)</span>
 </pre></div>
 
         </details>
 
             <div class="docstring"><p>Similar to dict.keys().</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>backward:</strong>  iteration direction, forward if <code>False</code>.</li>
+<li><strong>from_key:</strong>  iterate from key, first seek to this key
+or the nearest next key for iteration
+(depending on iteration direction).</li>
+<li><strong>read_opt:</strong>  read options, which can be used to set iterator boundaries</li>
+</ul>
 
 <h6 id="examples">Examples</h6>
 
@@ -6049,7 +6262,7 @@ option will be ignored.</p>
 </code></pre></div>
 </blockquote>
 
-<p>Returns: Iterator</p>
+<p>Returns: Reversible</p>
 </div>
 
 
@@ -6068,7 +6281,7 @@ option will be ignored.</p>
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_opt</span><span class="p">:</span> <span class="n">ReadOptions</span> <span class="o">=</span> <span class="n">ReadOptions</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">RdictIter</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Iterator for iterating over keys and values.</span>
+        <span class="sd">&quot;&quot;&quot;Reversible for iterating over keys and values.</span>
 
 <span class="sd">        Examples:</span>
 <span class="sd">            ::</span>
@@ -6111,7 +6324,7 @@ option will be ignored.</p>
 <span class="sd">        Args:</span>
 <span class="sd">            read_opt: ReadOptions</span>
 
-<span class="sd">        Returns: Iterator</span>
+<span class="sd">        Returns: Reversible</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">read_opt</span><span class="p">)</span>
@@ -6119,7 +6332,7 @@ option will be ignored.</p>
 
         </details>
 
-            <div class="docstring"><p>Iterator for iterating over keys and values.</p>
+            <div class="docstring"><p>Reversible for iterating over keys and values.</p>
 
 <h6 id="examples">Examples</h6>
 
@@ -6167,7 +6380,7 @@ option will be ignored.</p>
 <li><strong>read_opt:</strong>  ReadOptions</li>
 </ul>
 
-<p>Returns: Iterator</p>
+<p>Returns: Reversible</p>
 </div>
 
 
@@ -6519,24 +6732,53 @@ seek to key that lexicographically precedes it instead.</p>
 
         
         <span class="def">class</span>
-        <span class="name">RdictItems</span><wbr>(<span class="base">typing.Iterator[typing.Tuple[typing.Union[str, int, float, bytes], typing.Any]]</span>):
+        <span class="name">RdictItems</span><wbr>(<span class="base">typing.Reversible[typing.Tuple[typing.Union[str, int, float, bytes], typing.Any]]</span>):
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">RdictItems</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">RdictItems</span><span class="p">(</span><span class="n">Reversible</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">,</span>
+                 <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A more convenient interface for iterating through Rdict.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inner: the inner Rdict</span>
+<span class="sd">            backward: iteration direction, forward if `False`.</span>
+<span class="sd">            from_key: iterate from key, first seek to this key</span>
+<span class="sd">                or the nearest next key for iteration</span>
+<span class="sd">                (depending on iteration direction).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">inner</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">from_key</span> <span class="o">=</span> <span class="n">from_key</span>
+        <span class="k">if</span> <span class="n">from_key</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="n">backward</span>
+            <span class="k">if</span> <span class="n">backward</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_for_prev</span><span class="p">(</span><span class="n">from_key</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">from_key</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">backward</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_last</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__reversed__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RdictItems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="p">,</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">backward</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_key</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">valid</span><span class="p">():</span>
             <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">key</span><span class="p">()</span>
             <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backward</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">prev</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span>
         <span class="k">raise</span> <span class="ne">StopIteration</span>
 </pre></div>
@@ -6568,19 +6810,58 @@ For example, a generic mapping type might be defined as::</p>
                                         <div class="attr function"><a class="headerlink" href="#RdictItems.__init__">#&nbsp;&nbsp</a>
 
         
-            <span class="name">RdictItems</span><span class="signature">(inner: RdictIter)</span>
+            <span class="name">RdictItems</span><span class="signature">(
+    inner: RdictIter,
+    backward: bool = False,
+    from_key: Union[str, int, float, bytes, NoneType] = None
+)</span>
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">,</span>
+                 <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A more convenient interface for iterating through Rdict.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inner: the inner Rdict</span>
+<span class="sd">            backward: iteration direction, forward if `False`.</span>
+<span class="sd">            from_key: iterate from key, first seek to this key</span>
+<span class="sd">                or the nearest next key for iteration</span>
+<span class="sd">                (depending on iteration direction).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">inner</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">from_key</span> <span class="o">=</span> <span class="n">from_key</span>
+        <span class="k">if</span> <span class="n">from_key</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="n">backward</span>
+            <span class="k">if</span> <span class="n">backward</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_for_prev</span><span class="p">(</span><span class="n">from_key</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">from_key</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">backward</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_last</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="kc">False</span>
 </pre></div>
 
         </details>
 
-    
+            <div class="docstring"><p>A more convenient interface for iterating through Rdict.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>inner:</strong>  the inner Rdict</li>
+<li><strong>backward:</strong>  iteration direction, forward if <code>False</code>.</li>
+<li><strong>from_key:</strong>  iterate from key, first seek to this key
+or the nearest next key for iteration
+(depending on iteration direction).</li>
+</ul>
+</div>
+
 
                             </div>
                 </section>
@@ -6590,23 +6871,52 @@ For example, a generic mapping type might be defined as::</p>
 
         
         <span class="def">class</span>
-        <span class="name">RdictKeys</span><wbr>(<span class="base">typing.Iterator[typing.Union[str, int, float, bytes]]</span>):
+        <span class="name">RdictKeys</span><wbr>(<span class="base">typing.Reversible[typing.Union[str, int, float, bytes]]</span>):
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">RdictKeys</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">RdictKeys</span><span class="p">(</span><span class="n">Reversible</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">,</span>
+                 <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A more convenient interface for iterating through Rdict.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inner: the inner Rdict</span>
+<span class="sd">            backward: iteration direction, forward if `False`.</span>
+<span class="sd">            from_key: iterate from key, first seek to this key</span>
+<span class="sd">                or the nearest next key for iteration</span>
+<span class="sd">                (depending on iteration direction).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">inner</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">from_key</span> <span class="o">=</span> <span class="n">from_key</span>
+        <span class="k">if</span> <span class="n">from_key</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="n">backward</span>
+            <span class="k">if</span> <span class="n">backward</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_for_prev</span><span class="p">(</span><span class="n">from_key</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">from_key</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">backward</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_last</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span>
 
+    <span class="k">def</span> <span class="fm">__reversed__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RdictKeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="p">,</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">backward</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_key</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">valid</span><span class="p">():</span>
             <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">key</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backward</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">prev</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">k</span>
         <span class="k">raise</span> <span class="ne">StopIteration</span>
 </pre></div>
@@ -6638,19 +6948,58 @@ For example, a generic mapping type might be defined as::</p>
                                         <div class="attr function"><a class="headerlink" href="#RdictKeys.__init__">#&nbsp;&nbsp</a>
 
         
-            <span class="name">RdictKeys</span><span class="signature">(inner: RdictIter)</span>
+            <span class="name">RdictKeys</span><span class="signature">(
+    inner: RdictIter,
+    backward: bool = False,
+    from_key: Union[str, int, float, bytes, NoneType] = None
+)</span>
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">,</span>
+                 <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A more convenient interface for iterating through Rdict.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inner: the inner Rdict</span>
+<span class="sd">            backward: iteration direction, forward if `False`.</span>
+<span class="sd">            from_key: iterate from key, first seek to this key</span>
+<span class="sd">                or the nearest next key for iteration</span>
+<span class="sd">                (depending on iteration direction).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">inner</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">from_key</span> <span class="o">=</span> <span class="n">from_key</span>
+        <span class="k">if</span> <span class="n">from_key</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="n">backward</span>
+            <span class="k">if</span> <span class="n">backward</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_for_prev</span><span class="p">(</span><span class="n">from_key</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">from_key</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">backward</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_last</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="kc">False</span>
 </pre></div>
 
         </details>
 
-    
+            <div class="docstring"><p>A more convenient interface for iterating through Rdict.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>inner:</strong>  the inner Rdict</li>
+<li><strong>backward:</strong>  iteration direction, forward if <code>False</code>.</li>
+<li><strong>from_key:</strong>  iterate from key, first seek to this key
+or the nearest next key for iteration
+(depending on iteration direction).</li>
+</ul>
+</div>
+
 
                             </div>
                 </section>
@@ -6660,23 +7009,52 @@ For example, a generic mapping type might be defined as::</p>
 
         
         <span class="def">class</span>
-        <span class="name">RdictValues</span><wbr>(<span class="base">typing.Iterator[typing.Any]</span>):
+        <span class="name">RdictValues</span><wbr>(<span class="base">typing.Reversible[typing.Any]</span>):
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">RdictValues</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">RdictValues</span><span class="p">(</span><span class="n">Reversible</span><span class="p">[</span><span class="n">Any</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">,</span>
+                 <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A more convenient interface for iterating through Rdict.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inner: the inner Rdict</span>
+<span class="sd">            backward: iteration direction, forward if `False`.</span>
+<span class="sd">            from_key: iterate from key, first seek to this key</span>
+<span class="sd">                or the nearest next key for iteration</span>
+<span class="sd">                (depending on iteration direction).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">inner</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">from_key</span> <span class="o">=</span> <span class="n">from_key</span>
+        <span class="k">if</span> <span class="n">from_key</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="n">backward</span>
+            <span class="k">if</span> <span class="n">backward</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_for_prev</span><span class="p">(</span><span class="n">from_key</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">from_key</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">backward</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_last</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span>
 
+    <span class="k">def</span> <span class="fm">__reversed__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RdictValues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="p">,</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">backward</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_key</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">valid</span><span class="p">():</span>
             <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backward</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">prev</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">v</span>
         <span class="k">raise</span> <span class="ne">StopIteration</span>
 </pre></div>
@@ -6708,19 +7086,58 @@ For example, a generic mapping type might be defined as::</p>
                                         <div class="attr function"><a class="headerlink" href="#RdictValues.__init__">#&nbsp;&nbsp</a>
 
         
-            <span class="name">RdictValues</span><span class="signature">(inner: RdictIter)</span>
+            <span class="name">RdictValues</span><span class="signature">(
+    inner: RdictIter,
+    backward: bool = False,
+    from_key: Union[str, int, float, bytes, NoneType] = None
+)</span>
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">:</span> <span class="n">RdictIter</span><span class="p">,</span>
+                 <span class="n">backward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">from_key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A more convenient interface for iterating through Rdict.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inner: the inner Rdict</span>
+<span class="sd">            backward: iteration direction, forward if `False`.</span>
+<span class="sd">            from_key: iterate from key, first seek to this key</span>
+<span class="sd">                or the nearest next key for iteration</span>
+<span class="sd">                (depending on iteration direction).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">inner</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">from_key</span> <span class="o">=</span> <span class="n">from_key</span>
+        <span class="k">if</span> <span class="n">from_key</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="n">backward</span>
+            <span class="k">if</span> <span class="n">backward</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_for_prev</span><span class="p">(</span><span class="n">from_key</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">from_key</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">backward</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_last</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">seek_to_first</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward</span> <span class="o">=</span> <span class="kc">False</span>
 </pre></div>
 
         </details>
 
-    
+            <div class="docstring"><p>A more convenient interface for iterating through Rdict.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>inner:</strong>  the inner Rdict</li>
+<li><strong>backward:</strong>  iteration direction, forward if <code>False</code>.</li>
+<li><strong>from_key:</strong>  iterate from key, first seek to this key
+or the nearest next key for iteration
+(depending on iteration direction).</li>
+</ul>
+</div>
+
 
                             </div>
                 </section>

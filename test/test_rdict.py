@@ -1,7 +1,8 @@
 import unittest
 from sys import getrefcount
-from rocksdict import Rdict, Options, PlainTableFactoryOptions, SliceTransform
+from rocksdict import Rdict, Options, PlainTableFactoryOptions, SliceTransform, CuckooTableOptions
 from random import randint, random, getrandbits
+import os
 
 
 TEST_INT_RANGE_UPPER = 999999
@@ -17,6 +18,105 @@ def compare_dicts(test_case: unittest.TestCase,
                   test_dict: Rdict):
     # assert that the values are the same
     test_case.assertEqual({k: v for k, v in test_dict.items()}, ref_dict)
+
+
+class TestIterBytes(unittest.TestCase):
+    test_dict = None
+    ref_dict = None
+    opt = None
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.opt = Options()
+        cls.opt.increase_parallelism(os.cpu_count())
+        cls.test_dict = Rdict("./temp_iter_bytes", cls.opt)
+        cls.ref_dict = dict()
+        for i in range(100000):
+            key = randbytes(10)
+            value = randbytes(20)
+            cls.test_dict[key] = value
+            cls.ref_dict[key] = value
+        keys_to_remove = list(set(randint(0, len(cls.ref_dict) - 1) for _ in range(50000)))
+        keys = [k for k in cls.ref_dict.keys()]
+        keys_to_remove = [keys[i] for i in keys_to_remove]
+        for key in keys_to_remove:
+            del cls.test_dict[key]
+            del cls.ref_dict[key]
+
+    def test_seek_forward_key(self):
+        key = randbytes(10)
+        ref_list = [k for k in self.ref_dict.keys() if k >= key]
+        ref_list.sort()
+        self.assertEqual([k for k in self.test_dict.keys(from_key=key)], ref_list)
+
+    def test_seek_backward_key(self):
+        key = randbytes(20)
+        ref_list = [k for k in self.ref_dict.keys() if k <= key]
+        ref_list.sort(reverse=True)
+        self.assertEqual([k for k in reversed(self.test_dict.keys(from_key=key))], ref_list)
+
+    def test_seek_forward(self):
+        key = randbytes(20)
+        self.assertEqual({k: v for k, v in self.test_dict.items(from_key=key)},
+                         {k: v for k, v in self.ref_dict.items() if k >= key})
+
+    def test_seek_backward(self):
+        key = randbytes(20)
+        self.assertEqual({k: v for k, v in reversed(self.test_dict.items(from_key=key))},
+                         {k: v for k, v in self.ref_dict.items() if k <= key})
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.test_dict.close()
+        Rdict.destroy("./temp_iter_bytes", Options())
+
+
+class TestIterInt(unittest.TestCase):
+    test_dict = None
+    ref_dict = None
+    opt = None
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.test_dict = Rdict("./temp_iter_int")
+        cls.ref_dict = dict()
+        for i in range(10000):
+            key = randint(0, TEST_INT_RANGE_UPPER - 1)
+            value = randint(0, TEST_INT_RANGE_UPPER - 1)
+            cls.ref_dict[key] = value
+            cls.test_dict[key] = value
+        for i in range(5000):
+            key = randint(0, TEST_INT_RANGE_UPPER - 1)
+            if key in cls.ref_dict:
+                del cls.ref_dict[key]
+                del cls.test_dict[key]
+
+    def test_seek_forward_key(self):
+        key = randint(0, TEST_INT_RANGE_UPPER - 1)
+        ref_list = [k for k in self.ref_dict.keys() if k >= key]
+        test_list = set(key for key in self.test_dict.keys(from_key=key))
+        # this is due to characteristic of VarInt encoding
+        self.assertTrue(all(key in test_list for key in ref_list))
+
+    def test_seek_backward_key(self):
+        key = randint(0, TEST_INT_RANGE_UPPER - 1)
+        ref_list = [k for k in self.ref_dict.keys() if k <= key]
+        test_list = [key for key in reversed(self.test_dict.keys(from_key=key))]
+        # this is due to characteristic of VarInt encoding
+        self.assertTrue(all(key in ref_list for key in test_list))
+
+    def test_seek_forward(self):
+        self.assertEqual({k: v for k, v in self.test_dict.items()},
+                         {k: v for k, v in self.ref_dict.items()})
+
+    def test_seek_backward(self):
+        self.assertEqual({k: v for k, v in reversed(self.test_dict.items())},
+                         {k: v for k, v in self.ref_dict.items()})
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.test_dict.close()
+        Rdict.destroy("./temp_iter_int", Options())
 
 
 class TestInt(unittest.TestCase):
@@ -63,6 +163,33 @@ class TestInt(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         Rdict.destroy("./temp_int", cls.opt)
+
+
+class TestBigInt(unittest.TestCase):
+    test_dict = None
+    opt = None
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.opt = Options()
+        cls.opt.create_if_missing(True)
+        cls.opt.set_plain_table_factory(PlainTableFactoryOptions())
+        cls.opt.set_prefix_extractor(SliceTransform.create_max_len_prefix(8))
+        cls.test_dict = Rdict("./temp_big_int", cls.opt)
+
+    def test_big_int(self):
+        key = 13456436145354564353464754615223435465543
+        value = 3456321456543245657643253647543212425364342343564
+        self.test_dict[key] = value
+        self.assertTrue(key in self.test_dict)
+        self.assertEqual(self.test_dict[key], value)
+        del self.test_dict[key]
+        self.assertFalse(key in self.test_dict)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.test_dict.close()
+        Rdict.destroy("./temp_big_int", cls.opt)
 
 
 class TestFloat(unittest.TestCase):
@@ -118,6 +245,9 @@ class TestBytes(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.opt = Options()
         cls.opt.create_if_missing(True)
+        cls.opt.set_cuckoo_table_factory(CuckooTableOptions())
+        cls.opt.set_allow_mmap_reads(True)
+        cls.opt.set_allow_mmap_writes(True)
         cls.test_dict = Rdict("./temp_bytes", cls.opt)
         cls.ref_dict = dict()
 
