@@ -35,28 +35,22 @@ Below is a code example that shows how to do the following:
 
 ```python
 from rocksdict import Rdict
+import numpy as np
+import pandas as pd
 
 path = str("./test_dict")
 
 # create a Rdict with default options at `path`
 db = Rdict(path)
 
-# storing numbers
 db[1.0] = 1
 db[1] = 1.0
-# very big integer
 db["huge integer"] = 2343546543243564534233536434567543
-# boolean values
 db["good"] = True
 db["bad"] = False
-# bytes
 db["bytes"] = b"bytes"
-# store anything
 db["this is a list"] = [1, 2, 3]
 db["store a dict"] = {0: 1}
-# for example numpy array
-import numpy as np
-import pandas as pd
 db[b"numpy"] = np.array([1, 2, 3])
 db["a table"] = pd.DataFrame({"a": [1, 2], "b": [2, 1]})
 
