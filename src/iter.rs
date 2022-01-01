@@ -59,29 +59,29 @@ impl RdictIter {
 
     /// Seeks to the first key in the database.
     ///
-    /// # Examples
+    /// Example:
+    /// ::
+    ///     ```python
+    ///     from rocksdict import Rdict, Options, ReadOptions
     ///
-    /// ```python
-    /// from rocksdict import Rdict, Options, ReadOptions
+    ///     path = "_path_for_rocksdb_storage5"
+    ///     db = Rdict(path, Options())
+    ///     iter = db.iter(ReadOptions())
     ///
-    /// path = "_path_for_rocksdb_storage5"
-    /// db = Rdict(path, Options())
-    /// iter = db.iter(ReadOptions())
+    ///     # Iterate all keys from the start in lexicographic order
+    ///     iter.seek_to_first()
     ///
-    /// # Iterate all keys from the start in lexicographic order
-    /// iter.seek_to_first()
+    ///     while iter.valid():
+    ///         print(f"{iter.key()} {iter.value()}")
+    ///         iter.next()
     ///
-    /// while iter.valid():
+    ///     # Read just the first key
+    ///     iter.seek_to_first();
     ///     print(f"{iter.key()} {iter.value()}")
-    ///     iter.next()
     ///
-    /// # Read just the first key
-    /// iter.seek_to_first();
-    /// print(f"{iter.key()} {iter.value()}")
-    ///
-    /// del iter, db
-    /// Rdict.destroy(path, Options())
-    /// ```
+    ///     del iter, db
+    ///     Rdict.destroy(path, Options())
+    ///     ```
     pub fn seek_to_first(&mut self) {
         unsafe {
             librocksdb_sys::rocksdb_iter_seek_to_first(self.inner);
@@ -90,29 +90,29 @@ impl RdictIter {
 
     /// Seeks to the last key in the database.
     ///
-    /// # Examples
+    /// Example:
+    /// ::
+    ///     ```python
+    ///     from rocksdict import Rdict, Options, ReadOptions
     ///
-    /// ```python
-    /// from rocksdict import Rdict, Options, ReadOptions
+    ///     path = "_path_for_rocksdb_storage6"
+    ///     db = Rdict(path, Options())
+    ///     iter = db.iter(ReadOptions())
     ///
-    /// path = "_path_for_rocksdb_storage6"
-    /// db = Rdict(path, Options())
-    /// iter = db.iter(ReadOptions())
+    ///     # Iterate all keys from the start in lexicographic order
+    ///     iter.seek_to_last()
     ///
-    /// # Iterate all keys from the start in lexicographic order
-    /// iter.seek_to_last()
+    ///     while iter.valid():
+    ///         print(f"{iter.key()} {iter.value()}")
+    ///         iter.prev()
     ///
-    /// while iter.valid():
+    ///     # Read just the last key
+    ///     iter.seek_to_last();
     ///     print(f"{iter.key()} {iter.value()}")
-    ///     iter.prev()
     ///
-    /// # Read just the last key
-    /// iter.seek_to_last();
-    /// print(f"{iter.key()} {iter.value()}")
-    ///
-    /// del iter, db
-    /// Rdict.destroy(path, Options())
-    /// ```
+    ///     del iter, db
+    ///     Rdict.destroy(path, Options())
+    ///     ```
     pub fn seek_to_last(&mut self) {
         unsafe {
             librocksdb_sys::rocksdb_iter_seek_to_last(self.inner);
@@ -124,22 +124,22 @@ impl RdictIter {
     /// This method will attempt to seek to the specified key. If that key does not exist, it will
     /// find and seek to the key that lexicographically follows it instead.
     ///
-    /// # Examples
+    /// Example:
+    /// ::
+    ///     ```python
+    ///     from rocksdict import Rdict, Options, ReadOptions
     ///
-    /// ```python
-    /// from rocksdict import Rdict, Options, ReadOptions
+    ///     path = "_path_for_rocksdb_storage6"
+    ///     db = Rdict(path, Options())
+    ///     iter = db.iter(ReadOptions())
     ///
-    /// path = "_path_for_rocksdb_storage6"
-    /// db = Rdict(path, Options())
-    /// iter = db.iter(ReadOptions())
+    ///     # Read the first string key that starts with 'a'
+    ///     iter.seek("a");
+    ///     print(f"{iter.key()} {iter.value()}")
     ///
-    /// # Read the first string key that starts with 'a'
-    /// iter.seek("a");
-    /// print(f"{iter.key()} {iter.value()}")
-    ///
-    /// del iter, db
-    /// Rdict.destroy(path, Options())
-    /// ```
+    ///     del iter, db
+    ///     Rdict.destroy(path, Options())
+    ///     ```
     pub fn seek(&mut self, key: &PyAny) -> PyResult<()> {
         let key = encode_key(key)?;
 
@@ -158,22 +158,22 @@ impl RdictIter {
     /// The difference with ``.seek()`` is that if the specified key do not exist, this method will
     /// seek to key that lexicographically precedes it instead.
     ///
-    /// # Examples
+    /// Example:
+    /// ::
+    ///     ```python
+    ///     from rocksdict import Rdict, Options, ReadOptions
     ///
-    /// ```python
-    /// from rocksdict import Rdict, Options, ReadOptions
+    ///     path = "_path_for_rocksdb_storage6"
+    ///     db = Rdict(path, Options())
+    ///     iter = db.iter(ReadOptions())
     ///
-    /// path = "_path_for_rocksdb_storage6"
-    /// db = Rdict(path, Options())
-    /// iter = db.iter(ReadOptions())
+    ///     # Read the last key that starts with 'a'
+    ///     seek_for_prev("b")
+    ///     print(f"{iter.key()} {iter.value()}")
     ///
-    /// # Read the last key that starts with 'a'
-    /// seek_for_prev("b")
-    /// print(f"{iter.key()} {iter.value()}")
-    ///
-    /// del iter, db
-    /// Rdict.destroy(path, Options())
-    /// ```
+    ///     del iter, db
+    ///     Rdict.destroy(path, Options())
+    ///     ```
     pub fn seek_for_prev(&mut self, key: &PyAny) -> PyResult<()> {
         let key = encode_key(key)?;
 

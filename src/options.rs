@@ -13,64 +13,64 @@ use std::path::{Path, PathBuf};
 /// Please read the official tuning [guide](https://github.com/facebook/rocksdb/wiki/RocksDB-Tuning-Guide)
 /// and most importantly, measure performance under realistic workloads with realistic hardware.
 ///
-/// # Examples
+/// Example:
+/// ::
+///     ```python
+///     from rocksdict import Options, Rdict, DBCompactionStyle
 ///
-/// ```python
-/// from rocksdict import Options, Rdict, DBCompactionStyle
+///     def badly_tuned_for_somebody_elses_disk():
 ///
-/// def badly_tuned_for_somebody_elses_disk():
+///         path = "path/for/rocksdb/storageX"
 ///
-///     path = "path/for/rocksdb/storageX"
+///         opts = Options()
+///         opts.create_if_missing(true)
+///         opts.set_max_open_files(10000)
+///         opts.set_use_fsync(false)
+///         opts.set_bytes_per_sync(8388608)
+///         opts.optimize_for_point_lookup(1024)
+///         opts.set_table_cache_num_shard_bits(6)
+///         opts.set_max_write_buffer_number(32)
+///         opts.set_write_buffer_size(536870912)
+///         opts.set_target_file_size_base(1073741824)
+///         opts.set_min_write_buffer_number_to_merge(4)
+///         opts.set_level_zero_stop_writes_trigger(2000)
+///         opts.set_level_zero_slowdown_writes_trigger(0)
+///         opts.set_compaction_style(DBCompactionStyle.universal())
+///         opts.set_disable_auto_compactions(true)
 ///
-///     opts = Options::default()
-///     opts.create_if_missing(true)
-///     opts.set_max_open_files(10000)
-///     opts.set_use_fsync(false)
-///     opts.set_bytes_per_sync(8388608)
-///     opts.optimize_for_point_lookup(1024)
-///     opts.set_table_cache_num_shard_bits(6)
-///     opts.set_max_write_buffer_number(32)
-///     opts.set_write_buffer_size(536870912)
-///     opts.set_target_file_size_base(1073741824)
-///     opts.set_min_write_buffer_number_to_merge(4)
-///     opts.set_level_zero_stop_writes_trigger(2000)
-///     opts.set_level_zero_slowdown_writes_trigger(0)
-///     opts.set_compaction_style(DBCompactionStyle.universal())
-///     opts.set_disable_auto_compactions(true)
+///         return Rdict(path, opts)
 ///
-///     return Rdict(path, opts)
-///
-/// ```
+///     ```
 #[pyclass(name = "Options")]
 #[pyo3(text_signature = "()")]
 pub(crate) struct OptionsPy(pub(crate) Options);
 
 /// Optionally disable WAL or sync for this write.
 ///
-/// # Examples
+/// Example:
 ///
 /// Making an unsafe write of a batch:
+/// ::
+///     ```python
+///     from rocksdict import Rdict, Options, WriteBatch, WriteOptions
 ///
-/// ```python
-/// from rocksdict import Rdict, Options, WriteBatch, WriteOptions
+///     path = "_path_for_rocksdb_storageY1"
+///     db = Rdict(path, Options())
 ///
-/// path = "_path_for_rocksdb_storageY1"
-/// db = Rdict(path, Options())
+///     # set write options
+///     write_options = WriteOptions()
+///     write_options.set_sync(false)
+///     write_options.disable_wal(true)
+///     db.set_write_options(write_options)
 ///
-/// # set write options
-/// write_options = WriteOptions()
-/// write_options.set_sync(false)
-/// write_options.disable_wal(true)
-/// db.set_write_options(write_options)
+///     # write to db
+///     db["my key"] = "my value"
+///     db["key2"] = "value2"
+///     db["key3"] = "value3"
 ///
-/// # write to db
-/// db["my key"] = "my value"
-/// db["key2"] = "value2"
-/// db["key3"] = "value3"
-///
-/// # remove db
-/// del db
-/// Rdict.destroy(path, Options())
+///     # remove db
+///     del db
+///     Rdict.destroy(path, Options())
 /// ```
 #[pyclass(name = "WriteOptions")]
 #[pyo3(text_signature = "()")]
@@ -96,23 +96,23 @@ pub(crate) struct WriteOptionsPy {
 
 /// Optionally wait for the memtable flush to be performed.
 ///
-/// # Examples
+/// Example:
 ///
 /// Manually flushing the memtable:
+/// ::
+///     ```python
+///     from rocksdb import Rdict, Options, FlushOptions
 ///
-/// ```python
-/// from rocksdb import Rdict, Options, FlushOptions
+///     path = "_path_for_rocksdb_storageY2"
+///     db = Rdict(path, Options())
 ///
-/// path = "_path_for_rocksdb_storageY2"
-/// db = Rdict(path, Options())
+///     flush_options = FlushOptions()
+///     flush_options.set_wait(true)
 ///
-/// flush_options = FlushOptions()
-/// flush_options.set_wait(true)
-///
-/// db.flush_opt(flush_options)
-/// del db
-/// Rdict.destroy(path, Options())
-/// ```
+///     db.flush_opt(flush_options)
+///     del db
+///     Rdict.destroy(path, Options())
+///     ```
 #[pyclass(name = "FlushOptions")]
 #[derive(Copy, Clone)]
 #[pyo3(text_signature = "()")]
@@ -423,14 +423,14 @@ impl OptionsPy {
     /// Default: `DBCompressionType::Snappy` (`DBCompressionType::None` if
     /// snappy feature is not enabled).
     ///
-    /// # Examples
+    /// Example:
+    /// ::
+    ///     ```
+    ///     from rocksdict import Options, DBCompressionType
     ///
-    /// ```
-    /// from rocksdict import Options, DBCompressionType
-    ///
-    /// opts = Options()
-    /// opts.set_compression_type(DBCompressionType.snappy())
-    /// ```
+    ///     opts = Options()
+    ///     opts.set_compression_type(DBCompressionType.snappy())
+    ///     ```
     #[pyo3(text_signature = "($self, t)")]
     pub fn set_compression_type(&mut self, t: PyRef<DBCompressionTypePy>) {
         self.0.set_compression_type(t.0)
@@ -444,20 +444,20 @@ impl OptionsPy {
     /// each level of the database; these override the value specified in
     /// the previous field 'compression'.
     ///
-    /// # Examples
+    /// Example:
+    /// ::
+    ///     ```
+    ///     from rocksdict import Options, DBCompressionType
     ///
-    /// ```
-    /// from rocksdict import Options, DBCompressionType
-    ///
-    /// opts = Options()
-    /// opts.set_compression_per_level([
-    ///     DBCompressionType.none(),
-    ///     DBCompressionType.none(),
-    ///     DBCompressionType.snappy(),
-    ///     DBCompressionType.snappy(),
-    ///     DBCompressionType.snappy()
-    /// ])
-    /// ```
+    ///     opts = Options()
+    ///     opts.set_compression_per_level([
+    ///         DBCompressionType.none(),
+    ///         DBCompressionType.none(),
+    ///         DBCompressionType.snappy(),
+    ///         DBCompressionType.snappy(),
+    ///         DBCompressionType.snappy()
+    ///     ])
+    ///     ```
     #[pyo3(text_signature = "($self, level_types)")]
     pub fn set_compression_per_level(&mut self, level_types: &PyList) -> PyResult<()> {
         let mut result = Vec::with_capacity(level_types.len());
@@ -1180,18 +1180,18 @@ impl OptionsPy {
     /// See official [wiki](https://github.com/facebook/rocksdb/wiki/MemTable) for more information.
     /// Defaults to using a skiplist.
     ///
-    /// # Examples
+    /// Example:
+    /// ::
+    ///     ```
+    ///     from rocksdict import Options, MemtableFactory
+    ///     opts = Options()
+    ///     factory = MemtableFactory.hash_skip_list(bucket_count=1_000_000,
+    ///                                              height=4,
+    ///                                              branching_factor=4)
     ///
-    /// ```
-    /// from rocksdict import Options, MemtableFactory
-    /// opts = Options()
-    /// factory = MemtableFactory.hash_skip_list(bucket_count=1_000_000,
-    ///                                          height=4,
-    ///                                          branching_factor=4)
-    ///
-    /// opts.set_allow_concurrent_memtable_write(false)
-    /// opts.set_memtable_factory(factory)
-    /// ```
+    ///     opts.set_allow_concurrent_memtable_write(false)
+    ///     opts.set_memtable_factory(factory)
+    ///     ```
     #[pyo3(text_signature = "($self, factory)")]
     pub fn set_memtable_factory(&mut self, factory: PyRef<MemtableFactoryPy>) {
         self.0.set_memtable_factory(match factory.0 {
@@ -1221,21 +1221,21 @@ impl OptionsPy {
     /// implementation of TableBuilder and TableReader with default
     /// BlockBasedTableOptions).
     /// See official [wiki](https://github.com/facebook/rocksdb/wiki/CuckooTable-Format) for more information on this table format.
-    /// # Examples
+    /// Example:
+    /// ::
+    ///     ```
+    ///     from rocksdict import Options, CuckooTableOptions
     ///
-    /// ```
-    /// from rocksdict import Options, CuckooTableOptions
+    ///     opts = Options()
+    ///     factory_opts = CuckooTableOptions()
+    ///     factory_opts.set_hash_ratio(0.8)
+    ///     factory_opts.set_max_search_depth(20)
+    ///     factory_opts.set_cuckoo_block_size(10)
+    ///     factory_opts.set_identity_as_first_hash(true)
+    ///     factory_opts.set_use_module_hash(false)
     ///
-    /// opts = Options()
-    /// factory_opts = CuckooTableOptions()
-    /// factory_opts.set_hash_ratio(0.8)
-    /// factory_opts.set_max_search_depth(20)
-    /// factory_opts.set_cuckoo_block_size(10)
-    /// factory_opts.set_identity_as_first_hash(true)
-    /// factory_opts.set_use_module_hash(false)
-    ///
-    /// opts.set_cuckoo_table_factory(factory_opts)
-    /// ```
+    ///     opts.set_cuckoo_table_factory(factory_opts)
+    ///     ```
     #[pyo3(text_signature = "($self, factory)")]
     pub fn set_cuckoo_table_factory(&mut self, factory: PyRef<CuckooTableOptionsPy>) {
         self.0.set_cuckoo_table_factory(&factory.0)
@@ -1249,20 +1249,20 @@ impl OptionsPy {
     /// See official [wiki](https://github.com/facebook/rocksdb/wiki/PlainTable-Format) for more
     /// information.
     ///
-    /// # Examples
+    /// Example:
+    /// ::
+    ///     ```python
+    ///     from rocksdict import Options, PlainTableFactoryOptions
     ///
-    /// ```python
-    /// from rocksdict import Options, PlainTableFactoryOptions
+    ///     opts = Options()
+    ///     factory_opts = PlainTableFactoryOptions()
+    ///     factory_opts.user_key_length = 0
+    ///     factory_opts.bloom_bits_per_key = 20
+    ///     factory_opts.hash_table_ratio = 0.75
+    ///     factory_opts.index_sparseness = 16
     ///
-    /// opts = Options()
-    /// factory_opts = PlainTableFactoryOptions()
-    /// factory_opts.user_key_length = 0
-    /// factory_opts.bloom_bits_per_key = 20
-    /// factory_opts.hash_table_ratio = 0.75
-    /// factory_opts.index_sparseness = 16
-    ///
-    /// opts.set_plain_table_factory(factory_opts)
-    /// ```
+    ///     opts.set_plain_table_factory(factory_opts)
+    ///     ```
     #[pyo3(text_signature = "($self, options)")]
     pub fn set_plain_table_factory(&mut self, options: &PlainTableFactoryOptionsPy) {
         self.0.set_plain_table_factory(&options.into())
@@ -1520,14 +1520,14 @@ impl OptionsPy {
     ///
     /// Default: 0
     ///
-    /// # Examples
+    /// Example:
+    /// ::
+    ///     ```python
+    ///     from rocksdict import Options
     ///
-    /// ```python
-    /// from rocksdict import Options
-    ///
-    /// options = Options()
-    /// options.set_max_log_file_size(0)
-    /// ```
+    ///     options = Options()
+    ///     options.set_max_log_file_size(0)
+    ///     ```
     #[pyo3(text_signature = "($self, size)")]
     pub fn set_max_log_file_size(&mut self, size: usize) {
         self.0.set_max_log_file_size(size)
@@ -1553,14 +1553,14 @@ impl OptionsPy {
     ///
     /// Default: 0
     ///
-    /// # Examples
+    /// Example:
+    /// ::
+    ///     ```python
+    ///     from rocksdict import Options
     ///
-    /// ```python
-    /// from rocksdict import Options
-    ///
-    /// options = Options()
-    /// options.set_recycle_log_file_num(5)
-    /// ```
+    ///     options = Options()
+    ///     options.set_recycle_log_file_num(5)
+    ///     ```
     #[pyo3(text_signature = "($self, num)")]
     pub fn set_recycle_log_file_num(&mut self, num: usize) {
         self.0.set_recycle_log_file_num(num)
@@ -1742,21 +1742,21 @@ impl From<&WriteOptionsPy> for WriteOptions {
 
 /// Optionally wait for the memtable flush to be performed.
 ///
-/// # Examples
+/// Example:
 ///
 /// Manually flushing the memtable:
+/// ::
+///     ```python
+///     from rocksdict import Rdict, Options, FlushOptions
+///     path = "_path_for_rocksdb_storageY2"
+///     db = Rdict(path, Options())
+///     flush_options = FlushOptions()
+///     flush_options.set_wait(True)
 ///
-/// ```python
-/// from rocksdict import Rdict, Options, FlushOptions
-/// path = "_path_for_rocksdb_storageY2"
-/// db = Rdict(path, Options())
-/// flush_options = FlushOptions()
-/// flush_options.set_wait(True)
+///     db.flush_opt(flush_options)
 ///
-///     db.flush_opt(&flush_options);
-/// }
-/// let _ = DB::destroy(&Options::default(), path);
-/// ```
+///     Rdict.destroy(path, Options())
+///     ```
 #[pymethods]
 impl FlushOptionsPy {
     #[new]
@@ -1768,14 +1768,14 @@ impl FlushOptionsPy {
     ///
     /// Default: true
     ///
-    /// # Examples
+    /// Example:
+    /// ::
+    ///     ```python
+    ///     from rocksdb import FlushOptions
     ///
-    /// ```python
-    /// from rocksdb import FlushOptions
-    ///
-    /// let options = FlushOptions()
-    /// options.set_wait(False)
-    /// ```
+    ///     let options = FlushOptions()
+    ///     options.set_wait(False)
+    ///     ```
     #[pyo3(text_signature = "($self, wait)")]
     pub fn set_wait(&mut self, wait: bool) {
         self.wait = wait
@@ -2133,16 +2133,16 @@ impl BlockBasedOptionsPy {
 
     /// Defines the index type to be used for SS-table lookups.
     ///
-    /// # Examples
+    /// Example:
+    /// ::
+    ///     ```python
+    ///     from rocksdict import BlockBasedOptions, BlockBasedIndexType, Options
     ///
-    /// ```python
-    /// from rocksdict import BlockBasedOptions, BlockBasedIndexType, Options
-    ///
-    /// opts = Options()
-    /// block_opts = BlockBasedOptions()
-    /// block_opts.set_index_type(BlockBasedIndexType.hash_search())
-    /// opts.set_block_based_table_factory(block_opts)
-    /// ```
+    ///     opts = Options()
+    ///     block_opts = BlockBasedOptions()
+    ///     block_opts.set_index_type(BlockBasedIndexType.hash_search())
+    ///     opts.set_block_based_table_factory(block_opts)
+    ///     ```
     #[pyo3(text_signature = "($self, index_type)")]
     pub fn set_index_type(&mut self, index_type: PyRef<BlockBasedIndexTypePy>) {
         self.0.set_index_type(match index_type.0 {
@@ -2217,17 +2217,17 @@ impl BlockBasedOptionsPy {
     /// valid only when using `DataBlockIndexType::BinaryAndHash`.
     ///
     /// Default: `BinarySearch`
-    /// # Examples
+    /// Example:
+    /// ::
+    ///     ```python
+    ///     from rocksdict import BlockBasedOptions, BlockBasedIndexType, Options
     ///
-    /// ```python
-    /// from rocksdict import BlockBasedOptions, BlockBasedIndexType, Options
-    ///
-    /// opts = Options()
-    /// block_opts = BlockBasedOptions()
-    /// block_opts.set_data_block_index_type(DataBlockIndexType.binary_and_hash())
-    /// block_opts.set_data_block_hash_ratio(0.85)
-    /// opts.set_block_based_table_factory(block_opts)
-    /// ```
+    ///     opts = Options()
+    ///     block_opts = BlockBasedOptions()
+    ///     block_opts.set_data_block_index_type(DataBlockIndexType.binary_and_hash())
+    ///     block_opts.set_data_block_hash_ratio(0.85)
+    ///     opts.set_block_based_table_factory(block_opts)
+    ///     ```
     #[pyo3(text_signature = "($self, index_type)")]
     pub fn set_data_block_index_type(&mut self, index_type: PyRef<DataBlockIndexTypePy>) {
         self.0.set_data_block_index_type(match index_type.0 {

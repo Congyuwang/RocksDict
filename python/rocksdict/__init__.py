@@ -1,6 +1,5 @@
 from .rocksdict import *
-from .rocksdict import RdictInner as _Rdict
-from typing import Union, List, Any, Tuple, Reversible
+from typing import Union, Any, Tuple, Reversible
 
 __all__ = ["DataBlockIndexType",
            "BlockBasedIndexType",
@@ -165,43 +164,101 @@ class RdictValues(Reversible[Any]):
         raise StopIteration
 
 
-class Rdict:
+class Rdict(RdictInner):
     """
-    A persistent on-disk key value storage.
+    ## Abstract
+
+    This package enables users to store, query, and delete
+    a large number of key-value pairs on disk.
+
+    This is especially useful when the data cannot fit into RAM.
+    If you have hundreds of GBs or many TBs of key-value data to store
+    and query from, this is the package for you.
+
+    ### Installation
+
+    This packakge is built for MacOS (x86/arm), Windows 64/32, and Linux x86.
+    It can be installed from pypi with `pip install rocksdict`.
+
+    ## Introduction
+
+    Below is a code example that shows how to do the following:
+
+    - Create Rdict
+    - Store something on disk
+    - Close Rdict
+    - Open Rdict again
+    - Check Rdict elements
+    - Iterate from Rdict
+    - Batch get
+    - Delete storage
+
+    Examples:
+        ::
+
+            ```python
+            from rocksdict import Rdict, Options
+
+            path = str("./test_dict")
+
+            # create a Rdict with default options at `path`
+            db = Rdict(path)
+
+            # storing numbers
+            db[1.0] = 1
+            db[1] = 1.0
+            # very big integer
+            db["huge integer"] = 2343546543243564534233536434567543
+            # boolean values
+            db["good"] = True
+            db["bad"] = False
+            # bytes
+            db["bytes"] = b"bytes"
+            # store anything
+            db["this is a list"] = [1, 2, 3]
+            db["store a dict"] = {0: 1}
+            # for example numpy array
+            import numpy as np
+            import pandas as pd
+            db[b"numpy"] = np.array([1, 2, 3])
+            db["a table"] = pd.DataFrame({"a": [1, 2], "b": [2, 1]})
+
+            # close Rdict
+            db.close()
+
+            # reopen Rdict from disk
+            db = Rdict(path)
+            assert db[1.0] == 1
+            assert db[1] == 1.0
+            assert db["huge integer"] == 2343546543243564534233536434567543
+            assert db["good"] == True
+            assert db["bad"] == False
+            assert db["bytes"] == b"bytes"
+            assert db["this is a list"] == [1, 2, 3]
+            assert db["store a dict"] == {0: 1}
+            assert np.all(db[b"numpy"] == np.array([1, 2, 3]))
+            assert np.all(db["a table"] == pd.DataFrame({"a": [1, 2], "b": [2, 1]}))
+
+            # iterate through all elements
+            for k, v in db.items():
+                print(f"{k} -> {v}")
+
+            # batch get:
+            print(db[["good", "bad", 1.0]])
+            # [True, False, 1]
+
+            # delete Rdict from dict
+            del db
+            Rdict.destroy(path, Options())
+            ```
+
+    Supported types:
+
+    - key: `int, float, bool, str, bytes`
+    - value: `int, float, bool, str, bytes` and anything that
+        supports `pickle`.
+
     """
-
-    def __init__(self, path: str, options: Options = Options()):
-        """Create a new database or open an existing one.
-
-        Args:
-            path: path to the database
-            options: Options object
-        """
-        self._inner = _Rdict(path, options)
-
-    def set_write_options(self, write_opt: WriteOptions) -> None:
-        """Configure Write Options."""
-        self._inner.set_write_options(write_opt)
-
-    def set_flush_options(self, flush_opt: FlushOptions) -> None:
-        """Configure Flush Options."""
-        self._inner.set_flush_options(flush_opt)
-
-    def set_read_options(self, read_opt: ReadOptions) -> None:
-        """Configure Read Options."""
-        self._inner.set_read_options(read_opt)
-
-    def __getitem__(self, key: Union[str, int, float, bytes, bool, List[Union[str, int, float, bytes, bool]]]) -> Any:
-        return self._inner[key]
-
-    def __setitem__(self, key: Union[str, int, float, bytes, bool], value) -> None:
-        self._inner[key] = value
-
-    def __contains__(self, key: Union[str, int, float, bytes, bool]) -> bool:
-        return key in self._inner
-
-    def __delitem__(self, key: Union[str, int, float, bytes, bool]) -> None:
-        del self._inner[key]
 
     def items(self,
               backward: bool = False,
@@ -219,29 +276,29 @@ class Rdict:
         Examples:
             ::
 
-            ```python
-            from rocksdict import Rdict, Options, ReadOptions
+                ```python
+                from rocksdict import Rdict, Options, ReadOptions
 
-            path = "_path_for_rocksdb_storage5"
-            db = Rdict(path, Options())
+                path = "_path_for_rocksdb_storage5"
+                db = Rdict(path, Options())
 
-            for i in range(50):
-                db[i] = i ** 2
+                for i in range(50):
+                    db[i] = i ** 2
 
-            count = 0
-            for k, v in db.items():
-                assert k == count
-                assert v == k ** 2
-                count += 1
+                count = 0
+                for k, v in db.items():
+                    assert k == count
+                    assert v == k ** 2
+                    count += 1
 
-            del db
-            Rdict.destroy(path, Options())
-            ```
+                del db
+                Rdict.destroy(path, Options())
+                ```
 
         Returns: Reversible
 
         """
-        return RdictItems(self._inner.iter(read_opt), backward, from_key)
+        return RdictItems(self.iter(read_opt), backward, from_key)
 
     def values(self,
                backward: bool = False,
@@ -259,28 +316,28 @@ class Rdict:
         Examples:
             ::
 
-            ```python
-            from rocksdict import Rdict, Options, ReadOptions
+                ```python
+                from rocksdict import Rdict, Options, ReadOptions
 
-            path = "_path_for_rocksdb_storage5"
-            db = Rdict(path, Options())
+                path = "_path_for_rocksdb_storage5"
+                db = Rdict(path, Options())
 
-            for i in range(50):
-                db[i] = i ** 2
+                for i in range(50):
+                    db[i] = i ** 2
 
-            count = 0
-            for v in db.values():
-                assert v == count ** 2
-                count += 1
+                count = 0
+                for v in db.values():
+                    assert v == count ** 2
+                    count += 1
 
-            del db
-            Rdict.destroy(path, Options())
-            ```
+                del db
+                Rdict.destroy(path, Options())
+                ```
 
         Returns: Reversible
 
         """
-        return RdictValues(self._inner.iter(read_opt), backward, from_key)
+        return RdictValues(self.iter(read_opt), backward, from_key)
 
     def keys(self,
              read_opt: ReadOptions = ReadOptions(),
@@ -298,77 +355,40 @@ class Rdict:
         Examples:
             ::
 
-            ```python
-            from rocksdict import Rdict, Options, ReadOptions
+                ```python
+                from rocksdict import Rdict, Options, ReadOptions
 
-            path = "_path_for_rocksdb_storage5"
-            db = Rdict(path, Options())
+                path = "_path_for_rocksdb_storage5"
+                db = Rdict(path, Options())
 
-            for i in range(50):
-                db[i] = i ** 2
+                for i in range(50):
+                    db[i] = i ** 2
 
-            count = 0
-            for v in db.keys():
-                assert v == count
-                count += 1
+                count = 0
+                for v in db.keys():
+                    assert v == count
+                    count += 1
 
-            del db
-            Rdict.destroy(path, Options())
-            ```
-
-        Returns: Reversible
-
-        """
-        return RdictKeys(self._inner.iter(read_opt), backward, from_key)
-
-    def iter(self, read_opt: ReadOptions = ReadOptions()) -> RdictIter:
-        """Reversible for iterating over keys and values.
-
-        Examples:
-            ::
-
-            ```python
-            from rocksdict import Rdict, Options, ReadOptions
-
-            path = "_path_for_rocksdb_storage5"
-            db = Rdict(path, Options())
-
-            for i in range(50):
-                db[i] = i ** 2
-
-            iter = db.iter(ReadOptions())
-
-            iter.seek_to_first()
-
-            j = 0
-            while iter.valid():
-                assert iter.key() == j
-                assert iter.value() == j ** 2
-                print(f"{iter.key()} {iter.value()}")
-                iter.next()
-                j += 1
-
-            iter.seek_to_first();
-            assert iter.key() == 0
-            assert iter.value() == 0
-            print(f"{iter.key()} {iter.value()}")
-
-            iter.seek(25)
-            assert iter.key() == 25
-            assert iter.value() == 625
-            print(f"{iter.key()} {iter.value()}")
-
-            del iter, db
-            Rdict.destroy(path, Options())
-            ```
-
-        Args:
-            read_opt: ReadOptions
+                del db
+                Rdict.destroy(path, Options())
+                ```
 
         Returns: Reversible
 
         """
-        return self._inner.iter(read_opt)
+        return RdictKeys(self.iter(read_opt), backward, from_key)
+
+    def set_write_options(self, write_opt: WriteOptions) -> None:
+        """Configure Write Options."""
+        super(Rdict, self).set_write_options(write_opt)
+
+    def set_flush_options(self, flush_opt: FlushOptions) -> None:
+        """Configure Flush Options."""
+        super(Rdict, self).set_flush_options(flush_opt)
+
+    def set_read_options(self, read_opt: ReadOptions) -> None:
+        """Configure Read Options."""
+        super(Rdict, self).set_read_options(read_opt)
 
     def close(self) -> None:
         """Flush memory to disk, and drop the database.
@@ -383,7 +403,7 @@ class Rdict:
             Calling method after `close()` will throw exception.
 
         """
-        self._inner.close()
+        super(Rdict, self).close()
 
     @staticmethod
     def destroy(path: str, options: Options) -> None:
@@ -394,4 +414,4 @@ class Rdict:
             options (rocksdict.Options): Rocksdb options object
 
         """
-        _Rdict.destroy(path, options)
+        RdictInner.destroy(path, options)
