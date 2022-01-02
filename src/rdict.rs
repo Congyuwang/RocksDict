@@ -192,12 +192,18 @@ impl Rdict {
                     py,
                     &self.read_opt,
                     &self.pickle_loads,
+                    &self.column_family,
                 )?
                 .to_object(py));
             }
-            // single get
             let key = encode_key(key)?;
-            match db.borrow().get_pinned_opt(&key[..], &self.read_opt) {
+            let db = db.borrow();
+            let value_result = if let Some(cf) = &self.column_family {
+                db.get_pinned_cf_opt(cf.deref(), &key[..], &self.read_opt)
+            } else {
+                db.get_pinned_opt(&key[..], &self.read_opt)
+            };
+            match value_result {
                 Ok(value) => match value {
                     None => Err(PyException::new_err("key not found")),
                     Some(slice) => decode_value(py, slice.as_ref(), &self.pickle_loads),
@@ -213,7 +219,13 @@ impl Rdict {
         if let Some(db) = &self.db {
             let key = encode_key(key)?;
             let value = encode_value(value, &self.pickle_dumps, py)?;
-            match db.borrow().put_opt(&key[..], value, &self.write_opt) {
+            let db = db.borrow();
+            let put_result = if let Some(cf) = &self.column_family {
+                db.put_cf_opt(cf.deref(), &key[..], value, &self.write_opt)
+            } else {
+                db.put_opt(&key[..], value, &self.write_opt)
+            };
+            match put_result {
                 Ok(_) => Ok(()),
                 Err(e) => Err(PyException::new_err(e.to_string())),
             }
@@ -226,8 +238,18 @@ impl Rdict {
         if let Some(db) = &self.db {
             let key = encode_key(key)?;
             let db = db.borrow();
-            if db.key_may_exist_opt(&key[..], &self.read_opt) {
-                match db.get_pinned_opt(&key[..], &self.read_opt) {
+            let may_exist = if let Some(cf) = &self.column_family {
+                db.key_may_exist_cf_opt(cf.deref(), &key[..], &self.read_opt)
+            } else {
+                db.key_may_exist_opt(&key[..], &self.read_opt)
+            };
+            if may_exist {
+                let value_result = if let Some(cf) = &self.column_family {
+                    db.get_pinned_cf_opt(cf.deref(), &key[..], &self.read_opt)
+                } else {
+                    db.get_pinned_opt(&key[..], &self.read_opt)
+                };
+                match value_result {
                     Ok(value) => match value {
                         None => Ok(false),
                         Some(_) => Ok(true),
@@ -246,7 +268,12 @@ impl Rdict {
         if let Some(db) = &self.db {
             let key = encode_key(key)?;
             let db = db.borrow();
-            match db.delete_opt(&key[..], &self.write_opt) {
+            let del_result = if let Some(cf) = &self.column_family {
+                db.delete_cf_opt(cf.deref(), &key[..], &self.write_opt)
+            } else {
+                db.delete_opt(&key[..], &self.write_opt)
+            };
+            match del_result {
                 Ok(_) => Ok(()),
                 Err(e) => Err(PyException::new_err(e.to_string())),
             }
@@ -301,11 +328,23 @@ impl Rdict {
     #[args(read_opt = "Py::new(_py, ReadOptionsPy::default(_py)?)?")]
     fn iter(&self, read_opt: Py<ReadOptionsPy>, py: Python) -> PyResult<RdictIter> {
         if let Some(db) = &self.db {
-            Ok(RdictIter::new(
-                db,
-                read_opt.borrow(py).deref().into(),
-                &self.pickle_loads,
-            ))
+            match &self.column_family {
+                None => {
+                    Ok(RdictIter::new(
+                        db,
+                        read_opt.borrow(py).deref().into(),
+                        &self.pickle_loads,
+                    ))
+                }
+                Some(cf) => {
+                    Ok(RdictIter::new_cf(
+                        db,
+                        cf.deref(),
+                        read_opt.borrow(py).deref().into(),
+                        &self.pickle_loads,
+                    ))
+                }
+            }
         } else {
             Err(PyException::new_err("DB already closed"))
         }
@@ -428,7 +467,12 @@ impl Rdict {
             let mut f_opt = FlushOptions::new();
             f_opt.set_wait(wait);
             let db = db.borrow();
-            match db.flush_opt(&f_opt) {
+            let flush_result = if let Some(cf) = &self.column_family {
+                db.flush_cf_opt(cf.deref(), &f_opt)
+            } else {
+                db.flush_opt(&f_opt)
+            };
+            match flush_result {
                 Ok(_) => Ok(()),
                 Err(e) => Err(PyException::new_err(e.into_string())),
             }
@@ -522,7 +566,13 @@ impl Rdict {
     fn close(&mut self) -> PyResult<()> {
         if let Some(db) = &self.db {
             let f_opt = &self.flush_opt;
-            let flush_result = db.borrow().flush_opt(&f_opt.into());
+            let db = db.borrow();
+            let flush_result = if let Some(cf) = &self.column_family {
+                db.flush_cf_opt(cf.deref(), &f_opt.into())
+            } else {
+                db.flush_opt(&f_opt.into())
+            };
+            drop(db);
             match flush_result {
                 Ok(_) => Ok(drop(self.db.take().unwrap())),
                 Err(e) => {
@@ -558,12 +608,19 @@ fn get_batch_inner<'a>(
     py: Python<'a>,
     read_opt: &ReadOptions,
     pickle_loads: &PyObject,
+    column_family: &Option<Rc<ColumnFamily>>,
 ) -> PyResult<&'a PyList> {
     let mut keys_batch = Vec::new();
     for key in keys {
         keys_batch.push(encode_key(key)?);
     }
-    let values = db.borrow().multi_get_opt(keys_batch, read_opt);
+    let db = db.borrow();
+    let values = if let Some(cf) = column_family {
+        let keys_cols: Vec<(&ColumnFamily, Box<[u8]>)> = keys_batch.into_iter().map(|k| { (cf.deref(), k) }).collect();
+        db.multi_get_cf_opt(keys_cols, read_opt)
+    } else {
+        db.multi_get_opt(keys_batch, read_opt)
+    };
     let result = PyList::empty(py);
     for v in values {
         match v {
@@ -578,10 +635,16 @@ fn get_batch_inner<'a>(
 }
 
 impl Drop for Rdict {
+    // flush
     fn drop(&mut self) {
-        if let Some(db) = self.db.take() {
+        if let Some(db) = &self.db {
             let f_opt = &self.flush_opt;
-            let _ = db.borrow().flush_opt(&f_opt.into());
+            let db = db.borrow();
+            let _ = if let Some(cf) = &self.column_family {
+                db.flush_cf_opt(cf.deref(), &f_opt.into())
+            } else {
+                db.flush_opt(&f_opt.into())
+            };
         }
     }
 }

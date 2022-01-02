@@ -9,7 +9,7 @@ use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::PyIterProtocol;
 use rocksdb::db::DBAccess;
-use rocksdb::DB;
+use rocksdb::{ColumnFamily, DB};
 use std::ptr::null_mut;
 use std::rc::Rc;
 
@@ -54,6 +54,22 @@ impl RdictIter {
             RdictIter {
                 db: db.clone(),
                 inner: librocksdb_sys::rocksdb_create_iterator(db.borrow().inner(), readopts.0),
+                readopts,
+                pickle_loads: pickle_loads.clone(),
+            }
+        }
+    }
+
+    pub(crate) fn new_cf(
+        db: &Rc<RefCell<DB>>,
+        column_family: &ColumnFamily,
+        readopts: ReadOpt,
+        pickle_loads: &PyObject
+    ) -> Self {
+        unsafe {
+            Self {
+                db: db.clone(),
+                inner: librocksdb_sys::rocksdb_create_iterator_cf(db.borrow().inner(), readopts.0, column_family.inner()),
                 readopts,
                 pickle_loads: pickle_loads.clone(),
             }
