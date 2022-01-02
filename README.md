@@ -167,3 +167,12 @@ d.close()
 # delete tmp
 Rdict.destroy("tmp")
 ```
+
+## Limitations
+
+Currently the package does not support ColumnFamilies due to some memory bug.
+
+## Contribution
+
+This project is still in an early stage of development. People are welcome 
+to add tests, benchmarks and new features.
