@@ -60,7 +60,7 @@ impl Rdict {
     /// Args:
     ///     path (str): path to the database
     ///     options (Options): Options object
-    ///     cfs (List): List of ColumnFamilyDescriptors (default: None)
+    ///     column_families (List): List of ColumnFamilyDescriptors (default: None)
     ///     read_only (bool): whether to open read_only
     ///     error_if_log_file_exist (bool): this option is useful only when
     ///         read_only is set to `true`
@@ -68,7 +68,7 @@ impl Rdict {
     #[new]
     #[args(
         options = "Py::new(_py, OptionsPy::new())?",
-        cfs = "_py.None().into_ref(_py)",
+        column_families = "_py.None().into_ref(_py)",
         read_only = "false",
         error_if_log_file_exist = "true",
         ttl = "0"
@@ -76,7 +76,7 @@ impl Rdict {
     fn new(
         path: &str,
         options: Py<OptionsPy>,
-        cfs: &PyAny,
+        column_families: &PyAny,
         read_only: bool,
         error_if_log_file_exist: bool,
         ttl: u64,
@@ -87,7 +87,7 @@ impl Rdict {
         let options = &options.borrow(py).0;
         match create_dir_all(path) {
             Ok(_) => match {
-                match (read_only, ttl, cfs.is_none()) {
+                match (read_only, ttl, column_families.is_none()) {
                     (false, 0, true) => DB::open(options, &path),
                     (false, ttl, true) => {
                         DB::open_with_ttl(options, path, Duration::from_secs(ttl))
@@ -96,26 +96,28 @@ impl Rdict {
                         DB::open_for_read_only(options, &path, error_if_log_file_exist)
                     }
                     (read_only, ttl, false) => {
-                        let cfs: &PyList = cfs.extract()?;
-                        let mut cfs_into: Vec<ColumnFamilyDescriptor> =
-                            Vec::with_capacity(cfs.len());
-                        for cf in cfs {
+                        let column_families: &PyList = column_families.extract()?;
+                        let mut column_families_into: Vec<ColumnFamilyDescriptor> =
+                            Vec::with_capacity(column_families.len());
+                        for cf in column_families {
                             let cf: &PyCell<ColumnFamilyDescriptorPy> = PyTryFrom::try_from(cf)?;
                             let cf = cf.borrow();
-                            cfs_into.push((&*cf).into());
+                            column_families_into.push((&*cf).into());
                         }
                         match (read_only, ttl) {
-                            (false, 0) => DB::open_cf_descriptors(options, &path, cfs_into),
+                            (false, 0) => {
+                                DB::open_cf_descriptors(options, &path, column_families_into)
+                            }
                             (false, ttl) => DB::open_cf_descriptors_with_ttl(
                                 options,
                                 &path,
-                                cfs_into,
+                                column_families_into,
                                 Duration::from_secs(ttl),
                             ),
                             (true, _) => DB::open_cf_descriptors_for_read_only(
                                 options,
                                 &path,
-                                cfs_into,
+                                column_families_into,
                                 error_if_log_file_exist,
                             ),
                         }
@@ -486,9 +488,15 @@ impl Rdict {
     ///     the newly created column family
     #[pyo3(text_signature = "($self, name, options)")]
     #[args(options = "Py::new(_py, OptionsPy::new())?")]
-    fn create_column_family(&self, name: &str, options: Py<OptionsPy>, py: Python) -> PyResult<Rdict> {
+    fn create_column_family(
+        &self,
+        name: &str,
+        options: Py<OptionsPy>,
+        py: Python,
+    ) -> PyResult<Rdict> {
         if let Some(db) = &self.db {
-            match db.borrow_mut().create_cf(name, &options.borrow(py).0) {
+            let create_result = db.borrow_mut().create_cf(name, &options.borrow(py).0);
+            match create_result {
                 Ok(_) => Ok(self.column_family(name)?),
                 Err(e) => Err(PyException::new_err(e.to_string())),
             }

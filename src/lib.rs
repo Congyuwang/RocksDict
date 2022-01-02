@@ -8,8 +8,8 @@ mod util;
 use crate::iter::*;
 use crate::options::*;
 use crate::rdict::*;
-use pyo3::prelude::*;
 use crate::sst_file_writer::SstFileWriterPy;
+use pyo3::prelude::*;
 
 /// ## Abstract
 ///

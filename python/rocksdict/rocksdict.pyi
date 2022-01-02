@@ -366,7 +366,7 @@ class WriteOptions:
 class Rdict:
     def __init__(self, path: str,
                  options: Options = Options(),
-                 cfs: Union[List[ColumnFamily], None] = None,
+                 column_families: Union[List[ColumnFamily], None] = None,
                  read_only: bool = False,
                  error_if_log_file_exist: bool = True,
                  ttl: int = 0) -> Rdict: ...
