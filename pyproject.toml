@@ -1,6 +1,6 @@
 [project]
 name = "rocksdict"
-version = "0.2.10"
+version = "0.2.11"
 description = "On-disk Dict With RocksDB (dbm alternative)"
 long_description_content_type="text/markdown"
 readme = "README.md"
