@@ -2,7 +2,6 @@ use crate::encoder::{decode_value, encode_key};
 use crate::util::error_message;
 use crate::ReadOpt;
 use core::slice;
-use std::cell::RefCell;
 use libc::{c_char, c_uchar, size_t};
 use librocksdb_sys;
 use pyo3::exceptions::PyException;
@@ -10,6 +9,7 @@ use pyo3::prelude::*;
 use pyo3::PyIterProtocol;
 use rocksdb::db::DBAccess;
 use rocksdb::{ColumnFamily, DB};
+use std::cell::RefCell;
 use std::ptr::null_mut;
 use std::rc::Rc;
 
@@ -64,12 +64,16 @@ impl RdictIter {
         db: &Rc<RefCell<DB>>,
         column_family: &ColumnFamily,
         readopts: ReadOpt,
-        pickle_loads: &PyObject
+        pickle_loads: &PyObject,
     ) -> Self {
         unsafe {
             Self {
                 db: db.clone(),
-                inner: librocksdb_sys::rocksdb_create_iterator_cf(db.borrow().inner(), readopts.0, column_family.inner()),
+                inner: librocksdb_sys::rocksdb_create_iterator_cf(
+                    db.borrow().inner(),
+                    readopts.0,
+                    column_family.inner(),
+                ),
                 readopts,
                 pickle_loads: pickle_loads.clone(),
             }

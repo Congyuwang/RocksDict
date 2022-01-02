@@ -2,12 +2,14 @@ mod encoder;
 mod iter;
 mod options;
 mod rdict;
+mod sst_file_writer;
 mod util;
 
 use crate::iter::*;
 use crate::options::*;
 use crate::rdict::*;
 use pyo3::prelude::*;
+use crate::sst_file_writer::SstFileWriterPy;
 
 /// ## Abstract
 ///
@@ -128,5 +130,6 @@ fn rocksdict(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<RdictKeys>()?;
     m.add_class::<ColumnFamilyDescriptorPy>()?;
     m.add_class::<IngestExternalFileOptionsPy>()?;
+    m.add_class::<SstFileWriterPy>()?;
     Ok(())
 }

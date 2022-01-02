@@ -8,8 +8,7 @@ use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 use rocksdb::{
-    ColumnFamily, ColumnFamilyDescriptor, FlushOptions, Options, ReadOptions, WriteOptions,
-    DB,
+    ColumnFamily, ColumnFamilyDescriptor, FlushOptions, Options, ReadOptions, WriteOptions, DB,
 };
 use std::cell::RefCell;
 use std::fs::create_dir_all;
@@ -329,21 +328,17 @@ impl Rdict {
     fn iter(&self, read_opt: Py<ReadOptionsPy>, py: Python) -> PyResult<RdictIter> {
         if let Some(db) = &self.db {
             match &self.column_family {
-                None => {
-                    Ok(RdictIter::new(
-                        db,
-                        read_opt.borrow(py).deref().into(),
-                        &self.pickle_loads,
-                    ))
-                }
-                Some(cf) => {
-                    Ok(RdictIter::new_cf(
-                        db,
-                        cf.deref(),
-                        read_opt.borrow(py).deref().into(),
-                        &self.pickle_loads,
-                    ))
-                }
+                None => Ok(RdictIter::new(
+                    db,
+                    read_opt.borrow(py).deref().into(),
+                    &self.pickle_loads,
+                )),
+                Some(cf) => Ok(RdictIter::new_cf(
+                    db,
+                    cf.deref(),
+                    read_opt.borrow(py).deref().into(),
+                    &self.pickle_loads,
+                )),
             }
         } else {
             Err(PyException::new_err("DB already closed"))
@@ -481,14 +476,20 @@ impl Rdict {
         }
     }
 
-    /// Creates column family with given name and options
+    /// Creates column family with given name and options.
+    ///
+    /// Args:
+    ///     name: name of this column family
+    ///     options: Rdict Options for this column family
+    ///
+    /// Return:
+    ///     the newly created column family
     #[pyo3(text_signature = "($self, name, options)")]
-    #[args(opts = "Py::new(_py, OptionsPy::new())?")]
-    fn create_cf(&self, name: &str, options: Py<OptionsPy>, py: Python) -> PyResult<()> {
+    #[args(options = "Py::new(_py, OptionsPy::new())?")]
+    fn create_column_family(&self, name: &str, options: Py<OptionsPy>, py: Python) -> PyResult<Rdict> {
         if let Some(db) = &self.db {
-            match db.borrow_mut().create_cf(name, &options.borrow(py).0)
-            {
-                Ok(_) => Ok(()),
+            match db.borrow_mut().create_cf(name, &options.borrow(py).0) {
+                Ok(_) => Ok(self.column_family(name)?),
                 Err(e) => Err(PyException::new_err(e.to_string())),
             }
         } else {
@@ -497,8 +498,8 @@ impl Rdict {
     }
 
     /// Drops the column family with the given name
-    #[pyo3(text_signature = "($self, name, options)")]
-    fn drop_cf(&self, name: &str) -> PyResult<()> {
+    #[pyo3(text_signature = "($self, name)")]
+    fn drop_column_family(&self, name: &str) -> PyResult<()> {
         if let Some(db) = &self.db {
             match db.borrow_mut().drop_cf(name) {
                 Ok(_) => Ok(()),
@@ -509,6 +510,15 @@ impl Rdict {
         }
     }
 
+    /// Get a column family Rdict
+    ///
+    /// Args:
+    ///     name: name of this column family
+    ///     options: Rdict Options for this column family
+    ///
+    /// Return:
+    ///     the column family Rdict of this name
+    #[pyo3(text_signature = "($self, name)")]
     pub fn column_family(&self, name: &str) -> PyResult<Self> {
         if let Some(db) = &self.db {
             match db.borrow().cf_handle(name) {
@@ -533,7 +543,7 @@ impl Rdict {
         }
     }
 
-    #[pyo3(text_signature = "($self, paths)")]
+    #[pyo3(text_signature = "($self, paths, opts)")]
     #[args(opts = "Py::new(_py, IngestExternalFileOptionsPy::new())?")]
     fn ingest_external_file(
         &self,
@@ -542,8 +552,13 @@ impl Rdict {
         py: Python,
     ) -> PyResult<()> {
         if let Some(db) = &self.db {
-            match db.borrow().ingest_external_file_opts(&opts.borrow(py).0, paths)
-            {
+            let db = db.borrow();
+            let ingest_result = if let Some(cf) = &self.column_family {
+                db.ingest_external_file_cf_opts(cf.deref(), &opts.borrow(py).0, paths)
+            } else {
+                db.ingest_external_file_opts(&opts.borrow(py).0, paths)
+            };
+            match ingest_result {
                 Ok(_) => Ok(()),
                 Err(e) => Err(PyException::new_err(e.to_string())),
             }
@@ -616,7 +631,8 @@ fn get_batch_inner<'a>(
     }
     let db = db.borrow();
     let values = if let Some(cf) = column_family {
-        let keys_cols: Vec<(&ColumnFamily, Box<[u8]>)> = keys_batch.into_iter().map(|k| { (cf.deref(), k) }).collect();
+        let keys_cols: Vec<(&ColumnFamily, Box<[u8]>)> =
+            keys_batch.into_iter().map(|k| (cf.deref(), k)).collect();
         db.multi_get_cf_opt(keys_cols, read_opt)
     } else {
         db.multi_get_opt(keys_batch, read_opt)
