@@ -43,6 +43,7 @@ use std::path::{Path, PathBuf};
 ///
 #[pyclass(name = "Options")]
 #[pyo3(text_signature = "()")]
+#[derive(Clone)]
 pub(crate) struct OptionsPy(pub(crate) Options);
 
 /// Optionally disable WAL or sync for this write.

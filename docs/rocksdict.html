@@ -63,6 +63,15 @@
                                 <a class="function" href="#Rdict.flush">flush</a>
                         </li>
                         <li>
+                                <a class="function" href="#Rdict.create_column_family">create_column_family</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Rdict.drop_column_family">drop_column_family</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Rdict.get_column_family">get_column_family</a>
+                        </li>
+                        <li>
                                 <a class="function" href="#Rdict.ingest_external_file">ingest_external_file</a>
                         </li>
                         <li>
@@ -459,16 +468,16 @@
                                 <a class="variable" href="#WriteOptions.sync">sync</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.no_slowdown">no_slowdown</a>
+                                <a class="variable" href="#WriteOptions.low_pri">low_pri</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.low_pri">low_pri</a>
+                                <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
                         </li>
                         <li>
                                 <a class="variable" href="#WriteOptions.memtable_insert_hint_per_batch">memtable_insert_hint_per_batch</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
+                                <a class="variable" href="#WriteOptions.no_slowdown">no_slowdown</a>
                         </li>
                 </ul>
 
@@ -654,9 +663,6 @@
                                 <a class="function" href="#PlainTableFactoryOptions.__init__">PlainTableFactoryOptions</a>
                         </li>
                         <li>
-                                <a class="variable" href="#PlainTableFactoryOptions.user_key_length">user_key_length</a>
-                        </li>
-                        <li>
                                 <a class="variable" href="#PlainTableFactoryOptions.hash_table_ratio">hash_table_ratio</a>
                         </li>
                         <li>
@@ -664,6 +670,9 @@
                         </li>
                         <li>
                                 <a class="variable" href="#PlainTableFactoryOptions.bloom_bits_per_key">bloom_bits_per_key</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#PlainTableFactoryOptions.user_key_length">user_key_length</a>
                         </li>
                 </ul>
 
@@ -717,19 +726,19 @@
                                 <a class="function" href="#UniversalCompactOptions.set_stop_style">set_stop_style</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.min_merge_width">min_merge_width</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#UniversalCompactOptions.compression_size_percent">compression_size_percent</a>
+                                <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.max_merge_width">max_merge_width</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
+                                <a class="variable" href="#UniversalCompactOptions.min_merge_width">min_merge_width</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.max_size_amplification_percent">max_size_amplification_percent</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#UniversalCompactOptions.compression_size_percent">compression_size_percent</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
@@ -1376,6 +1385,74 @@ or the nearest next key for iteration
 <ul>
 <li><strong>wait (bool):</strong>  whether to wait for the flush to finish.</li>
 </ul>
+</div>
+
+
+                            </div>
+                            <div id="Rdict.create_column_family" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.create_column_family">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">create_column_family</span><span class="signature">(self, /, name, options)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Creates column family with given name and options.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>name:</strong>  name of this column family</li>
+<li><strong>options:</strong>  Rdict Options for this column family</li>
+</ul>
+
+<h6 id="return">Return</h6>
+
+<blockquote>
+  <p>the newly created column family</p>
+</blockquote>
+</div>
+
+
+                            </div>
+                            <div id="Rdict.drop_column_family" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.drop_column_family">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">drop_column_family</span><span class="signature">(self, /, name)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Drops the column family with the given name</p>
+</div>
+
+
+                            </div>
+                            <div id="Rdict.get_column_family" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.get_column_family">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">get_column_family</span><span class="signature">(self, /, name)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Get a column family Rdict</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>name:</strong>  name of this column family</li>
+<li><strong>options:</strong>  Rdict Options for this column family</li>
+</ul>
+
+<h6 id="return">Return</h6>
+
+<blockquote>
+  <p>the column family Rdict of this name</p>
+</blockquote>
 </div>
 
 
@@ -4092,19 +4169,19 @@ option will be ignored.</p>
     
 
                             </div>
-                            <div id="WriteOptions.no_slowdown" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.no_slowdown">#&nbsp;&nbsp</a>
+                            <div id="WriteOptions.low_pri" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.low_pri">#&nbsp;&nbsp</a>
 
-        <span class="name">no_slowdown</span>
+        <span class="name">low_pri</span>
     </div>
 
     
 
                             </div>
-                            <div id="WriteOptions.low_pri" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.low_pri">#&nbsp;&nbsp</a>
+                            <div id="WriteOptions.ignore_missing_column_families" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.ignore_missing_column_families">#&nbsp;&nbsp</a>
 
-        <span class="name">low_pri</span>
+        <span class="name">ignore_missing_column_families</span>
     </div>
 
     
@@ -4119,10 +4196,10 @@ option will be ignored.</p>
     
 
                             </div>
-                            <div id="WriteOptions.ignore_missing_column_families" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.ignore_missing_column_families">#&nbsp;&nbsp</a>
+                            <div id="WriteOptions.no_slowdown" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.no_slowdown">#&nbsp;&nbsp</a>
 
-        <span class="name">ignore_missing_column_families</span>
+        <span class="name">no_slowdown</span>
     </div>
 
     
@@ -5020,15 +5097,6 @@ information.</p>
     
 
                             </div>
-                            <div id="PlainTableFactoryOptions.user_key_length" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.user_key_length">#&nbsp;&nbsp</a>
-
-        <span class="name">user_key_length</span>
-    </div>
-
-    
-
-                            </div>
                             <div id="PlainTableFactoryOptions.hash_table_ratio" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.hash_table_ratio">#&nbsp;&nbsp</a>
 
@@ -5051,6 +5119,15 @@ information.</p>
                                             <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.bloom_bits_per_key">#&nbsp;&nbsp</a>
 
         <span class="name">bloom_bits_per_key</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="PlainTableFactoryOptions.user_key_length" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.user_key_length">#&nbsp;&nbsp</a>
+
+        <span class="name">user_key_length</span>
     </div>
 
     
@@ -5319,19 +5396,10 @@ will be compressed iff
 
 
                             </div>
-                            <div id="UniversalCompactOptions.min_merge_width" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.min_merge_width">#&nbsp;&nbsp</a>
+                            <div id="UniversalCompactOptions.stop_style" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.stop_style">#&nbsp;&nbsp</a>
 
-        <span class="name">min_merge_width</span>
-    </div>
-
-    
-
-                            </div>
-                            <div id="UniversalCompactOptions.compression_size_percent" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.compression_size_percent">#&nbsp;&nbsp</a>
-
-        <span class="name">compression_size_percent</span>
+        <span class="name">stop_style</span>
     </div>
 
     
@@ -5346,10 +5414,10 @@ will be compressed iff
     
 
                             </div>
-                            <div id="UniversalCompactOptions.stop_style" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.stop_style">#&nbsp;&nbsp</a>
+                            <div id="UniversalCompactOptions.min_merge_width" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.min_merge_width">#&nbsp;&nbsp</a>
 
-        <span class="name">stop_style</span>
+        <span class="name">min_merge_width</span>
     </div>
 
     
@@ -5359,6 +5427,15 @@ will be compressed iff
                                             <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_size_amplification_percent">#&nbsp;&nbsp</a>
 
         <span class="name">max_size_amplification_percent</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="UniversalCompactOptions.compression_size_percent" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.compression_size_percent">#&nbsp;&nbsp</a>
+
+        <span class="name">compression_size_percent</span>
     </div>
 
     
