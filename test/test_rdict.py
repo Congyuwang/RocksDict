@@ -100,6 +100,18 @@ class TestIterInt(unittest.TestCase):
         self.assertEqual({k: v for k, v in self.test_dict.items(backwards=True)},
                          {k: v for k, v in self.ref_dict.items()})
 
+    def test_seek_forward_key(self):
+        key = randint(0, TEST_INT_RANGE_UPPER - 1)
+        ref_list = [k for k in self.ref_dict.keys() if k >= key]
+        ref_list.sort()
+        self.assertEqual([k for k in self.test_dict.keys(from_key=key)], ref_list)
+
+    def test_seek_backward_key(self):
+        key = randint(0, TEST_INT_RANGE_UPPER - 1)
+        ref_list = [k for k in self.ref_dict.keys() if k <= key]
+        ref_list.sort(reverse=True)
+        self.assertEqual([k for k in self.test_dict.keys(from_key=key, backwards=True)], ref_list)
+
     @classmethod
     def tearDownClass(cls):
         cls.test_dict.close()

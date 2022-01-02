@@ -1,5 +1,6 @@
 use crate::encoder::encode_value;
 use libc::{c_char, c_uchar, size_t};
+use num_bigint::BigInt;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
@@ -314,6 +315,13 @@ impl OptionsPy {
     pub fn new() -> Self {
         let mut opt = Options::default();
         opt.create_if_missing(true);
+        opt.set_comparator("rocksdict", |v1, v2| {
+            if let (Some(3), Some(3)) = (v1.first(), v2.first()) {
+                BigInt::from_signed_bytes_be(&v1[1..]).cmp(&BigInt::from_signed_bytes_be(&v2[1..]))
+            } else {
+                v1.cmp(v2)
+            }
+        });
         OptionsPy(opt)
     }
 

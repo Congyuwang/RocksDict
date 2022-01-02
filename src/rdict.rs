@@ -76,12 +76,8 @@ impl Rdict {
             Ok(_) => match {
                 match (read_only, ttl) {
                     (false, 0) => DB::open(options, &path),
-                    (false, ttl) => {
-                        DB::open_with_ttl(options, path, Duration::from_secs(ttl))
-                    }
-                    (true, _) => {
-                        DB::open_for_read_only(options, &path, error_if_log_file_exist)
-                    }
+                    (false, ttl) => DB::open_with_ttl(options, path, Duration::from_secs(ttl)),
+                    (true, _) => DB::open_for_read_only(options, &path, error_if_log_file_exist),
                 }
             } {
                 Ok(db) => {
@@ -146,14 +142,10 @@ impl Rdict {
         if let Some(db) = &self.db {
             // batch_get
             if let Ok(keys) = PyTryFrom::try_from(key) {
-                return Ok(get_batch_inner(
-                    db,
-                    keys,
-                    py,
-                    &self.read_opt,
-                    &self.pickle_loads,
-                )?
-                .to_object(py));
+                return Ok(
+                    get_batch_inner(db, keys, py, &self.read_opt, &self.pickle_loads)?
+                        .to_object(py),
+                );
             }
             let key = encode_key(key)?;
             let db = db.borrow();
