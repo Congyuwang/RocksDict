@@ -7,9 +7,7 @@ use crate::{
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
-use rocksdb::{
-    ColumnFamily, ColumnFamilyDescriptor, FlushOptions, Options, ReadOptions, WriteOptions, DB,
-};
+use rocksdb::{FlushOptions, ReadOptions, WriteOptions, DB};
 use std::cell::RefCell;
 use std::fs::create_dir_all;
 use std::ops::Deref;
@@ -41,16 +39,8 @@ pub(crate) struct Rdict {
     read_opt: ReadOptions,
     pickle_loads: PyObject,
     pickle_dumps: PyObject,
-    column_family: Option<Rc<ColumnFamily>>,
     write_opt_py: WriteOptionsPy,
     read_opt_py: ReadOptionsPy,
-}
-
-#[pyclass(name = "ColumnFamily")]
-#[pyo3(text_signature = "(name, options)")]
-pub(crate) struct ColumnFamilyDescriptorPy {
-    pub(crate) name: String,
-    pub(crate) options: Options,
 }
 
 #[pymethods]
@@ -60,7 +50,6 @@ impl Rdict {
     /// Args:
     ///     path (str): path to the database
     ///     options (Options): Options object
-    ///     column_families (List): List of ColumnFamilyDescriptors (default: None)
     ///     read_only (bool): whether to open read_only
     ///     error_if_log_file_exist (bool): this option is useful only when
     ///         read_only is set to `true`
@@ -68,7 +57,6 @@ impl Rdict {
     #[new]
     #[args(
         options = "Py::new(_py, OptionsPy::new())?",
-        column_families = "_py.None().into_ref(_py)",
         read_only = "false",
         error_if_log_file_exist = "true",
         ttl = "0"
@@ -76,7 +64,6 @@ impl Rdict {
     fn new(
         path: &str,
         options: Py<OptionsPy>,
-        column_families: &PyAny,
         read_only: bool,
         error_if_log_file_exist: bool,
         ttl: u64,
@@ -87,40 +74,13 @@ impl Rdict {
         let options = &options.borrow(py).0;
         match create_dir_all(path) {
             Ok(_) => match {
-                match (read_only, ttl, column_families.is_none()) {
-                    (false, 0, true) => DB::open(options, &path),
-                    (false, ttl, true) => {
+                match (read_only, ttl) {
+                    (false, 0) => DB::open(options, &path),
+                    (false, ttl) => {
                         DB::open_with_ttl(options, path, Duration::from_secs(ttl))
                     }
-                    (true, _, true) => {
+                    (true, _) => {
                         DB::open_for_read_only(options, &path, error_if_log_file_exist)
-                    }
-                    (read_only, ttl, false) => {
-                        let column_families: &PyList = column_families.extract()?;
-                        let mut column_families_into: Vec<ColumnFamilyDescriptor> =
-                            Vec::with_capacity(column_families.len());
-                        for cf in column_families {
-                            let cf: &PyCell<ColumnFamilyDescriptorPy> = PyTryFrom::try_from(cf)?;
-                            let cf = cf.borrow();
-                            column_families_into.push((&*cf).into());
-                        }
-                        match (read_only, ttl) {
-                            (false, 0) => {
-                                DB::open_cf_descriptors(options, &path, column_families_into)
-                            }
-                            (false, ttl) => DB::open_cf_descriptors_with_ttl(
-                                options,
-                                &path,
-                                column_families_into,
-                                Duration::from_secs(ttl),
-                            ),
-                            (true, _) => DB::open_cf_descriptors_for_read_only(
-                                options,
-                                &path,
-                                column_families_into,
-                                error_if_log_file_exist,
-                            ),
-                        }
                     }
                 }
             } {
@@ -134,7 +94,6 @@ impl Rdict {
                         read_opt: (&r_opt).into(),
                         pickle_loads: pickle.getattr(py, "loads")?,
                         pickle_dumps: pickle.getattr(py, "dumps")?,
-                        column_family: None,
                         write_opt_py: w_opt,
                         read_opt_py: r_opt,
                     })
@@ -193,17 +152,12 @@ impl Rdict {
                     py,
                     &self.read_opt,
                     &self.pickle_loads,
-                    &self.column_family,
                 )?
                 .to_object(py));
             }
             let key = encode_key(key)?;
             let db = db.borrow();
-            let value_result = if let Some(cf) = &self.column_family {
-                db.get_pinned_cf_opt(cf.deref(), &key[..], &self.read_opt)
-            } else {
-                db.get_pinned_opt(&key[..], &self.read_opt)
-            };
+            let value_result = db.get_pinned_opt(&key[..], &self.read_opt);
             match value_result {
                 Ok(value) => match value {
                     None => Err(PyException::new_err("key not found")),
@@ -221,11 +175,7 @@ impl Rdict {
             let key = encode_key(key)?;
             let value = encode_value(value, &self.pickle_dumps, py)?;
             let db = db.borrow();
-            let put_result = if let Some(cf) = &self.column_family {
-                db.put_cf_opt(cf.deref(), &key[..], value, &self.write_opt)
-            } else {
-                db.put_opt(&key[..], value, &self.write_opt)
-            };
+            let put_result = db.put_opt(&key[..], value, &self.write_opt);
             match put_result {
                 Ok(_) => Ok(()),
                 Err(e) => Err(PyException::new_err(e.to_string())),
@@ -239,17 +189,9 @@ impl Rdict {
         if let Some(db) = &self.db {
             let key = encode_key(key)?;
             let db = db.borrow();
-            let may_exist = if let Some(cf) = &self.column_family {
-                db.key_may_exist_cf_opt(cf.deref(), &key[..], &self.read_opt)
-            } else {
-                db.key_may_exist_opt(&key[..], &self.read_opt)
-            };
+            let may_exist = db.key_may_exist_opt(&key[..], &self.read_opt);
             if may_exist {
-                let value_result = if let Some(cf) = &self.column_family {
-                    db.get_pinned_cf_opt(cf.deref(), &key[..], &self.read_opt)
-                } else {
-                    db.get_pinned_opt(&key[..], &self.read_opt)
-                };
+                let value_result = db.get_pinned_opt(&key[..], &self.read_opt);
                 match value_result {
                     Ok(value) => match value {
                         None => Ok(false),
@@ -269,11 +211,7 @@ impl Rdict {
         if let Some(db) = &self.db {
             let key = encode_key(key)?;
             let db = db.borrow();
-            let del_result = if let Some(cf) = &self.column_family {
-                db.delete_cf_opt(cf.deref(), &key[..], &self.write_opt)
-            } else {
-                db.delete_opt(&key[..], &self.write_opt)
-            };
+            let del_result = db.delete_opt(&key[..], &self.write_opt);
             match del_result {
                 Ok(_) => Ok(()),
                 Err(e) => Err(PyException::new_err(e.to_string())),
@@ -329,19 +267,11 @@ impl Rdict {
     #[args(read_opt = "Py::new(_py, ReadOptionsPy::default(_py)?)?")]
     fn iter(&self, read_opt: Py<ReadOptionsPy>, py: Python) -> PyResult<RdictIter> {
         if let Some(db) = &self.db {
-            match &self.column_family {
-                None => Ok(RdictIter::new(
-                    db,
-                    read_opt.borrow(py).deref().into(),
-                    &self.pickle_loads,
-                )),
-                Some(cf) => Ok(RdictIter::new_cf(
-                    db,
-                    cf.deref(),
-                    read_opt.borrow(py).deref().into(),
-                    &self.pickle_loads,
-                )),
-            }
+            Ok(RdictIter::new(
+                db,
+                read_opt.borrow(py).deref().into(),
+                &self.pickle_loads,
+            ))
         } else {
             Err(PyException::new_err("DB already closed"))
         }
@@ -464,87 +394,10 @@ impl Rdict {
             let mut f_opt = FlushOptions::new();
             f_opt.set_wait(wait);
             let db = db.borrow();
-            let flush_result = if let Some(cf) = &self.column_family {
-                db.flush_cf_opt(cf.deref(), &f_opt)
-            } else {
-                db.flush_opt(&f_opt)
-            };
+            let flush_result = db.flush_opt(&f_opt);
             match flush_result {
                 Ok(_) => Ok(()),
                 Err(e) => Err(PyException::new_err(e.into_string())),
-            }
-        } else {
-            Err(PyException::new_err("DB already closed"))
-        }
-    }
-
-    /// Creates column family with given name and options.
-    ///
-    /// Args:
-    ///     name: name of this column family
-    ///     options: Rdict Options for this column family
-    ///
-    /// Return:
-    ///     the newly created column family
-    #[pyo3(text_signature = "($self, name, options)")]
-    #[args(options = "Py::new(_py, OptionsPy::new())?")]
-    fn create_column_family(
-        &self,
-        name: &str,
-        options: Py<OptionsPy>,
-        py: Python,
-    ) -> PyResult<Rdict> {
-        if let Some(db) = &self.db {
-            let create_result = db.borrow_mut().create_cf(name, &options.borrow(py).0);
-            match create_result {
-                Ok(_) => Ok(self.column_family(name)?),
-                Err(e) => Err(PyException::new_err(e.to_string())),
-            }
-        } else {
-            Err(PyException::new_err("DB already closed"))
-        }
-    }
-
-    /// Drops the column family with the given name
-    #[pyo3(text_signature = "($self, name)")]
-    fn drop_column_family(&self, name: &str) -> PyResult<()> {
-        if let Some(db) = &self.db {
-            match db.borrow_mut().drop_cf(name) {
-                Ok(_) => Ok(()),
-                Err(e) => Err(PyException::new_err(e.to_string())),
-            }
-        } else {
-            Err(PyException::new_err("DB already closed"))
-        }
-    }
-
-    /// Get a column family Rdict
-    ///
-    /// Args:
-    ///     name: name of this column family
-    ///     options: Rdict Options for this column family
-    ///
-    /// Return:
-    ///     the column family Rdict of this name
-    #[pyo3(text_signature = "($self, name)")]
-    pub fn column_family(&self, name: &str) -> PyResult<Self> {
-        if let Some(db) = &self.db {
-            match db.borrow().cf_handle(name) {
-                None => Err(PyException::new_err(format!(
-                    "column name `{}` does not exist, use `create_cf` to creat it",
-                    name
-                ))),
-                Some(cf) => Ok(Self {
-                    db: Some(db.clone()),
-                    write_opt: (&self.write_opt_py).into(),
-                    flush_opt: self.flush_opt.clone(),
-                    read_opt: (&self.read_opt_py).into(),
-                    pickle_loads: self.pickle_loads.clone(),
-                    pickle_dumps: self.pickle_dumps.clone(),
-                    column_family: Some(cf.clone()),
-                    write_opt_py: self.write_opt_py.clone(),
-                    read_opt_py: self.read_opt_py.clone(),
-                }),
             }
         } else {
             Err(PyException::new_err("DB already closed"))
@@ -566,11 +419,7 @@ impl Rdict {
     ) -> PyResult<()> {
         if let Some(db) = &self.db {
             let db = db.borrow();
-            let ingest_result = if let Some(cf) = &self.column_family {
-                db.ingest_external_file_cf_opts(cf.deref(), &opts.borrow(py).0, paths)
-            } else {
-                db.ingest_external_file_opts(&opts.borrow(py).0, paths)
-            };
+            let ingest_result = db.ingest_external_file_opts(&opts.borrow(py).0, paths);
             match ingest_result {
                 Ok(_) => Ok(()),
                 Err(e) => Err(PyException::new_err(e.to_string())),
@@ -595,11 +444,7 @@ impl Rdict {
         if let Some(db) = &self.db {
             let f_opt = &self.flush_opt;
             let db = db.borrow();
-            let flush_result = if let Some(cf) = &self.column_family {
-                db.flush_cf_opt(cf.deref(), &f_opt.into())
-            } else {
-                db.flush_opt(&f_opt.into())
-            };
+            let flush_result = db.flush_opt(&f_opt.into());
             drop(db);
             match flush_result {
                 Ok(_) => Ok(drop(self.db.take().unwrap())),
@@ -636,20 +481,13 @@ fn get_batch_inner<'a>(
     py: Python<'a>,
     read_opt: &ReadOptions,
     pickle_loads: &PyObject,
-    column_family: &Option<Rc<ColumnFamily>>,
 ) -> PyResult<&'a PyList> {
     let mut keys_batch = Vec::new();
     for key in keys {
         keys_batch.push(encode_key(key)?);
     }
     let db = db.borrow();
-    let values = if let Some(cf) = column_family {
-        let keys_cols: Vec<(&ColumnFamily, Box<[u8]>)> =
-            keys_batch.into_iter().map(|k| (cf.deref(), k)).collect();
-        db.multi_get_cf_opt(keys_cols, read_opt)
-    } else {
-        db.multi_get_opt(keys_batch, read_opt)
-    };
+    let values = db.multi_get_opt(keys_batch, read_opt);
     let result = PyList::empty(py);
     for v in values {
         match v {
@@ -669,31 +507,8 @@ impl Drop for Rdict {
         if let Some(db) = &self.db {
             let f_opt = &self.flush_opt;
             let db = db.borrow();
-            let _ = if let Some(cf) = &self.column_family {
-                db.flush_cf_opt(cf.deref(), &f_opt.into())
-            } else {
-                db.flush_opt(&f_opt.into())
-            };
+            let _ = db.flush_opt(&f_opt.into());
         }
-    }
-}
-
-#[pymethods]
-impl ColumnFamilyDescriptorPy {
-    #[new]
-    #[args(options = "Py::new(_py, OptionsPy::new())?")]
-    fn new(name: &str, options: Py<OptionsPy>, py: Python) -> Self {
-        let opt = &options.borrow(py).0;
-        Self {
-            name: name.to_string(),
-            options: opt.clone(),
-        }
-    }
-}
-
-impl From<&ColumnFamilyDescriptorPy> for ColumnFamilyDescriptor {
-    fn from(cf: &ColumnFamilyDescriptorPy) -> Self {
-        ColumnFamilyDescriptor::new(&cf.name, cf.options.clone())
     }
 }
 

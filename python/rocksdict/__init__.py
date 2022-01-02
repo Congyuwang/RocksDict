@@ -5,7 +5,6 @@ __doc__ = rocksdict.__doc__
 __all__ = ["Rdict",
            "RdictIter",
            "Options",
-           "ColumnFamily",
            "WriteOptions",
            "ReadOptions",
            "SstFileWriter",
