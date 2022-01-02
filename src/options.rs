@@ -70,6 +70,7 @@ pub(crate) struct OptionsPy(pub(crate) Options);
 ///         Rdict.destroy(path, Options())
 #[pyclass(name = "WriteOptions")]
 #[pyo3(text_signature = "()")]
+#[derive(Clone)]
 pub(crate) struct WriteOptionsPy {
     #[pyo3(get, set)]
     sync: bool,
@@ -116,6 +117,7 @@ pub(crate) struct FlushOptionsPy {
 
 #[pyclass(name = "ReadOptions")]
 #[pyo3(text_signature = "()")]
+#[derive(Clone)]
 pub(crate) struct ReadOptionsPy {
     fill_cache: bool,
     iterate_upper_bound: Option<Box<[u8]>>,
@@ -296,10 +298,15 @@ pub(crate) struct UniversalCompactOptionsPy {
 pub(crate) struct UniversalCompactionStopStylePy(UniversalCompactionStopStyle);
 
 #[pyclass(name = "FifoCompactOptions")]
+#[pyo3(text_signature = "()")]
 pub(crate) struct FifoCompactOptionsPy {
     #[pyo3(get, set)]
     max_table_files_size: u64,
 }
+
+#[pyclass(name = "IngestExternalFileOptions")]
+#[pyo3(text_signature = "()")]
+pub(crate) struct IngestExternalFileOptionsPy(pub(crate) IngestExternalFileOptions);
 
 #[pymethods]
 impl OptionsPy {
@@ -2799,6 +2806,53 @@ impl From<&FifoCompactOptionsPy> for FifoCompactOptions {
         let mut opt = FifoCompactOptions::default();
         opt.set_max_table_files_size(f_opt.max_table_files_size);
         opt
+    }
+}
+
+#[pymethods]
+impl IngestExternalFileOptionsPy {
+    #[new]
+    pub fn new() -> Self {
+        IngestExternalFileOptionsPy(IngestExternalFileOptions::default())
+    }
+
+    /// Can be set to true to move the files instead of copying them.
+    #[pyo3(text_signature = "($self, v)")]
+    pub fn set_move_files(&mut self, v: bool) {
+        self.0.set_move_files(v)
+    }
+
+    /// If set to false, an ingested file keys could appear in existing snapshots
+    /// that where created before the file was ingested.
+    #[pyo3(text_signature = "($self, v)")]
+    pub fn set_snapshot_consistency(&mut self, v: bool) {
+        self.0.set_snapshot_consistency(v)
+    }
+
+    /// If set to false, IngestExternalFile() will fail if the file key range
+    /// overlaps with existing keys or tombstones in the DB.
+    #[pyo3(text_signature = "($self, v)")]
+    pub fn set_allow_global_seqno(&mut self, v: bool) {
+        self.0.set_allow_global_seqno(v)
+    }
+
+    /// If set to false and the file key range overlaps with the memtable key range
+    /// (memtable flush required), IngestExternalFile will fail.
+    #[pyo3(text_signature = "($self, v)")]
+    pub fn set_allow_blocking_flush(&mut self, v: bool) {
+        self.0.set_allow_blocking_flush(v)
+    }
+
+    /// Set to true if you would like duplicate keys in the file being ingested
+    /// to be skipped rather than overwriting existing data under that key.
+    /// Usecase: back-fill of some historical data in the database without
+    /// over-writing existing newer version of data.
+    /// This option could only be used if the DB has been running
+    /// with allow_ingest_behind=true since the dawn of time.
+    /// All files will be ingested at the bottommost level with seqno=0.
+    #[pyo3(text_signature = "($self, v)")]
+    pub fn set_ingest_behind(&mut self, v: bool) {
+        self.0.set_ingest_behind(v)
     }
 }
 

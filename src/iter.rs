@@ -2,6 +2,7 @@ use crate::encoder::{decode_value, encode_key};
 use crate::util::error_message;
 use crate::ReadOpt;
 use core::slice;
+use std::cell::RefCell;
 use libc::{c_char, c_uchar, size_t};
 use librocksdb_sys;
 use pyo3::exceptions::PyException;
@@ -10,13 +11,13 @@ use pyo3::PyIterProtocol;
 use rocksdb::db::DBAccess;
 use rocksdb::DB;
 use std::ptr::null_mut;
-use std::sync::Arc;
+use std::rc::Rc;
 
 #[pyclass]
 #[allow(dead_code)]
 pub(crate) struct RdictIter {
     /// iterator must keep a reference count of DB to keep DB alive.
-    pub(crate) db: Arc<DB>,
+    pub(crate) db: Rc<RefCell<DB>>,
 
     pub(crate) inner: *mut librocksdb_sys::rocksdb_iterator_t,
 
@@ -48,11 +49,11 @@ pub(crate) struct RdictValues {
 }
 
 impl RdictIter {
-    pub(crate) fn new(db: &Arc<DB>, readopts: ReadOpt, pickle_loads: &PyObject) -> Self {
+    pub(crate) fn new(db: &Rc<RefCell<DB>>, readopts: ReadOpt, pickle_loads: &PyObject) -> Self {
         unsafe {
             RdictIter {
                 db: db.clone(),
-                inner: librocksdb_sys::rocksdb_create_iterator(db.inner(), readopts.0),
+                inner: librocksdb_sys::rocksdb_create_iterator(db.borrow().inner(), readopts.0),
                 readopts,
                 pickle_loads: pickle_loads.clone(),
             }

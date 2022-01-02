@@ -6,7 +6,7 @@ mod util;
 
 use crate::iter::*;
 use crate::options::*;
-use crate::rdict::Rdict;
+use crate::rdict::*;
 use pyo3::prelude::*;
 
 /// ## Abstract
@@ -126,5 +126,7 @@ fn rocksdict(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<RdictItems>()?;
     m.add_class::<RdictValues>()?;
     m.add_class::<RdictKeys>()?;
+    m.add_class::<ColumnFamilyDescriptorPy>()?;
+    m.add_class::<IngestExternalFileOptionsPy>()?;
     Ok(())
 }

@@ -1,14 +1,22 @@
 use crate::encoder::{decode_value, encode_key, encode_value};
 use crate::iter::{RdictItems, RdictKeys, RdictValues};
-use crate::{FlushOptionsPy, OptionsPy, RdictIter, ReadOptionsPy, WriteOptionsPy};
+use crate::{
+    FlushOptionsPy, IngestExternalFileOptionsPy, OptionsPy, RdictIter, ReadOptionsPy,
+    WriteOptionsPy,
+};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
-use rocksdb::{FlushOptions, ReadOptions, WriteOptions, DB};
+use rocksdb::{
+    ColumnFamily, ColumnFamilyDescriptor, FlushOptions, Options, ReadOptions, WriteOptions,
+    DB,
+};
+use std::cell::RefCell;
 use std::fs::create_dir_all;
 use std::ops::Deref;
 use std::path::Path;
-use std::sync::Arc;
+use std::rc::Rc;
+use std::time::Duration;
 
 ///
 /// A persistent on-disk dictionary. Supports string, int, float, bytes as key, values.
@@ -25,15 +33,25 @@ use std::sync::Arc;
 ///         db = Rdict("./test_dir")
 ///         assert(db[0] == 1)
 ///
-#[pyclass(name = "Rdict", subclass)]
-#[pyo3(text_signature = "(path, options)")]
+#[pyclass(name = "Rdict")]
+#[pyo3(text_signature = "(path, options, read_only, ttl)")]
 pub(crate) struct Rdict {
-    db: Option<Arc<DB>>,
+    db: Option<Rc<RefCell<DB>>>,
     write_opt: WriteOptions,
     flush_opt: FlushOptionsPy,
     read_opt: ReadOptions,
     pickle_loads: PyObject,
     pickle_dumps: PyObject,
+    column_family: Option<Rc<ColumnFamily>>,
+    write_opt_py: WriteOptionsPy,
+    read_opt_py: ReadOptionsPy,
+}
+
+#[pyclass(name = "ColumnFamilyDescriptor")]
+#[pyo3(text_signature = "(name, options)")]
+pub(crate) struct ColumnFamilyDescriptorPy {
+    pub(crate) name: String,
+    pub(crate) options: Options,
 }
 
 #[pymethods]
@@ -41,23 +59,85 @@ impl Rdict {
     /// Create a new database or open an existing one.
     ///
     /// Args:
-    ///     path: path to the database
-    ///     options: Options object
+    ///     path (str): path to the database
+    ///     options (Options): Options object
+    ///     cfs (List): List of ColumnFamilyDescriptors (default: None)
+    ///     read_only (bool): whether to open read_only
+    ///     error_if_log_file_exist (bool): this option is useful only when
+    ///         read_only is set to `true`
+    ///     ttl (int): TTL option in seconds.
     #[new]
-    #[args(options = "Py::new(_py, OptionsPy::new())?")]
-    fn new(path: &str, options: Py<OptionsPy>, py: Python) -> PyResult<Self> {
+    #[args(
+        options = "Py::new(_py, OptionsPy::new())?",
+        cfs = "_py.None().into_ref(_py)",
+        read_only = "false",
+        error_if_log_file_exist = "true",
+        ttl = "0"
+    )]
+    fn new(
+        path: &str,
+        options: Py<OptionsPy>,
+        cfs: &PyAny,
+        read_only: bool,
+        error_if_log_file_exist: bool,
+        ttl: u64,
+        py: Python,
+    ) -> PyResult<Self> {
         let path = Path::new(path);
         let pickle = PyModule::import(py, "pickle")?.to_object(py);
+        let options = &options.borrow(py).0;
         match create_dir_all(path) {
-            Ok(_) => match DB::open(&options.borrow(py).0, &path) {
-                Ok(db) => Ok(Rdict {
-                    db: Some(Arc::new(db)),
-                    write_opt: WriteOptions::default(),
-                    flush_opt: FlushOptionsPy::new(),
-                    read_opt: ReadOptions::default(),
-                    pickle_loads: pickle.getattr(py, "loads")?,
-                    pickle_dumps: pickle.getattr(py, "dumps")?,
-                }),
+            Ok(_) => match {
+                match (read_only, ttl, cfs.is_none()) {
+                    (false, 0, true) => DB::open(options, &path),
+                    (false, ttl, true) => {
+                        DB::open_with_ttl(options, path, Duration::from_secs(ttl))
+                    }
+                    (true, _, true) => {
+                        DB::open_for_read_only(options, &path, error_if_log_file_exist)
+                    }
+                    (read_only, ttl, false) => {
+                        let cfs: &PyList = cfs.extract()?;
+                        let mut cfs_into: Vec<ColumnFamilyDescriptor> =
+                            Vec::with_capacity(cfs.len());
+                        for cf in cfs {
+                            let cf: &PyCell<ColumnFamilyDescriptorPy> = PyTryFrom::try_from(cf)?;
+                            let cf = cf.borrow();
+                            cfs_into.push((&*cf).into());
+                        }
+                        match (read_only, ttl) {
+                            (false, 0) => DB::open_cf_descriptors(options, &path, cfs_into),
+                            (false, ttl) => DB::open_cf_descriptors_with_ttl(
+                                options,
+                                &path,
+                                cfs_into,
+                                Duration::from_secs(ttl),
+                            ),
+                            (true, _) => DB::open_cf_descriptors_for_read_only(
+                                options,
+                                &path,
+                                cfs_into,
+                                error_if_log_file_exist,
+                            ),
+                        }
+                    }
+                }
+            } {
+                Ok(db) => {
+                    let r_opt = ReadOptionsPy::default(py)?;
+                    let w_opt = WriteOptionsPy::new();
+                    Ok(Rdict {
+                        db: Some(Rc::new(RefCell::new(db))),
+                        write_opt: (&w_opt).into(),
+                        flush_opt: FlushOptionsPy::new(),
+                        read_opt: (&r_opt).into(),
+                        pickle_loads: pickle.getattr(py, "loads")?,
+                        pickle_dumps: pickle.getattr(py, "dumps")?,
+                        column_family: None,
+                        write_opt_py: w_opt,
+                        read_opt_py: r_opt,
+                    })
+                }
                 Err(e) => Err(PyException::new_err(e.to_string())),
             },
             Err(e) => Err(PyException::new_err(e.to_string())),
@@ -89,14 +169,16 @@ impl Rdict {
     ///         del db
     ///         Rdict.destroy(path)
     #[pyo3(text_signature = "($self, write_opt)")]
-    fn set_write_options(&mut self, write_opt: PyRef<WriteOptionsPy>) {
-        self.write_opt = write_opt.deref().into()
+    fn set_write_options(&mut self, write_opt: &WriteOptionsPy) {
+        self.write_opt = write_opt.into();
+        self.write_opt_py = write_opt.clone();
     }
 
     /// Configure Read Options for all the get operations.
     #[pyo3(text_signature = "($self, read_opt)")]
     fn set_read_options(&mut self, read_opt: &ReadOptionsPy) {
-        self.read_opt = read_opt.into()
+        self.read_opt = read_opt.into();
+        self.read_opt_py = read_opt.clone();
     }
 
     /// Parse list for batch get.
@@ -104,14 +186,18 @@ impl Rdict {
         if let Some(db) = &self.db {
             // batch_get
             if let Ok(keys) = PyTryFrom::try_from(key) {
-                return Ok(
-                    get_batch_inner(db, keys, py, &self.read_opt, &self.pickle_loads)?
-                        .to_object(py),
-                );
+                return Ok(get_batch_inner(
+                    db,
+                    keys,
+                    py,
+                    &self.read_opt,
+                    &self.pickle_loads,
+                )?
+                .to_object(py));
             }
             // single get
             let key = encode_key(key)?;
-            match db.get_pinned_opt(&key[..], &self.read_opt) {
+            match db.borrow().get_pinned_opt(&key[..], &self.read_opt) {
                 Ok(value) => match value {
                     None => Err(PyException::new_err("key not found")),
                     Some(slice) => decode_value(py, slice.as_ref(), &self.pickle_loads),
@@ -127,7 +213,7 @@ impl Rdict {
         if let Some(db) = &self.db {
             let key = encode_key(key)?;
             let value = encode_value(value, &self.pickle_dumps, py)?;
-            match db.put_opt(&key[..], value, &self.write_opt) {
+            match db.borrow().put_opt(&key[..], value, &self.write_opt) {
                 Ok(_) => Ok(()),
                 Err(e) => Err(PyException::new_err(e.to_string())),
             }
@@ -139,6 +225,7 @@ impl Rdict {
     fn __contains__(&self, key: &PyAny) -> PyResult<bool> {
         if let Some(db) = &self.db {
             let key = encode_key(key)?;
+            let db = db.borrow();
             if db.key_may_exist_opt(&key[..], &self.read_opt) {
                 match db.get_pinned_opt(&key[..], &self.read_opt) {
                     Ok(value) => match value {
@@ -158,6 +245,7 @@ impl Rdict {
     fn __delitem__(&self, key: &PyAny) -> PyResult<()> {
         if let Some(db) = &self.db {
             let key = encode_key(key)?;
+            let db = db.borrow();
             match db.delete_opt(&key[..], &self.write_opt) {
                 Ok(_) => Ok(()),
                 Err(e) => Err(PyException::new_err(e.to_string())),
@@ -339,9 +427,81 @@ impl Rdict {
         if let Some(db) = &self.db {
             let mut f_opt = FlushOptions::new();
             f_opt.set_wait(wait);
+            let db = db.borrow();
             match db.flush_opt(&f_opt) {
                 Ok(_) => Ok(()),
                 Err(e) => Err(PyException::new_err(e.into_string())),
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
+
+    /// Creates column family with given name and options
+    #[pyo3(text_signature = "($self, name, options)")]
+    #[args(opts = "Py::new(_py, OptionsPy::new())?")]
+    fn create_cf(&self, name: &str, options: Py<OptionsPy>, py: Python) -> PyResult<()> {
+        if let Some(db) = &self.db {
+            match db.borrow_mut().create_cf(name, &options.borrow(py).0)
+            {
+                Ok(_) => Ok(()),
+                Err(e) => Err(PyException::new_err(e.to_string())),
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
+
+    /// Drops the column family with the given name
+    #[pyo3(text_signature = "($self, name, options)")]
+    fn drop_cf(&self, name: &str) -> PyResult<()> {
+        if let Some(db) = &self.db {
+            match db.borrow_mut().drop_cf(name) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(PyException::new_err(e.to_string())),
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
+
+    pub fn column_family(&self, name: &str) -> PyResult<Self> {
+        if let Some(db) = &self.db {
+            match db.borrow().cf_handle(name) {
+                None => Err(PyException::new_err(format!(
+                    "column name `{}` does not exist, use `create_cf` to creat it",
+                    name
+                ))),
+                Some(cf) => Ok(Self {
+                    db: Some(db.clone()),
+                    write_opt: (&self.write_opt_py).into(),
+                    flush_opt: self.flush_opt.clone(),
+                    read_opt: (&self.read_opt_py).into(),
+                    pickle_loads: self.pickle_loads.clone(),
+                    pickle_dumps: self.pickle_dumps.clone(),
+                    column_family: Some(cf.clone()),
+                    write_opt_py: self.write_opt_py.clone(),
+                    read_opt_py: self.read_opt_py.clone(),
+                }),
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
+
+    #[pyo3(text_signature = "($self, paths)")]
+    #[args(opts = "Py::new(_py, IngestExternalFileOptionsPy::new())?")]
+    fn ingest_external_file(
+        &self,
+        paths: Vec<String>,
+        opts: Py<IngestExternalFileOptionsPy>,
+        py: Python,
+    ) -> PyResult<()> {
+        if let Some(db) = &self.db {
+            match db.borrow().ingest_external_file_opts(&opts.borrow(py).0, paths)
+            {
+                Ok(_) => Ok(()),
+                Err(e) => Err(PyException::new_err(e.to_string())),
             }
         } else {
             Err(PyException::new_err("DB already closed"))
@@ -362,7 +522,8 @@ impl Rdict {
     fn close(&mut self) -> PyResult<()> {
         if let Some(db) = &self.db {
             let f_opt = &self.flush_opt;
-            match db.flush_opt(&f_opt.into()) {
+            let flush_result = db.borrow().flush_opt(&f_opt.into());
+            match flush_result {
                 Ok(_) => Ok(drop(self.db.take().unwrap())),
                 Err(e) => {
                     drop(self.db.take().unwrap());
@@ -392,7 +553,7 @@ impl Rdict {
 
 #[inline(always)]
 fn get_batch_inner<'a>(
-    db: &DB,
+    db: &RefCell<DB>,
     keys: &'a PyList,
     py: Python<'a>,
     read_opt: &ReadOptions,
@@ -402,7 +563,7 @@ fn get_batch_inner<'a>(
     for key in keys {
         keys_batch.push(encode_key(key)?);
     }
-    let values = db.multi_get_opt(keys_batch, read_opt);
+    let values = db.borrow().multi_get_opt(keys_batch, read_opt);
     let result = PyList::empty(py);
     for v in values {
         match v {
@@ -420,7 +581,28 @@ impl Drop for Rdict {
     fn drop(&mut self) {
         if let Some(db) = self.db.take() {
             let f_opt = &self.flush_opt;
-            let _ = db.flush_opt(&f_opt.into());
+            let _ = db.borrow().flush_opt(&f_opt.into());
         }
     }
 }
+
+#[pymethods]
+impl ColumnFamilyDescriptorPy {
+    #[new]
+    #[args(options = "Py::new(_py, OptionsPy::new())?")]
+    fn new(name: &str, options: Py<OptionsPy>, py: Python) -> Self {
+        let opt = &options.borrow(py).0;
+        Self {
+            name: name.to_string(),
+            options: opt.clone(),
+        }
+    }
+}
+
+impl From<&ColumnFamilyDescriptorPy> for ColumnFamilyDescriptor {
+    fn from(cf: &ColumnFamilyDescriptorPy) -> Self {
+        ColumnFamilyDescriptor::new(&cf.name, cf.options.clone())
+    }
+}
+
+unsafe impl Send for Rdict {}
