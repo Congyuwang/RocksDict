@@ -1,5 +1,6 @@
 import rocksdict as rd
 from tqdm import tqdm
+import os
 
 
 # create an option
