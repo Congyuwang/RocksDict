@@ -3,7 +3,7 @@ from typing import Any, Union, List, Iterator, Tuple
 __all__ = ["Rdict",
            "RdictIter",
            "Options",
-           "ColumnFamilyDescriptor",
+           "ColumnFamily",
            "WriteOptions",
            "ReadOptions",
            "DBPath",
@@ -21,7 +21,9 @@ __all__ = ["Rdict",
            "DBCompressionType",
            "DBRecoveryMode",
            "Env",
-           "FifoCompactOptions"]
+           "FifoCompactOptions",
+           "SstFileWriter",
+           "IngestExternalFileOptions"]
 
 class DataBlockIndexType:
     @staticmethod
@@ -364,7 +366,7 @@ class WriteOptions:
 class Rdict:
     def __init__(self, path: str,
                  options: Options = Options(),
-                 cfs: Union[List[ColumnFamilyDescriptor], None] = None,
+                 cfs: Union[List[ColumnFamily], None] = None,
                  read_only: bool = False,
                  error_if_log_file_exist: bool = True,
                  ttl: int = 0) -> Rdict: ...
@@ -417,8 +419,8 @@ class RdictIter:
     def key(self) -> Any: ...
     def value(self) -> Any: ...
 
-class ColumnFamilyDescriptor:
-    def __init__(self, name: str, options: Options = Options()) -> ColumnFamilyDescriptor: ...
+class ColumnFamily:
+    def __init__(self, name: str, options: Options = Options()) -> ColumnFamily: ...
 
 class IngestExternalFileOptions:
     def __init__(self) -> IngestExternalFileOptions: ...

@@ -63,6 +63,18 @@
                                 <a class="function" href="#Rdict.flush">flush</a>
                         </li>
                         <li>
+                                <a class="function" href="#Rdict.create_column_family">create_column_family</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Rdict.drop_column_family">drop_column_family</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Rdict.column_family">column_family</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Rdict.ingest_external_file">ingest_external_file</a>
+                        </li>
+                        <li>
                                 <a class="function" href="#Rdict.close">close</a>
                         </li>
                         <li>
@@ -429,6 +441,15 @@
 
             </li>
             <li>
+                    <a class="class" href="#ColumnFamily">ColumnFamily</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#ColumnFamily.__init__">ColumnFamily</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
                     <a class="class" href="#WriteOptions">WriteOptions</a>
                             <ul class="memberlist">
                         <li>
@@ -453,10 +474,10 @@
                                 <a class="function" href="#WriteOptions.set_memtable_insert_hint_per_batch">set_memtable_insert_hint_per_batch</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.sync">sync</a>
+                                <a class="variable" href="#WriteOptions.no_slowdown">no_slowdown</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.no_slowdown">no_slowdown</a>
+                                <a class="variable" href="#WriteOptions.memtable_insert_hint_per_batch">memtable_insert_hint_per_batch</a>
                         </li>
                         <li>
                                 <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
@@ -465,7 +486,7 @@
                                 <a class="variable" href="#WriteOptions.low_pri">low_pri</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.memtable_insert_hint_per_batch">memtable_insert_hint_per_batch</a>
+                                <a class="variable" href="#WriteOptions.sync">sync</a>
                         </li>
                 </ul>
 
@@ -511,6 +532,51 @@
                         </li>
                         <li>
                                 <a class="function" href="#ReadOptions.set_pin_data">set_pin_data</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
+                    <a class="class" href="#SstFileWriter">SstFileWriter</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#SstFileWriter.__init__">SstFileWriter</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#SstFileWriter.open">open</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#SstFileWriter.finish">finish</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#SstFileWriter.file_size">file_size</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#SstFileWriter.merge">merge</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
+                    <a class="class" href="#IngestExternalFileOptions">IngestExternalFileOptions</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#IngestExternalFileOptions.__init__">IngestExternalFileOptions</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#IngestExternalFileOptions.set_move_files">set_move_files</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#IngestExternalFileOptions.set_snapshot_consistency">set_snapshot_consistency</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#IngestExternalFileOptions.set_allow_global_seqno">set_allow_global_seqno</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#IngestExternalFileOptions.set_allow_blocking_flush">set_allow_blocking_flush</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#IngestExternalFileOptions.set_ingest_behind">set_ingest_behind</a>
                         </li>
                 </ul>
 
@@ -669,22 +735,22 @@
                                 <a class="function" href="#UniversalCompactOptions.set_stop_style">set_stop_style</a>
                         </li>
                         <li>
+                                <a class="variable" href="#UniversalCompactOptions.max_merge_width">max_merge_width</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#UniversalCompactOptions.max_size_amplification_percent">max_size_amplification_percent</a>
+                        </li>
+                        <li>
                                 <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.max_merge_width">max_merge_width</a>
+                                <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.min_merge_width">min_merge_width</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.compression_size_percent">compression_size_percent</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#UniversalCompactOptions.max_size_amplification_percent">max_size_amplification_percent</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
                         </li>
                 </ul>
 
@@ -1020,8 +1086,11 @@ supports <code>pickle</code>.</li>
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Rdict&quot;</span><span class="p">,</span>
            <span class="s2">&quot;RdictIter&quot;</span><span class="p">,</span>
            <span class="s2">&quot;Options&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;ColumnFamily&quot;</span><span class="p">,</span>
            <span class="s2">&quot;WriteOptions&quot;</span><span class="p">,</span>
            <span class="s2">&quot;ReadOptions&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;SstFileWriter&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;IngestExternalFileOptions&quot;</span><span class="p">,</span>
            <span class="s2">&quot;DBPath&quot;</span><span class="p">,</span>
            <span class="s2">&quot;MemtableFactory&quot;</span><span class="p">,</span>
            <span class="s2">&quot;BlockBasedOptions&quot;</span><span class="p">,</span>
@@ -1325,6 +1394,95 @@ or the nearest next key for iteration
 
 <ul>
 <li><strong>wait (bool):</strong>  whether to wait for the flush to finish.</li>
+</ul>
+</div>
+
+
+                            </div>
+                            <div id="Rdict.create_column_family" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.create_column_family">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">create_column_family</span><span class="signature">(self, /, name, options)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Creates column family with given name and options.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>name:</strong>  name of this column family</li>
+<li><strong>options:</strong>  Rdict Options for this column family</li>
+</ul>
+
+<h6 id="return">Return</h6>
+
+<blockquote>
+  <p>the newly created column family</p>
+</blockquote>
+</div>
+
+
+                            </div>
+                            <div id="Rdict.drop_column_family" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.drop_column_family">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">drop_column_family</span><span class="signature">(self, /, name)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Drops the column family with the given name</p>
+</div>
+
+
+                            </div>
+                            <div id="Rdict.column_family" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.column_family">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">column_family</span><span class="signature">(self, /, name)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Get a column family Rdict</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>name:</strong>  name of this column family</li>
+<li><strong>options:</strong>  Rdict Options for this column family</li>
+</ul>
+
+<h6 id="return">Return</h6>
+
+<blockquote>
+  <p>the column family Rdict of this name</p>
+</blockquote>
+</div>
+
+
+                            </div>
+                            <div id="Rdict.ingest_external_file" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.ingest_external_file">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">ingest_external_file</span><span class="signature">(self, /, paths, opts)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Loads a list of external SST files created with SstFileWriter into the DB</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>paths:</strong>  a list a paths</li>
+<li><strong>opts:</strong>  IngestExternalFileOptionsPy instance</li>
 </ul>
 </div>
 
@@ -3849,6 +4007,30 @@ can potentially reduce CPU usage for point-look-ups.</p>
 
                             </div>
                 </section>
+                <section id="ColumnFamily">
+                                <div class="attr class">
+        <a class="headerlink" href="#ColumnFamily">#&nbsp;&nbsp</a>
+
+        
+        <span class="def">class</span>
+        <span class="name">ColumnFamily</span>:
+    </div>
+
+        
+    
+
+                            <div id="ColumnFamily.__init__" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#ColumnFamily.__init__">#&nbsp;&nbsp</a>
+
+        
+            <span class="name">ColumnFamily</span><span class="signature">()</span>
+    </div>
+
+        
+    
+
+                            </div>
+                </section>
                 <section id="WriteOptions">
                                 <div class="attr class">
         <a class="headerlink" href="#WriteOptions">#&nbsp;&nbsp</a>
@@ -4012,19 +4194,19 @@ option will be ignored.</p>
 
 
                             </div>
-                            <div id="WriteOptions.sync" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.sync">#&nbsp;&nbsp</a>
+                            <div id="WriteOptions.no_slowdown" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.no_slowdown">#&nbsp;&nbsp</a>
 
-        <span class="name">sync</span>
+        <span class="name">no_slowdown</span>
     </div>
 
     
 
                             </div>
-                            <div id="WriteOptions.no_slowdown" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.no_slowdown">#&nbsp;&nbsp</a>
+                            <div id="WriteOptions.memtable_insert_hint_per_batch" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.memtable_insert_hint_per_batch">#&nbsp;&nbsp</a>
 
-        <span class="name">no_slowdown</span>
+        <span class="name">memtable_insert_hint_per_batch</span>
     </div>
 
     
@@ -4048,10 +4230,10 @@ option will be ignored.</p>
     
 
                             </div>
-                            <div id="WriteOptions.memtable_insert_hint_per_batch" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.memtable_insert_hint_per_batch">#&nbsp;&nbsp</a>
+                            <div id="WriteOptions.sync" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.sync">#&nbsp;&nbsp</a>
 
-        <span class="name">memtable_insert_hint_per_batch</span>
+        <span class="name">sync</span>
     </div>
 
     
@@ -4294,6 +4476,193 @@ Iterator's property "rocksdb.iterator.is-key-pinned" is guaranteed to
 return 1.</p>
 
 <p>Default: false</p>
+</div>
+
+
+                            </div>
+                </section>
+                <section id="SstFileWriter">
+                                <div class="attr class">
+        <a class="headerlink" href="#SstFileWriter">#&nbsp;&nbsp</a>
+
+        
+        <span class="def">class</span>
+        <span class="name">SstFileWriter</span>:
+    </div>
+
+        
+            <div class="docstring"><p>SstFileWriter is used to create sst files that can be added to database later
+All keys in files generated by SstFileWriter will have sequence number = 0.</p>
+</div>
+
+
+                            <div id="SstFileWriter.__init__" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#SstFileWriter.__init__">#&nbsp;&nbsp</a>
+
+        
+            <span class="name">SstFileWriter</span><span class="signature">()</span>
+    </div>
+
+        
+    
+
+                            </div>
+                            <div id="SstFileWriter.open" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#SstFileWriter.open">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">open</span><span class="signature">(self, /, path)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Prepare SstFileWriter to write into file located at "file_path".</p>
+</div>
+
+
+                            </div>
+                            <div id="SstFileWriter.finish" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#SstFileWriter.finish">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">finish</span><span class="signature">(self, /)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Finalize writing to sst file and close file.</p>
+</div>
+
+
+                            </div>
+                            <div id="SstFileWriter.file_size" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#SstFileWriter.file_size">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">file_size</span><span class="signature">(self, /)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>returns the current file size</p>
+</div>
+
+
+                            </div>
+                            <div id="SstFileWriter.merge" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#SstFileWriter.merge">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">merge</span><span class="signature">(self, /, key, value)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Adds a Merge key with value to currently opened file
+REQUIRES: key is after any previously added key according to comparator.</p>
+</div>
+
+
+                            </div>
+                </section>
+                <section id="IngestExternalFileOptions">
+                                <div class="attr class">
+        <a class="headerlink" href="#IngestExternalFileOptions">#&nbsp;&nbsp</a>
+
+        
+        <span class="def">class</span>
+        <span class="name">IngestExternalFileOptions</span>:
+    </div>
+
+        
+    
+
+                            <div id="IngestExternalFileOptions.__init__" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#IngestExternalFileOptions.__init__">#&nbsp;&nbsp</a>
+
+        
+            <span class="name">IngestExternalFileOptions</span><span class="signature">()</span>
+    </div>
+
+        
+    
+
+                            </div>
+                            <div id="IngestExternalFileOptions.set_move_files" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#IngestExternalFileOptions.set_move_files">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">set_move_files</span><span class="signature">(self, /, v)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Can be set to true to move the files instead of copying them.</p>
+</div>
+
+
+                            </div>
+                            <div id="IngestExternalFileOptions.set_snapshot_consistency" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#IngestExternalFileOptions.set_snapshot_consistency">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">set_snapshot_consistency</span><span class="signature">(self, /, v)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>If set to false, an ingested file keys could appear in existing snapshots
+that where created before the file was ingested.</p>
+</div>
+
+
+                            </div>
+                            <div id="IngestExternalFileOptions.set_allow_global_seqno" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#IngestExternalFileOptions.set_allow_global_seqno">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">set_allow_global_seqno</span><span class="signature">(self, /, v)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>If set to false, IngestExternalFile() will fail if the file key range
+overlaps with existing keys or tombstones in the DB.</p>
+</div>
+
+
+                            </div>
+                            <div id="IngestExternalFileOptions.set_allow_blocking_flush" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#IngestExternalFileOptions.set_allow_blocking_flush">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">set_allow_blocking_flush</span><span class="signature">(self, /, v)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>If set to false and the file key range overlaps with the memtable key range
+(memtable flush required), IngestExternalFile will fail.</p>
+</div>
+
+
+                            </div>
+                            <div id="IngestExternalFileOptions.set_ingest_behind" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#IngestExternalFileOptions.set_ingest_behind">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">set_ingest_behind</span><span class="signature">(self, /, v)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Set to true if you would like duplicate keys in the file being ingested
+to be skipped rather than overwriting existing data under that key.
+Usecase: back-fill of some historical data in the database without
+over-writing existing newer version of data.
+This option could only be used if the DB has been running
+with allow_ingest_behind=true since the dawn of time.
+All files will be ingested at the bottommost level with seqno=0.</p>
 </div>
 
 
@@ -5061,6 +5430,24 @@ will be compressed iff
 
 
                             </div>
+                            <div id="UniversalCompactOptions.max_merge_width" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_merge_width">#&nbsp;&nbsp</a>
+
+        <span class="name">max_merge_width</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="UniversalCompactOptions.max_size_amplification_percent" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_size_amplification_percent">#&nbsp;&nbsp</a>
+
+        <span class="name">max_size_amplification_percent</span>
+    </div>
+
+    
+
+                            </div>
                             <div id="UniversalCompactOptions.size_ratio" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.size_ratio">#&nbsp;&nbsp</a>
 
@@ -5070,10 +5457,10 @@ will be compressed iff
     
 
                             </div>
-                            <div id="UniversalCompactOptions.max_merge_width" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_merge_width">#&nbsp;&nbsp</a>
+                            <div id="UniversalCompactOptions.stop_style" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.stop_style">#&nbsp;&nbsp</a>
 
-        <span class="name">max_merge_width</span>
+        <span class="name">stop_style</span>
     </div>
 
     
@@ -5092,24 +5479,6 @@ will be compressed iff
                                             <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.compression_size_percent">#&nbsp;&nbsp</a>
 
         <span class="name">compression_size_percent</span>
-    </div>
-
-    
-
-                            </div>
-                            <div id="UniversalCompactOptions.max_size_amplification_percent" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_size_amplification_percent">#&nbsp;&nbsp</a>
-
-        <span class="name">max_size_amplification_percent</span>
-    </div>
-
-    
-
-                            </div>
-                            <div id="UniversalCompactOptions.stop_style" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.stop_style">#&nbsp;&nbsp</a>
-
-        <span class="name">stop_style</span>
     </div>
 
     

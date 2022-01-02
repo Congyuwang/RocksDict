@@ -46,7 +46,7 @@ pub(crate) struct Rdict {
     read_opt_py: ReadOptionsPy,
 }
 
-#[pyclass(name = "ColumnFamilyDescriptor")]
+#[pyclass(name = "ColumnFamily")]
 #[pyo3(text_signature = "(name, options)")]
 pub(crate) struct ColumnFamilyDescriptorPy {
     pub(crate) name: String,
@@ -543,6 +543,11 @@ impl Rdict {
         }
     }
 
+    /// Loads a list of external SST files created with SstFileWriter into the DB
+    ///
+    /// Args:
+    ///     paths: a list a paths
+    ///     opts: IngestExternalFileOptionsPy instance
     #[pyo3(text_signature = "($self, paths, opts)")]
     #[args(opts = "Py::new(_py, IngestExternalFileOptionsPy::new())?")]
     fn ingest_external_file(
