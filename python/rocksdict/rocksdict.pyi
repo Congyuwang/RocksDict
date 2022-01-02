@@ -1,4 +1,4 @@
-from typing import Any, Union, List, Iterator, Tuple
+from typing import Any, Union, List, Iterator, Tuple, Dict
 
 __all__ = ["Rdict",
            "RdictIter",
@@ -365,7 +365,7 @@ class WriteOptions:
 class Rdict:
     def __init__(self, path: str,
                  options: Options = Options(),
-                 column_families: Union[List[ColumnFamily], None] = None,
+                 column_families: Union[Dict[str, Options], None] = None,
                  read_only: bool = False,
                  error_if_log_file_exist: bool = True,
                  ttl: int = 0) -> Rdict: ...
@@ -390,6 +390,9 @@ class Rdict:
                from_key: Union[str, int, float, bytes, bool, None] = None,
                read_opt: ReadOptions = ReadOptions()) -> RdictValues: ...
     def ingest_external_file(self, paths: List[str], opts: IngestExternalFileOptions = IngestExternalFileOptions()) -> None: ...
+    def get_column_family(self, name: str) -> Rdict: ...
+    def drop_column_family(self, name: str) -> None: ...
+    def create_column_family(self, name: str, options: Options = Options()) -> Rdict: ...
 
 class RdictItems(Iterator[Tuple[Union[str, int, float, bytes, bool], Any]]):
     def __iter__(self) -> RdictItems: ...
