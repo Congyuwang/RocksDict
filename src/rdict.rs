@@ -652,35 +652,26 @@ impl Rdict {
         }
     }
 
-    /// write batch with WriteOptions of this Rdict instance.
+    /// WriteBatch
     ///
     /// Notes:
     ///     This WriteBatch does not write to the current column family.
     ///
     /// Args:
     ///     write_batch: WriteBatch instance. This instance will be consumed.
-    #[pyo3(text_signature = "($self, write_batch)")]
-    pub fn write(&self, write_batch: &mut WriteBatchPy) -> PyResult<()> {
+    ///     write_opt: has default value.
+    #[pyo3(text_signature = "($self, write_batch, write_opt)")]
+    #[args(opts = "Py::new(_py, WriteOptionsPy::new())?")]
+    pub fn write(
+        &self,
+        write_batch: &mut WriteBatchPy,
+        write_opt: Py<WriteOptionsPy>,
+        py: Python,
+    ) -> PyResult<()> {
         if let Some(db) = &self.db {
             let db = db.borrow();
-            match db.write_opt(write_batch.consume()?, &self.write_opt) {
-                Ok(_) => Ok(()),
-                Err(e) => Err(PyException::new_err(e.to_string())),
-            }
-        } else {
-            Err(PyException::new_err("DB already closed"))
-        }
-    }
-
-    /// write batch with explicit WriteOptions.
-    ///
-    /// Notes:
-    ///     This WriteBatch does not write to the current column family.
-    #[pyo3(text_signature = "($self, write_batch, opt)")]
-    pub fn write_opt(&self, write_batch: &mut WriteBatchPy, opt: &WriteOptionsPy) -> PyResult<()> {
-        if let Some(db) = &self.db {
-            let db = db.borrow();
-            match db.write_opt(write_batch.consume()?, &opt.into()) {
+            let opt = write_opt.borrow(py);
+            match db.write_opt(write_batch.consume()?, &opt.deref().into()) {
                 Ok(_) => Ok(()),
                 Err(e) => Err(PyException::new_err(e.to_string())),
             }
