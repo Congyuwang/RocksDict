@@ -1,15 +1,10 @@
 use crate::encoder::{decode_value, encode_key, encode_value};
 use crate::iter::{RdictItems, RdictKeys, RdictValues};
-use crate::{
-    FlushOptionsPy, IngestExternalFileOptionsPy, OptionsPy, RdictIter, ReadOptionsPy,
-    WriteOptionsPy,
-};
+use crate::{FlushOptionsPy, IngestExternalFileOptionsPy, OptionsPy, RdictIter, ReadOptionsPy, WriteBatchPy, WriteOptionsPy};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
-use rocksdb::{
-    ColumnFamily, ColumnFamilyDescriptor, FlushOptions, ReadOptions, WriteOptions, DB,
-};
+use rocksdb::{ColumnFamily, ColumnFamilyDescriptor, FlushOptions, ReadOptions, WriteOptions, DB};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs::create_dir_all;
@@ -36,7 +31,6 @@ use std::time::Duration;
 #[pyclass(name = "Rdict")]
 #[pyo3(text_signature = "(path, options, read_only, ttl)")]
 pub(crate) struct Rdict {
-    db: Option<Rc<RefCell<DB>>>,
     write_opt: WriteOptions,
     flush_opt: FlushOptionsPy,
     read_opt: ReadOptions,
@@ -45,6 +39,8 @@ pub(crate) struct Rdict {
     write_opt_py: WriteOptionsPy,
     read_opt_py: ReadOptionsPy,
     column_family: Option<Rc<ColumnFamily>>,
+    // drop DB last
+    db: Option<Rc<RefCell<DB>>>,
 }
 
 #[pymethods]
@@ -176,10 +172,15 @@ impl Rdict {
         if let Some(db) = &self.db {
             // batch_get
             if let Ok(keys) = PyTryFrom::try_from(key) {
-                return Ok(
-                    get_batch_inner(db, keys, py, &self.read_opt, &self.pickle_loads, &self.column_family)?
-                        .to_object(py),
-                );
+                return Ok(get_batch_inner(
+                    db,
+                    keys,
+                    py,
+                    &self.read_opt,
+                    &self.pickle_loads,
+                    &self.column_family,
+                )?
+                .to_object(py));
             }
             let key = encode_key(key)?;
             let db = db.borrow();
@@ -528,6 +529,24 @@ impl Rdict {
         }
     }
 
+    /// Use this method to obtain a ColumnFamily instance, which can be used in WriteBatch.
+    pub fn get_column_family_handle(&self, name: &str) -> PyResult<ColumnFamilyPy> {
+        if let Some(db) = &self.db {
+            match db.borrow().cf_handle(name) {
+                None => Err(PyException::new_err(format!(
+                    "column name `{}` does not exist, use `create_cf` to creat it",
+                    name
+                ))),
+                Some(cf) => Ok(ColumnFamilyPy {
+                    cf: cf.clone(),
+                    db: db.clone(),
+                }),
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
+
     /// Loads a list of external SST files created with SstFileWriter into the DB
     ///
     /// Args:
@@ -557,16 +576,47 @@ impl Rdict {
         }
     }
 
+    /// write batch with WriteOptions of this Rdict instance.
+    ///
+    /// Args:
+    ///     write_batch: WriteBatch instance. This instance will be consumed.
+    pub fn write(&self, write_batch: &mut WriteBatchPy) -> PyResult<()> {
+        if let Some(db) = &self.db {
+            let db = db.borrow();
+            match db.write_opt(write_batch.consume()?, &self.write_opt) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(PyException::new_err(e.to_string()))
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
+
+    /// write batch with explicit WriteOptions.
+    pub fn write_opt(&self, write_batch: &mut WriteBatchPy, opt: &WriteOptionsPy) -> PyResult<()> {
+        if let Some(db) = &self.db {
+            let db = db.borrow();
+            match db.write_opt(write_batch.consume()?, &opt.into()) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(PyException::new_err(e.to_string()))
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
+
     /// Flush memory to disk, and drop the database.
     ///
     /// Notes:
-    ///     Setting Rdict to `None` does not always immediately close
-    ///     the database depending on the garbage collector of python.
-    ///     Calling `close()` is a more reliable method to ensure
-    ///     that the database is correctly closed.
+    ///     Calling `db.close()` is nearly equivalent to first calling
+    ///     `db.flush()` and then `del db`. However, `db.close()` does
+    ///     not guarantee the underlying RocksDB to be actually closed.
+    ///     Other Column Family `Rdict` instances, `ColumnFamily`
+    ///     (cf handle) instances, iterator instances such as`RdictIter`,
+    ///     `RdictItems`, `RdictKeys`, `RdictValues` can all keep RocksDB
+    ///     alive. `del` all associated instances mentioned above
+    ///     to actually shut down RocksDB.
     ///
-    ///     The database would not be usable after `close()` is called.
-    ///     Calling method after `close()` will throw exception.
     #[pyo3(text_signature = "($self)")]
     fn close(&mut self) -> PyResult<()> {
         if let Some(db) = &self.db {
@@ -659,3 +709,16 @@ impl Drop for Rdict {
 }
 
 unsafe impl Send for Rdict {}
+
+/// Column family handle. This can be used in WriteBatch to specify Column Family.
+#[pyclass(name = "ColumnFamily")]
+#[allow(dead_code)]
+#[derive(Clone)]
+pub(crate) struct ColumnFamilyPy {
+    // must follow this drop order
+    pub(crate) cf: Rc<ColumnFamily>,
+    // must keep db alive
+    db: Rc<RefCell<DB>>,
+}
+
+unsafe impl Send for ColumnFamilyPy {}

@@ -4,11 +4,13 @@ mod options;
 mod rdict;
 mod sst_file_writer;
 mod util;
+mod write_batch;
 
 use crate::iter::*;
 use crate::options::*;
 use crate::rdict::*;
-use crate::sst_file_writer::SstFileWriterPy;
+use crate::sst_file_writer::*;
+use crate::write_batch::*;
 use pyo3::prelude::*;
 
 /// ## Abstract
@@ -130,5 +132,7 @@ fn rocksdict(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<RdictKeys>()?;
     m.add_class::<IngestExternalFileOptionsPy>()?;
     m.add_class::<SstFileWriterPy>()?;
+    m.add_class::<WriteBatchPy>()?;
+    m.add_class::<ColumnFamilyPy>()?;
     Ok(())
 }
