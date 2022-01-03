@@ -36,6 +36,7 @@ It can be installed from pypi with `pip install rocksdict`.
 - [x] write batch
 - [x] delete range
 - [x] open as secondary, with-ttl, read-only
+- [ ] Snapshot
 - [ ] support merge
 
 ## Supported key-value types:
