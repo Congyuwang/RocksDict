@@ -72,7 +72,19 @@
                                 <a class="function" href="#Rdict.get_column_family">get_column_family</a>
                         </li>
                         <li>
+                                <a class="function" href="#Rdict.get_column_family_handle">get_column_family_handle</a>
+                        </li>
+                        <li>
                                 <a class="function" href="#Rdict.ingest_external_file">ingest_external_file</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Rdict.write">write</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Rdict.write_opt">write_opt</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Rdict.delete_range">delete_range</a>
                         </li>
                         <li>
                                 <a class="function" href="#Rdict.close">close</a>
@@ -465,16 +477,16 @@
                                 <a class="function" href="#WriteOptions.set_memtable_insert_hint_per_batch">set_memtable_insert_hint_per_batch</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.sync">sync</a>
+                                <a class="variable" href="#WriteOptions.low_pri">low_pri</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.low_pri">low_pri</a>
+                                <a class="variable" href="#WriteOptions.memtable_insert_hint_per_batch">memtable_insert_hint_per_batch</a>
                         </li>
                         <li>
                                 <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.memtable_insert_hint_per_batch">memtable_insert_hint_per_batch</a>
+                                <a class="variable" href="#WriteOptions.sync">sync</a>
                         </li>
                         <li>
                                 <a class="variable" href="#WriteOptions.no_slowdown">no_slowdown</a>
@@ -523,6 +535,51 @@
                         </li>
                         <li>
                                 <a class="function" href="#ReadOptions.set_pin_data">set_pin_data</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
+                    <a class="class" href="#WriteBatch">WriteBatch</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#WriteBatch.__init__">WriteBatch</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#WriteBatch.set_default_column_family">set_default_column_family</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#WriteBatch.len">len</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#WriteBatch.size_in_bytes">size_in_bytes</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#WriteBatch.is_empty">is_empty</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#WriteBatch.put">put</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#WriteBatch.delete">delete</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#WriteBatch.delete_range">delete_range</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#WriteBatch.clear">clear</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#WriteBatch.default_column_family">default_column_family</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
+                    <a class="class" href="#ColumnFamily">ColumnFamily</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#ColumnFamily.__init__">ColumnFamily</a>
                         </li>
                 </ul>
 
@@ -663,16 +720,16 @@
                                 <a class="function" href="#PlainTableFactoryOptions.__init__">PlainTableFactoryOptions</a>
                         </li>
                         <li>
-                                <a class="variable" href="#PlainTableFactoryOptions.hash_table_ratio">hash_table_ratio</a>
+                                <a class="variable" href="#PlainTableFactoryOptions.bloom_bits_per_key">bloom_bits_per_key</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#PlainTableFactoryOptions.user_key_length">user_key_length</a>
                         </li>
                         <li>
                                 <a class="variable" href="#PlainTableFactoryOptions.index_sparseness">index_sparseness</a>
                         </li>
                         <li>
-                                <a class="variable" href="#PlainTableFactoryOptions.bloom_bits_per_key">bloom_bits_per_key</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#PlainTableFactoryOptions.user_key_length">user_key_length</a>
+                                <a class="variable" href="#PlainTableFactoryOptions.hash_table_ratio">hash_table_ratio</a>
                         </li>
                 </ul>
 
@@ -726,13 +783,13 @@
                                 <a class="function" href="#UniversalCompactOptions.set_stop_style">set_stop_style</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
-                        </li>
-                        <li>
                                 <a class="variable" href="#UniversalCompactOptions.max_merge_width">max_merge_width</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.min_merge_width">min_merge_width</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.max_size_amplification_percent">max_size_amplification_percent</a>
@@ -741,7 +798,7 @@
                                 <a class="variable" href="#UniversalCompactOptions.compression_size_percent">compression_size_percent</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
+                                <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
                         </li>
                 </ul>
 
@@ -1079,6 +1136,8 @@ supports <code>pickle</code>.</li>
            <span class="s2">&quot;Options&quot;</span><span class="p">,</span>
            <span class="s2">&quot;WriteOptions&quot;</span><span class="p">,</span>
            <span class="s2">&quot;ReadOptions&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;WriteBatch&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;ColumnFamily&quot;</span><span class="p">,</span>
            <span class="s2">&quot;SstFileWriter&quot;</span><span class="p">,</span>
            <span class="s2">&quot;IngestExternalFileOptions&quot;</span><span class="p">,</span>
            <span class="s2">&quot;DBPath&quot;</span><span class="p">,</span>
@@ -1457,6 +1516,20 @@ or the nearest next key for iteration
 
 
                             </div>
+                            <div id="Rdict.get_column_family_handle" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.get_column_family_handle">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">get_column_family_handle</span><span class="signature">(unknown)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Use this method to obtain a ColumnFamily instance, which can be used in WriteBatch.</p>
+</div>
+
+
+                            </div>
                             <div id="Rdict.ingest_external_file" class="classattr">
                                         <div class="attr function"><a class="headerlink" href="#Rdict.ingest_external_file">#&nbsp;&nbsp</a>
 
@@ -1478,6 +1551,54 @@ or the nearest next key for iteration
 
 
                             </div>
+                            <div id="Rdict.write" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.write">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">write</span><span class="signature">(unknown)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>write batch with WriteOptions of this Rdict instance.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>write_batch:</strong>  WriteBatch instance. This instance will be consumed.</li>
+</ul>
+</div>
+
+
+                            </div>
+                            <div id="Rdict.write_opt" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.write_opt">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">write_opt</span><span class="signature">(unknown)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>write batch with explicit WriteOptions.</p>
+</div>
+
+
+                            </div>
+                            <div id="Rdict.delete_range" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.delete_range">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">delete_range</span><span class="signature">(unknown)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Removes the database entries in the range <code>["from", "to")</code></p>
+</div>
+
+
+                            </div>
                             <div id="Rdict.close" class="classattr">
                                         <div class="attr function"><a class="headerlink" href="#Rdict.close">#&nbsp;&nbsp</a>
 
@@ -1492,13 +1613,14 @@ or the nearest next key for iteration
 <h6 id="notes">Notes</h6>
 
 <blockquote>
-  <p>Setting Rdict to <code>None</code> does not always immediately close
-  the database depending on the garbage collector of python.
-  Calling <code><a href="#Rdict.close">close()</a></code> is a more reliable method to ensure
-  that the database is correctly closed.</p>
-  
-  <p>The database would not be usable after <code><a href="#Rdict.close">close()</a></code> is called.
-  Calling method after <code><a href="#Rdict.close">close()</a></code> will throw exception.</p>
+  <p>Calling <code>db.close()</code> is nearly equivalent to first calling
+  <code>db.flush()</code> and then <code>del db</code>. However, <code>db.close()</code> does
+  not guarantee the underlying RocksDB to be actually closed.
+  Other Column Family <code><a href="#Rdict">Rdict</a></code> instances, <code><a href="#ColumnFamily">ColumnFamily</a></code>
+  (cf handle) instances, iterator instances such as<code><a href="#RdictIter">RdictIter</a></code>,
+  <code>RdictItems</code>, <code>RdictKeys</code>, <code>RdictValues</code> can all keep RocksDB
+  alive. <code>del</code> all associated instances mentioned above
+  to actually shut down RocksDB.</p>
 </blockquote>
 </div>
 
@@ -4160,19 +4282,19 @@ option will be ignored.</p>
 
 
                             </div>
-                            <div id="WriteOptions.sync" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.sync">#&nbsp;&nbsp</a>
+                            <div id="WriteOptions.low_pri" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.low_pri">#&nbsp;&nbsp</a>
 
-        <span class="name">sync</span>
+        <span class="name">low_pri</span>
     </div>
 
     
 
                             </div>
-                            <div id="WriteOptions.low_pri" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.low_pri">#&nbsp;&nbsp</a>
+                            <div id="WriteOptions.memtable_insert_hint_per_batch" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.memtable_insert_hint_per_batch">#&nbsp;&nbsp</a>
 
-        <span class="name">low_pri</span>
+        <span class="name">memtable_insert_hint_per_batch</span>
     </div>
 
     
@@ -4187,10 +4309,10 @@ option will be ignored.</p>
     
 
                             </div>
-                            <div id="WriteOptions.memtable_insert_hint_per_batch" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.memtable_insert_hint_per_batch">#&nbsp;&nbsp</a>
+                            <div id="WriteOptions.sync" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.sync">#&nbsp;&nbsp</a>
 
-        <span class="name">memtable_insert_hint_per_batch</span>
+        <span class="name">sync</span>
     </div>
 
     
@@ -4444,6 +4566,213 @@ return 1.</p>
 <p>Default: false</p>
 </div>
 
+
+                            </div>
+                </section>
+                <section id="WriteBatch">
+                                <div class="attr class">
+        <a class="headerlink" href="#WriteBatch">#&nbsp;&nbsp</a>
+
+        
+        <span class="def">class</span>
+        <span class="name">WriteBatch</span>:
+    </div>
+
+        
+    
+
+                            <div id="WriteBatch.__init__" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#WriteBatch.__init__">#&nbsp;&nbsp</a>
+
+        
+            <span class="name">WriteBatch</span><span class="signature">()</span>
+    </div>
+
+        
+    
+
+                            </div>
+                            <div id="WriteBatch.set_default_column_family" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#WriteBatch.set_default_column_family">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">set_default_column_family</span><span class="signature">(self, /, column_family)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Set the default item for <code>a[i] = j</code> and <code>del a[i]</code> syntax.</p>
+
+<p>You can also use <code>put(key, value, column_family)</code> to explicitly choose column family.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>- column_family (ColumnFamily | None):</strong>  column family descriptor or None (for default family).</li>
+</ul>
+</div>
+
+
+                            </div>
+                            <div id="WriteBatch.len" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#WriteBatch.len">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">len</span><span class="signature">(self, /)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>length of the batch</p>
+</div>
+
+
+                            </div>
+                            <div id="WriteBatch.size_in_bytes" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#WriteBatch.size_in_bytes">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">size_in_bytes</span><span class="signature">(self, /)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Return WriteBatch serialized size (in bytes).</p>
+</div>
+
+
+                            </div>
+                            <div id="WriteBatch.is_empty" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#WriteBatch.is_empty">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">is_empty</span><span class="signature">(self, /)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Check whether the batch is empty.</p>
+</div>
+
+
+                            </div>
+                            <div id="WriteBatch.put" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#WriteBatch.put">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">put</span><span class="signature">(self, /, key, value, column_family)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Insert a value into the database under the given key.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>column_family:</strong>  override the default column family set by set_default_column_family</li>
+</ul>
+</div>
+
+
+                            </div>
+                            <div id="WriteBatch.delete" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#WriteBatch.delete">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">delete</span><span class="signature">(self, /, key, column_family)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Removes the database entry for key. Does nothing if the key was not found.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>column_family:</strong>  override the default column family set by set_default_column_family</li>
+</ul>
+</div>
+
+
+                            </div>
+                            <div id="WriteBatch.delete_range" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#WriteBatch.delete_range">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">delete_range</span><span class="signature">(self, /, begin, end)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Remove database entries in column family from start key to end key.</p>
+
+<h6 id="notes">Notes</h6>
+
+<blockquote>
+  <p>Removes the database entries in the range ["begin_key", "end_key"), i.e.,
+  including "begin_key" and excluding "end_key". It is not an error if no
+  keys exist in the range ["begin_key", "end_key").</p>
+</blockquote>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>begin:</strong>  begin key</li>
+<li><strong>end:</strong>  end key</li>
+<li><strong>column_family:</strong>  override the default column family set by set_default_column_family</li>
+</ul>
+</div>
+
+
+                            </div>
+                            <div id="WriteBatch.clear" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#WriteBatch.clear">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">clear</span><span class="signature">(self, /)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Clear all updates buffered in this batch.</p>
+</div>
+
+
+                            </div>
+                            <div id="WriteBatch.default_column_family" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteBatch.default_column_family">#&nbsp;&nbsp</a>
+
+        <span class="name">default_column_family</span>
+    </div>
+
+    
+
+                            </div>
+                </section>
+                <section id="ColumnFamily">
+                                <div class="attr class">
+        <a class="headerlink" href="#ColumnFamily">#&nbsp;&nbsp</a>
+
+        
+        <span class="def">class</span>
+        <span class="name">ColumnFamily</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Column family handle. This can be used in WriteBatch to specify Column Family.</p>
+</div>
+
+
+                            <div id="ColumnFamily.__init__" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#ColumnFamily.__init__">#&nbsp;&nbsp</a>
+
+        
+            <span class="name">ColumnFamily</span><span class="signature">()</span>
+    </div>
+
+        
+    
 
                             </div>
                 </section>
@@ -5097,10 +5426,19 @@ information.</p>
     
 
                             </div>
-                            <div id="PlainTableFactoryOptions.hash_table_ratio" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.hash_table_ratio">#&nbsp;&nbsp</a>
+                            <div id="PlainTableFactoryOptions.bloom_bits_per_key" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.bloom_bits_per_key">#&nbsp;&nbsp</a>
 
-        <span class="name">hash_table_ratio</span>
+        <span class="name">bloom_bits_per_key</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="PlainTableFactoryOptions.user_key_length" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.user_key_length">#&nbsp;&nbsp</a>
+
+        <span class="name">user_key_length</span>
     </div>
 
     
@@ -5115,19 +5453,10 @@ information.</p>
     
 
                             </div>
-                            <div id="PlainTableFactoryOptions.bloom_bits_per_key" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.bloom_bits_per_key">#&nbsp;&nbsp</a>
+                            <div id="PlainTableFactoryOptions.hash_table_ratio" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.hash_table_ratio">#&nbsp;&nbsp</a>
 
-        <span class="name">bloom_bits_per_key</span>
-    </div>
-
-    
-
-                            </div>
-                            <div id="PlainTableFactoryOptions.user_key_length" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.user_key_length">#&nbsp;&nbsp</a>
-
-        <span class="name">user_key_length</span>
+        <span class="name">hash_table_ratio</span>
     </div>
 
     
@@ -5396,15 +5725,6 @@ will be compressed iff
 
 
                             </div>
-                            <div id="UniversalCompactOptions.stop_style" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.stop_style">#&nbsp;&nbsp</a>
-
-        <span class="name">stop_style</span>
-    </div>
-
-    
-
-                            </div>
                             <div id="UniversalCompactOptions.max_merge_width" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_merge_width">#&nbsp;&nbsp</a>
 
@@ -5418,6 +5738,15 @@ will be compressed iff
                                             <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.min_merge_width">#&nbsp;&nbsp</a>
 
         <span class="name">min_merge_width</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="UniversalCompactOptions.size_ratio" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.size_ratio">#&nbsp;&nbsp</a>
+
+        <span class="name">size_ratio</span>
     </div>
 
     
@@ -5441,10 +5770,10 @@ will be compressed iff
     
 
                             </div>
-                            <div id="UniversalCompactOptions.size_ratio" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.size_ratio">#&nbsp;&nbsp</a>
+                            <div id="UniversalCompactOptions.stop_style" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.stop_style">#&nbsp;&nbsp</a>
 
-        <span class="name">size_ratio</span>
+        <span class="name">stop_style</span>
     </div>
 
     

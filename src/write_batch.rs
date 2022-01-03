@@ -1,9 +1,9 @@
 use crate::encoder::{encode_key, encode_value};
 use crate::ColumnFamilyPy;
+use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use rocksdb::WriteBatch;
 use std::ops::Deref;
-use pyo3::exceptions::PyException;
 
 #[pyclass(name = "WriteBatch")]
 pub(crate) struct WriteBatchPy {
@@ -39,7 +39,9 @@ impl WriteBatchPy {
             }
             Ok(())
         } else {
-            Err(PyException::new_err("this batch is already consumed, create a new one by calling `WriteBatch()`"))
+            Err(PyException::new_err(
+                "this batch is already consumed, create a new one by calling `WriteBatch()`",
+            ))
         }
     }
 
@@ -52,7 +54,9 @@ impl WriteBatchPy {
             }
             Ok(())
         } else {
-            Err(PyException::new_err("this batch is already consumed, create a new one by calling `WriteBatch()`"))
+            Err(PyException::new_err(
+                "this batch is already consumed, create a new one by calling `WriteBatch()`",
+            ))
         }
     }
 
@@ -63,11 +67,16 @@ impl WriteBatchPy {
     /// Args:
     ///     - column_family (ColumnFamily | None): column family descriptor or None (for default family).
     #[pyo3(text_signature = "($self, column_family)")]
-    pub fn set_default_column_family(&mut self, column_family: Option<ColumnFamilyPy>) -> PyResult<()> {
+    pub fn set_default_column_family(
+        &mut self,
+        column_family: Option<ColumnFamilyPy>,
+    ) -> PyResult<()> {
         if let Some(_) = &self.inner {
             Ok(self.default_column_family = column_family)
         } else {
-            Err(PyException::new_err("this batch is already consumed, create a new one by calling `WriteBatch()`"))
+            Err(PyException::new_err(
+                "this batch is already consumed, create a new one by calling `WriteBatch()`",
+            ))
         }
     }
 
@@ -77,7 +86,9 @@ impl WriteBatchPy {
         if let Some(inner) = &self.inner {
             Ok(inner.len())
         } else {
-            Err(PyException::new_err("this batch is already consumed, create a new one by calling `WriteBatch()`"))
+            Err(PyException::new_err(
+                "this batch is already consumed, create a new one by calling `WriteBatch()`",
+            ))
         }
     }
 
@@ -87,7 +98,9 @@ impl WriteBatchPy {
         if let Some(inner) = &self.inner {
             Ok(inner.size_in_bytes())
         } else {
-            Err(PyException::new_err("this batch is already consumed, create a new one by calling `WriteBatch()`"))
+            Err(PyException::new_err(
+                "this batch is already consumed, create a new one by calling `WriteBatch()`",
+            ))
         }
     }
 
@@ -97,7 +110,9 @@ impl WriteBatchPy {
         if let Some(inner) = &self.inner {
             Ok(inner.is_empty())
         } else {
-            Err(PyException::new_err("this batch is already consumed, create a new one by calling `WriteBatch()`"))
+            Err(PyException::new_err(
+                "this batch is already consumed, create a new one by calling `WriteBatch()`",
+            ))
         }
     }
 
@@ -123,7 +138,9 @@ impl WriteBatchPy {
             }
             Ok(())
         } else {
-            Err(PyException::new_err("this batch is already consumed, create a new one by calling `WriteBatch()`"))
+            Err(PyException::new_err(
+                "this batch is already consumed, create a new one by calling `WriteBatch()`",
+            ))
         }
     }
 
@@ -142,7 +159,9 @@ impl WriteBatchPy {
             }
             Ok(())
         } else {
-            Err(PyException::new_err("this batch is already consumed, create a new one by calling `WriteBatch()`"))
+            Err(PyException::new_err(
+                "this batch is already consumed, create a new one by calling `WriteBatch()`",
+            ))
         }
     }
 
@@ -174,7 +193,9 @@ impl WriteBatchPy {
             }
             Ok(())
         } else {
-            Err(PyException::new_err("this batch is already consumed, create a new one by calling `WriteBatch()`"))
+            Err(PyException::new_err(
+                "this batch is already consumed, create a new one by calling `WriteBatch()`",
+            ))
         }
     }
 
@@ -184,7 +205,9 @@ impl WriteBatchPy {
         if let Some(inner) = &mut self.inner {
             Ok(inner.clear())
         } else {
-            Err(PyException::new_err("this batch is already consumed, create a new one by calling `WriteBatch()`"))
+            Err(PyException::new_err(
+                "this batch is already consumed, create a new one by calling `WriteBatch()`",
+            ))
         }
     }
 }
@@ -196,7 +219,9 @@ impl WriteBatchPy {
             drop(self.default_column_family.take());
             Ok(inner)
         } else {
-            Err(PyException::new_err("this batch is already consumed, create a new one by calling `WriteBatch()`"))
+            Err(PyException::new_err(
+                "this batch is already consumed, create a new one by calling `WriteBatch()`",
+            ))
         }
     }
 }

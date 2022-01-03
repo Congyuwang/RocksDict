@@ -1,10 +1,16 @@
 use crate::encoder::{decode_value, encode_key, encode_value};
 use crate::iter::{RdictItems, RdictKeys, RdictValues};
-use crate::{FlushOptionsPy, IngestExternalFileOptionsPy, OptionsPy, RdictIter, ReadOptionsPy, WriteBatchPy, WriteOptionsPy};
+use crate::{
+    FlushOptionsPy, IngestExternalFileOptionsPy, OptionsPy, RdictIter, ReadOptionsPy, WriteBatchPy,
+    WriteOptionsPy,
+};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
-use rocksdb::{ColumnFamily, ColumnFamilyDescriptor, FlushOptions, ReadOptions, WriteOptions, DB};
+use rocksdb::{
+    ColumnFamily, ColumnFamilyDescriptor, Direction, FlushOptions, IteratorMode, ReadOptions,
+    WriteOptions, DB,
+};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs::create_dir_all;
@@ -578,6 +584,9 @@ impl Rdict {
 
     /// write batch with WriteOptions of this Rdict instance.
     ///
+    /// Notes:
+    ///     This WriteBatch does not write to the current column family.
+    ///
     /// Args:
     ///     write_batch: WriteBatch instance. This instance will be consumed.
     pub fn write(&self, write_batch: &mut WriteBatchPy) -> PyResult<()> {
@@ -585,7 +594,7 @@ impl Rdict {
             let db = db.borrow();
             match db.write_opt(write_batch.consume()?, &self.write_opt) {
                 Ok(_) => Ok(()),
-                Err(e) => Err(PyException::new_err(e.to_string()))
+                Err(e) => Err(PyException::new_err(e.to_string())),
             }
         } else {
             Err(PyException::new_err("DB already closed"))
@@ -593,12 +602,50 @@ impl Rdict {
     }
 
     /// write batch with explicit WriteOptions.
+    ///
+    /// Notes:
+    ///     This WriteBatch does not write to the current column family.
     pub fn write_opt(&self, write_batch: &mut WriteBatchPy, opt: &WriteOptionsPy) -> PyResult<()> {
         if let Some(db) = &self.db {
             let db = db.borrow();
             match db.write_opt(write_batch.consume()?, &opt.into()) {
                 Ok(_) => Ok(()),
-                Err(e) => Err(PyException::new_err(e.to_string()))
+                Err(e) => Err(PyException::new_err(e.to_string())),
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
+
+    /// Removes the database entries in the range `["from", "to")` of the current column family.
+    ///
+    /// Args:
+    ///     begin: included
+    ///     end: excluded
+    pub fn delete_range(&self, begin: &PyAny, end: &PyAny) -> PyResult<()> {
+        if let Some(db) = &self.db {
+            let db = db.borrow();
+            let from = encode_key(begin)?;
+            let to = encode_key(end)?;
+            match &self.column_family {
+                None => {
+                    // manual implementation when there is no column
+                    let mut r_opt = ReadOptions::default();
+                    r_opt.set_iterate_lower_bound(from.to_vec());
+                    r_opt.set_iterate_upper_bound(to.to_vec());
+                    let mode = IteratorMode::From(&from, Direction::Forward);
+                    let iter = db.iterator_opt(mode, r_opt);
+                    for (key, _) in iter {
+                        if let Err(e) = db.delete_opt(key, &self.write_opt) {
+                            return Err(PyException::new_err(e.to_string()));
+                        }
+                    }
+                    Ok(())
+                }
+                Some(cf) => match db.delete_range_cf_opt(cf.deref(), from, to, &self.write_opt) {
+                    Ok(_) => Ok(()),
+                    Err(e) => Err(PyException::new_err(e.to_string())),
+                },
             }
         } else {
             Err(PyException::new_err("DB already closed"))
