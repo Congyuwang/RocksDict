@@ -627,6 +627,31 @@ impl Rdict {
         }
     }
 
+    /// Tries to catch up with the primary by reading as much as possible from the
+    /// log files.
+    #[pyo3(text_signature = "($self)")]
+    pub fn try_catch_up_with_primary(&self) -> PyResult<()> {
+        if let Some(db) = &self.db {
+            let db = db.borrow();
+            match db.try_catch_up_with_primary() {
+                Ok(_) => Ok(()),
+                Err(e) => Err(PyException::new_err(e.to_string())),
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
+
+    /// Request stopping background work, if wait is true wait until it's done.
+    #[pyo3(text_signature = "($self, wait)")]
+    pub fn cancel_all_background(&self, wait: bool) -> PyResult<()> {
+        if let Some(db) = &self.db {
+            Ok(db.borrow().cancel_all_background_work(wait))
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
+
     /// write batch with WriteOptions of this Rdict instance.
     ///
     /// Notes:
