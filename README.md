@@ -335,6 +335,10 @@ db.close()
 Rdict.destroy(path)
 ```
 
+## Full Documentation
+
+See [rocksdict documentation](https://congyuwang.github.io/RocksDict/rocksdict.html).
+
 ## Contribution
 
 This project is still in an early stage of development. People are welcome 
