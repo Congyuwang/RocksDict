@@ -28,4 +28,6 @@ __all__ = ["Rdict",
            "DBCompressionType",
            "DBRecoveryMode",
            "Env",
-           "FifoCompactOptions"]
+           "FifoCompactOptions",
+           "CompactOptions",
+           "BottommostLevelCompaction"]

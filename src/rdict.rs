@@ -1,8 +1,8 @@
 use crate::encoder::{decode_value, encode_key, encode_value};
 use crate::iter::{RdictItems, RdictKeys, RdictValues};
 use crate::{
-    FlushOptionsPy, IngestExternalFileOptionsPy, OptionsPy, RdictIter, ReadOptionsPy, Snapshot,
-    WriteBatchPy, WriteOptionsPy,
+    CompactOptionsPy, FlushOptionsPy, IngestExternalFileOptionsPy, OptionsPy, RdictIter,
+    ReadOptionsPy, Snapshot, WriteBatchPy, WriteOptionsPy,
 };
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
@@ -796,17 +796,39 @@ impl Rdict {
         }
     }
 
-    // /// Runs a manual compaction on the Range of keys given for the current Column Family.
-    // #[pyo3(text_signature = "($self, start, end)")]
-    // fn compact_range(&self, start: &PyAny, end: &PyAny, opts: &CompactOptions){
-    //     if let Some(db) = &self.db {
-    //         let db = db.borrow();
-    //         db.compact_range_cf_opt()
-    //         db.compact_range(start, end)
-    //     } else {
-    //         Err(PyException::new_err("DB already closed"))
-    //     }
-    // }
+    /// Runs a manual compaction on the Range of keys given for the current Column Family.
+    #[pyo3(text_signature = "($self, begin, end, compact_opt)")]
+    #[args(opts = "Py::new(_py, CompactOptionsPy::default())?")]
+    fn compact_range(
+        &self,
+        begin: &PyAny,
+        end: &PyAny,
+        compact_opt: Py<CompactOptionsPy>,
+        py: Python,
+    ) -> PyResult<()> {
+        if let Some(db) = &self.db {
+            let db = db.borrow();
+            let from = if begin.is_none() {
+                None
+            } else {
+                Some(encode_key(begin)?)
+            };
+            let to = if end.is_none() {
+                None
+            } else {
+                Some(encode_key(end)?)
+            };
+            let opt = compact_opt.borrow(py);
+            if let Some(cf) = &self.column_family {
+                db.compact_range_cf_opt(cf.deref(), from, to, &opt.deref().0)
+            } else {
+                db.compact_range_opt(from, to, &opt.deref().0)
+            };
+            Ok(())
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
 
     /// Set options for the current column family.
     #[pyo3(text_signature = "($self, options)")]
