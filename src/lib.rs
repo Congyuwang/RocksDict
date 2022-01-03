@@ -134,5 +134,6 @@ fn rocksdict(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<SstFileWriterPy>()?;
     m.add_class::<WriteBatchPy>()?;
     m.add_class::<ColumnFamilyPy>()?;
+    m.add_class::<AccessType>()?;
     Ok(())
 }

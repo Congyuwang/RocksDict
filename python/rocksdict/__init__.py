@@ -3,13 +3,14 @@ from .rocksdict import *
 __doc__ = rocksdict.__doc__
 
 __all__ = ["Rdict",
+           "WriteBatch",
+           "SstFileWriter",
+           "AccessType",
+           "WriteOptions",
            "RdictIter",
            "Options",
-           "WriteOptions",
            "ReadOptions",
-           "WriteBatch",
            "ColumnFamily",
-           "SstFileWriter",
            "IngestExternalFileOptions",
            "DBPath",
            "MemtableFactory",

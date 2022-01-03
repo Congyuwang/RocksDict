@@ -8,7 +8,6 @@ use std::ops::Deref;
 #[pyclass(name = "WriteBatch")]
 pub(crate) struct WriteBatchPy {
     inner: Option<WriteBatch>,
-    #[pyo3(set, get)]
     default_column_family: Option<ColumnFamilyPy>,
     pickle_dumps: PyObject,
 }

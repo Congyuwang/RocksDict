@@ -35,7 +35,7 @@ use std::time::Duration;
 ///         assert(db[0] == 1)
 ///
 #[pyclass(name = "Rdict")]
-#[pyo3(text_signature = "(path, options, read_only, ttl)")]
+#[pyo3(text_signature = "(path, options, column_families, access_type)")]
 pub(crate) struct Rdict {
     write_opt: WriteOptions,
     flush_opt: FlushOptionsPy,
@@ -49,6 +49,34 @@ pub(crate) struct Rdict {
     db: Option<Rc<RefCell<DB>>>,
 }
 
+/// Define DB Access Types.
+///
+/// Notes:
+///     There are four access types:
+///         - ReadWrite: default value
+///         - ReadOnly
+///         - WithTTL
+///         - Secondary
+///
+/// Examples:
+///     ::
+///
+///         from rocksdict import Rdict, AccessType
+///
+///         # open with 24 hours ttl
+///         db = Rdict("./main_path", access_type = AccessType.with_ttl(24 * 3600))
+///
+///         # open as read_only
+///         db = Rdict("./main_path", access_type = AccessType.read_only())
+///
+///         # open as secondary
+///         db = Rdict("./main_path", access_type = AccessType.secondary("./secondary_path"))
+///
+///
+#[derive(Clone)]
+#[pyclass(name = "AccessType")]
+pub(crate) struct AccessType(AccessTypeInner);
+
 #[pymethods]
 impl Rdict {
     /// Create a new database or open an existing one.
@@ -57,25 +85,20 @@ impl Rdict {
     ///     path (str): path to the database
     ///     options (Options): Options object
     ///     column_families (dict): (name, options) pairs
-    ///     read_only (bool): whether to open read_only
-    ///     error_if_log_file_exist (bool): this option is useful only when
-    ///         read_only is set to `true`
-    ///     ttl (int): TTL option in seconds.
+    ///     access_type (AccessType): there are four access types:
+    ///         ReadWrite, ReadOnly, WithTTL, and Secondary, use
+    ///         AccessType class to create.
     #[new]
     #[args(
         options = "Py::new(_py, OptionsPy::new())?",
         column_families = "None",
-        read_only = "false",
-        error_if_log_file_exist = "true",
-        ttl = "0"
+        access_type = "AccessType::read_write()"
     )]
     fn new(
         path: &str,
         options: Py<OptionsPy>,
         column_families: Option<HashMap<String, OptionsPy>>,
-        read_only: bool,
-        error_if_log_file_exist: bool,
-        ttl: u64,
+        access_type: AccessType,
         py: Python,
     ) -> PyResult<Self> {
         let path = Path::new(path);
@@ -83,36 +106,43 @@ impl Rdict {
         let options = &options.borrow(py).0;
         match create_dir_all(path) {
             Ok(_) => match {
-                match (read_only, ttl, column_families.is_some()) {
-                    (false, 0, true) => DB::open_cf_descriptors(
-                        options,
-                        path,
-                        column_families
-                            .unwrap()
-                            .into_iter()
-                            .map(|(name, opt)| ColumnFamilyDescriptor::new(name, opt.0)),
-                    ),
-                    (false, ttl, true) => DB::open_cf_descriptors_with_ttl(
-                        options,
-                        path,
-                        column_families
-                            .unwrap()
-                            .into_iter()
-                            .map(|(name, opt)| ColumnFamilyDescriptor::new(name, opt.0)),
-                        Duration::from_secs(ttl),
-                    ),
-                    (true, _, true) => DB::open_cf_descriptors_for_read_only(
-                        options,
-                        path,
-                        column_families
-                            .unwrap()
-                            .into_iter()
-                            .map(|(name, opt)| ColumnFamilyDescriptor::new(name, opt.0)),
-                        error_if_log_file_exist,
-                    ),
-                    (false, 0, _) => DB::open(options, &path),
-                    (false, ttl, _) => DB::open_with_ttl(options, path, Duration::from_secs(ttl)),
-                    (true, _, _) => DB::open_for_read_only(options, &path, error_if_log_file_exist),
+                if let Some(cf) = column_families {
+                    let cfs = cf
+                        .into_iter()
+                        .map(|(name, opt)| ColumnFamilyDescriptor::new(name, opt.0));
+                    match access_type.0 {
+                        AccessTypeInner::ReadWrite => DB::open_cf_descriptors(options, path, cfs),
+                        AccessTypeInner::ReadOnly {
+                            error_if_log_file_exist,
+                        } => DB::open_cf_descriptors_for_read_only(
+                            options,
+                            path,
+                            cfs,
+                            error_if_log_file_exist,
+                        ),
+                        AccessTypeInner::Secondary { secondary_path } => {
+                            DB::open_cf_descriptors_as_secondary(
+                                options,
+                                path,
+                                Path::new(&secondary_path),
+                                cfs,
+                            )
+                        }
+                        AccessTypeInner::WithTTL { ttl } => {
+                            DB::open_cf_descriptors_with_ttl(options, path, cfs, ttl)
+                        }
+                    }
+                } else {
+                    match access_type.0 {
+                        AccessTypeInner::ReadWrite => DB::open(options, &path),
+                        AccessTypeInner::ReadOnly {
+                            error_if_log_file_exist,
+                        } => DB::open_for_read_only(options, &path, error_if_log_file_exist),
+                        AccessTypeInner::Secondary { secondary_path } => {
+                            DB::open_as_secondary(options, path, Path::new(&secondary_path))
+                        }
+                        AccessTypeInner::WithTTL { ttl } => DB::open_with_ttl(options, path, ttl),
+                    }
                 }
             } {
                 Ok(db) => {
@@ -536,6 +566,21 @@ impl Rdict {
     }
 
     /// Use this method to obtain a ColumnFamily instance, which can be used in WriteBatch.
+    ///
+    /// Example:
+    ///     ::
+    ///
+    ///         wb = WriteBatch()
+    ///         for i in range(100):
+    ///             wb.put(i, i**2, db.get_column_family_handle(cf_name_1))
+    ///         db.write(wb)
+    ///
+    ///         wb = WriteBatch()
+    ///         wb.set_default_column_family(db.get_column_family_handle(cf_name_2))
+    ///         for i in range(100, 200):
+    ///             wb[i] = i**2
+    ///         db.write(wb)
+    #[pyo3(text_signature = "($self, name)")]
     pub fn get_column_family_handle(&self, name: &str) -> PyResult<ColumnFamilyPy> {
         if let Some(db) = &self.db {
             match db.borrow().cf_handle(name) {
@@ -589,6 +634,7 @@ impl Rdict {
     ///
     /// Args:
     ///     write_batch: WriteBatch instance. This instance will be consumed.
+    #[pyo3(text_signature = "($self, write_batch)")]
     pub fn write(&self, write_batch: &mut WriteBatchPy) -> PyResult<()> {
         if let Some(db) = &self.db {
             let db = db.borrow();
@@ -605,6 +651,7 @@ impl Rdict {
     ///
     /// Notes:
     ///     This WriteBatch does not write to the current column family.
+    #[pyo3(text_signature = "($self, write_batch, opt)")]
     pub fn write_opt(&self, write_batch: &mut WriteBatchPy, opt: &WriteOptionsPy) -> PyResult<()> {
         if let Some(db) = &self.db {
             let db = db.borrow();
@@ -622,6 +669,7 @@ impl Rdict {
     /// Args:
     ///     begin: included
     ///     end: excluded
+    #[pyo3(text_signature = "($self, begin, end)")]
     pub fn delete_range(&self, begin: &PyAny, end: &PyAny) -> PyResult<()> {
         if let Some(db) = &self.db {
             let db = db.borrow();
@@ -769,3 +817,139 @@ pub(crate) struct ColumnFamilyPy {
 }
 
 unsafe impl Send for ColumnFamilyPy {}
+
+#[pymethods]
+impl AccessType {
+    /// Define DB Access Types.
+    ///
+    /// Notes:
+    ///     There are four access types:
+    ///         - ReadWrite: default value
+    ///         - ReadOnly
+    ///         - WithTTL
+    ///         - Secondary
+    ///
+    /// Examples:
+    ///     ::
+    ///
+    ///         from rocksdict import Rdict, AccessType
+    ///
+    ///         # open with 24 hours ttl
+    ///         db = Rdict("./main_path", access_type = AccessType.with_ttl(24 * 3600))
+    ///
+    ///         # open as read_only
+    ///         db = Rdict("./main_path", access_type = AccessType.read_only())
+    ///
+    ///         # open as secondary
+    ///         db = Rdict("./main_path", access_type = AccessType.secondary("./secondary_path"))
+    ///
+    ///
+    #[staticmethod]
+    #[pyo3(text_signature = "()")]
+    fn read_write() -> Self {
+        AccessType(AccessTypeInner::ReadWrite)
+    }
+
+    /// Define DB Access Types.
+    ///
+    /// Notes:
+    ///     There are four access types:
+    ///         - ReadWrite: default value
+    ///         - ReadOnly
+    ///         - WithTTL
+    ///         - Secondary
+    ///
+    /// Examples:
+    ///     ::
+    ///
+    ///         from rocksdict import Rdict, AccessType
+    ///
+    ///         # open with 24 hours ttl
+    ///         db = Rdict("./main_path", access_type = AccessType.with_ttl(24 * 3600))
+    ///
+    ///         # open as read_only
+    ///         db = Rdict("./main_path", access_type = AccessType.read_only())
+    ///
+    ///         # open as secondary
+    ///         db = Rdict("./main_path", access_type = AccessType.secondary("./secondary_path"))
+    ///
+    ///
+    #[staticmethod]
+    #[pyo3(text_signature = "(error_if_log_file_exist)")]
+    #[args(error_if_log_file_exist = "true")]
+    fn read_only(error_if_log_file_exist: bool) -> Self {
+        AccessType(AccessTypeInner::ReadOnly {
+            error_if_log_file_exist,
+        })
+    }
+
+    /// Define DB Access Types.
+    ///
+    /// Notes:
+    ///     There are four access types:
+    ///         - ReadWrite: default value
+    ///         - ReadOnly
+    ///         - WithTTL
+    ///         - Secondary
+    ///
+    /// Examples:
+    ///     ::
+    ///
+    ///         from rocksdict import Rdict, AccessType
+    ///
+    ///         # open with 24 hours ttl
+    ///         db = Rdict("./main_path", access_type = AccessType.with_ttl(24 * 3600))
+    ///
+    ///         # open as read_only
+    ///         db = Rdict("./main_path", access_type = AccessType.read_only())
+    ///
+    ///         # open as secondary
+    ///         db = Rdict("./main_path", access_type = AccessType.secondary("./secondary_path"))
+    ///
+    ///
+    #[staticmethod]
+    #[pyo3(text_signature = "(secondary_path)")]
+    fn secondary(secondary_path: String) -> Self {
+        AccessType(AccessTypeInner::Secondary { secondary_path })
+    }
+
+    /// Define DB Access Types.
+    ///
+    /// Notes:
+    ///     There are four access types:
+    ///         - ReadWrite: default value
+    ///         - ReadOnly
+    ///         - WithTTL
+    ///         - Secondary
+    ///
+    /// Examples:
+    ///     ::
+    ///
+    ///         from rocksdict import Rdict, AccessType
+    ///
+    ///         # open with 24 hours ttl
+    ///         db = Rdict("./main_path", access_type = AccessType.with_ttl(24 * 3600))
+    ///
+    ///         # open as read_only
+    ///         db = Rdict("./main_path", access_type = AccessType.read_only())
+    ///
+    ///         # open as secondary
+    ///         db = Rdict("./main_path", access_type = AccessType.secondary("./secondary_path"))
+    ///
+    ///
+    #[staticmethod]
+    #[pyo3(text_signature = "(duration)")]
+    fn with_ttl(duration: u64) -> Self {
+        AccessType(AccessTypeInner::WithTTL {
+            ttl: Duration::from_secs(duration),
+        })
+    }
+}
+
+#[derive(Clone)]
+enum AccessTypeInner {
+    ReadWrite,
+    ReadOnly { error_if_log_file_exist: bool },
+    Secondary { secondary_path: String },
+    WithTTL { ttl: Duration },
+}

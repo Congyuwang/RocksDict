@@ -33,7 +33,8 @@ It can be installed from pypi with `pip install rocksdict`.
 - [x] SstFileWriter and bulk ingest
 - [x] column families
 - [x] write batch
-- [ ] delete range, open as secondary
+- [x] delete range
+- [x] open as secondary, with-ttl, read-only
 - [ ] support merge
 
 ## Introduction
