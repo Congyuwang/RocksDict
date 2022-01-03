@@ -9,12 +9,12 @@
 
 ## Abstract
 
-This package enables users to store, query, and delete
-a large number of key-value pairs on disk.
+This library provides a solution for on-disk key-value storage for python.
 
-This is especially useful when the data cannot fit into RAM.
-If you have hundreds of GBs or many TBs of key-value data to store
-and query from, this is the package for you.
+It has a nice user-friendly interface that is familiar to python users.
+
+It is not intended to be used as a rocksdb python client.
+For that purpose, use rust-rocksdb or java-rocksdb instead.
 
 ### Installation
 

@@ -96,7 +96,34 @@
                                 <a class="function" href="#Rdict.close">close</a>
                         </li>
                         <li>
+                                <a class="function" href="#Rdict.path">path</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Rdict.compact_range">compact_range</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Rdict.set_options">set_options</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Rdict.property_value">property_value</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Rdict.property_int_value">property_int_value</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Rdict.latest_sequence_number">latest_sequence_number</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Rdict.live_files">live_files</a>
+                        </li>
+                        <li>
                                 <a class="function" href="#Rdict.destroy">destroy</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Rdict.repair">repair</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Rdict.list_cf">list_cf</a>
                         </li>
                 </ul>
 
@@ -198,19 +225,19 @@
                                 <a class="function" href="#WriteOptions.set_memtable_insert_hint_per_batch">set_memtable_insert_hint_per_batch</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.no_slowdown">no_slowdown</a>
+                                <a class="variable" href="#WriteOptions.memtable_insert_hint_per_batch">memtable_insert_hint_per_batch</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
                         </li>
                         <li>
                                 <a class="variable" href="#WriteOptions.sync">sync</a>
                         </li>
                         <li>
+                                <a class="variable" href="#WriteOptions.no_slowdown">no_slowdown</a>
+                        </li>
+                        <li>
                                 <a class="variable" href="#WriteOptions.low_pri">low_pri</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#WriteOptions.memtable_insert_hint_per_batch">memtable_insert_hint_per_batch</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
                         </li>
                 </ul>
 
@@ -762,9 +789,6 @@
                                 <a class="function" href="#PlainTableFactoryOptions.__init__">PlainTableFactoryOptions</a>
                         </li>
                         <li>
-                                <a class="variable" href="#PlainTableFactoryOptions.hash_table_ratio">hash_table_ratio</a>
-                        </li>
-                        <li>
                                 <a class="variable" href="#PlainTableFactoryOptions.bloom_bits_per_key">bloom_bits_per_key</a>
                         </li>
                         <li>
@@ -772,6 +796,9 @@
                         </li>
                         <li>
                                 <a class="variable" href="#PlainTableFactoryOptions.user_key_length">user_key_length</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#PlainTableFactoryOptions.hash_table_ratio">hash_table_ratio</a>
                         </li>
                 </ul>
 
@@ -828,10 +855,7 @@
                                 <a class="variable" href="#UniversalCompactOptions.min_merge_width">min_merge_width</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#UniversalCompactOptions.max_merge_width">max_merge_width</a>
+                                <a class="variable" href="#UniversalCompactOptions.max_size_amplification_percent">max_size_amplification_percent</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.compression_size_percent">compression_size_percent</a>
@@ -840,7 +864,10 @@
                                 <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.max_size_amplification_percent">max_size_amplification_percent</a>
+                                <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#UniversalCompactOptions.max_merge_width">max_merge_width</a>
                         </li>
                 </ul>
 
@@ -1052,6 +1079,48 @@
                 </ul>
 
             </li>
+            <li>
+                    <a class="class" href="#CompactOptions">CompactOptions</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#CompactOptions.__init__">CompactOptions</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#CompactOptions.set_exclusive_manual_compaction">set_exclusive_manual_compaction</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#CompactOptions.set_bottommost_level_compaction">set_bottommost_level_compaction</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#CompactOptions.set_change_level">set_change_level</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#CompactOptions.set_target_level">set_target_level</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
+                    <a class="class" href="#BottommostLevelCompaction">BottommostLevelCompaction</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#BottommostLevelCompaction.__init__">BottommostLevelCompaction</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#BottommostLevelCompaction.skip">skip</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#BottommostLevelCompaction.if_have_compaction_filter">if_have_compaction_filter</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#BottommostLevelCompaction.force">force</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#BottommostLevelCompaction.force_optimized">force_optimized</a>
+                        </li>
+                </ul>
+
+            </li>
     </ul>
 
 
@@ -1199,7 +1268,9 @@ supports <code>pickle</code>.</li>
            <span class="s2">&quot;DBCompressionType&quot;</span><span class="p">,</span>
            <span class="s2">&quot;DBRecoveryMode&quot;</span><span class="p">,</span>
            <span class="s2">&quot;Env&quot;</span><span class="p">,</span>
-           <span class="s2">&quot;FifoCompactOptions&quot;</span><span class="p">]</span>
+           <span class="s2">&quot;FifoCompactOptions&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;CompactOptions&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;BottommostLevelCompaction&quot;</span><span class="p">]</span>
 </pre></div>
 
         </details>
@@ -1764,6 +1835,108 @@ log files.</p>
 
 
                             </div>
+                            <div id="Rdict.path" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.path">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">path</span><span class="signature">(self, /)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Return current database path.</p>
+</div>
+
+
+                            </div>
+                            <div id="Rdict.compact_range" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.compact_range">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">compact_range</span><span class="signature">(self, /, begin, end, compact_opt)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Runs a manual compaction on the Range of keys given for the current Column Family.</p>
+</div>
+
+
+                            </div>
+                            <div id="Rdict.set_options" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.set_options">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">set_options</span><span class="signature">(self, /, options)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Set options for the current column family.</p>
+</div>
+
+
+                            </div>
+                            <div id="Rdict.property_value" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.property_value">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">property_value</span><span class="signature">(self, /, name)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Retrieves a RocksDB property by name, for the current column family.</p>
+</div>
+
+
+                            </div>
+                            <div id="Rdict.property_int_value" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.property_int_value">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">property_int_value</span><span class="signature">(self, /, name)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Retrieves a RocksDB property and casts it to an integer
+(for the current column family).</p>
+
+<p>Full list of properties that return int values could be find
+<a href="https://github.com/facebook/rocksdb/blob/08809f5e6cd9cc4bc3958dd4d59457ae78c76660/include/rocksdb/db.h#L654-L689">here</a>.</p>
+</div>
+
+
+                            </div>
+                            <div id="Rdict.latest_sequence_number" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.latest_sequence_number">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">latest_sequence_number</span><span class="signature">(self, /)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>The sequence number of the most recent transaction.</p>
+</div>
+
+
+                            </div>
+                            <div id="Rdict.live_files" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.live_files">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">live_files</span><span class="signature">(self, /)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Returns a list of all table files with their level, start key and end key</p>
+</div>
+
+
+                            </div>
                             <div id="Rdict.destroy" class="classattr">
                                         <div class="attr function"><a class="headerlink" href="#Rdict.destroy">#&nbsp;&nbsp</a>
 
@@ -1783,6 +1956,39 @@ log files.</p>
 </ul>
 </div>
 
+
+                            </div>
+                            <div id="Rdict.repair" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.repair">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">repair</span><span class="signature">(path, options)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Repair the database.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>path (str):</strong>  path to this database</li>
+<li><strong>options (<a href="#Options">rocksdict.Options</a>):</strong>  Rocksdb options object</li>
+</ul>
+</div>
+
+
+                            </div>
+                            <div id="Rdict.list_cf" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Rdict.list_cf">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">list_cf</span><span class="signature">(path, options)</span>:
+    </div>
+
+        
+    
 
                             </div>
                 </section>
@@ -2427,10 +2633,19 @@ option will be ignored.</p>
 
 
                             </div>
-                            <div id="WriteOptions.no_slowdown" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.no_slowdown">#&nbsp;&nbsp</a>
+                            <div id="WriteOptions.memtable_insert_hint_per_batch" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.memtable_insert_hint_per_batch">#&nbsp;&nbsp</a>
 
-        <span class="name">no_slowdown</span>
+        <span class="name">memtable_insert_hint_per_batch</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="WriteOptions.ignore_missing_column_families" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.ignore_missing_column_families">#&nbsp;&nbsp</a>
+
+        <span class="name">ignore_missing_column_families</span>
     </div>
 
     
@@ -2445,28 +2660,19 @@ option will be ignored.</p>
     
 
                             </div>
+                            <div id="WriteOptions.no_slowdown" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.no_slowdown">#&nbsp;&nbsp</a>
+
+        <span class="name">no_slowdown</span>
+    </div>
+
+    
+
+                            </div>
                             <div id="WriteOptions.low_pri" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#WriteOptions.low_pri">#&nbsp;&nbsp</a>
 
         <span class="name">low_pri</span>
-    </div>
-
-    
-
-                            </div>
-                            <div id="WriteOptions.memtable_insert_hint_per_batch" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.memtable_insert_hint_per_batch">#&nbsp;&nbsp</a>
-
-        <span class="name">memtable_insert_hint_per_batch</span>
-    </div>
-
-    
-
-                            </div>
-                            <div id="WriteOptions.ignore_missing_column_families" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.ignore_missing_column_families">#&nbsp;&nbsp</a>
-
-        <span class="name">ignore_missing_column_families</span>
     </div>
 
     
@@ -5892,15 +6098,6 @@ information.</p>
     
 
                             </div>
-                            <div id="PlainTableFactoryOptions.hash_table_ratio" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.hash_table_ratio">#&nbsp;&nbsp</a>
-
-        <span class="name">hash_table_ratio</span>
-    </div>
-
-    
-
-                            </div>
                             <div id="PlainTableFactoryOptions.bloom_bits_per_key" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.bloom_bits_per_key">#&nbsp;&nbsp</a>
 
@@ -5923,6 +6120,15 @@ information.</p>
                                             <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.user_key_length">#&nbsp;&nbsp</a>
 
         <span class="name">user_key_length</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="PlainTableFactoryOptions.hash_table_ratio" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.hash_table_ratio">#&nbsp;&nbsp</a>
+
+        <span class="name">hash_table_ratio</span>
     </div>
 
     
@@ -6200,19 +6406,10 @@ will be compressed iff
     
 
                             </div>
-                            <div id="UniversalCompactOptions.size_ratio" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.size_ratio">#&nbsp;&nbsp</a>
+                            <div id="UniversalCompactOptions.max_size_amplification_percent" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_size_amplification_percent">#&nbsp;&nbsp</a>
 
-        <span class="name">size_ratio</span>
-    </div>
-
-    
-
-                            </div>
-                            <div id="UniversalCompactOptions.max_merge_width" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_merge_width">#&nbsp;&nbsp</a>
-
-        <span class="name">max_merge_width</span>
+        <span class="name">max_size_amplification_percent</span>
     </div>
 
     
@@ -6236,10 +6433,19 @@ will be compressed iff
     
 
                             </div>
-                            <div id="UniversalCompactOptions.max_size_amplification_percent" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_size_amplification_percent">#&nbsp;&nbsp</a>
+                            <div id="UniversalCompactOptions.size_ratio" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.size_ratio">#&nbsp;&nbsp</a>
 
-        <span class="name">max_size_amplification_percent</span>
+        <span class="name">size_ratio</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="UniversalCompactOptions.max_merge_width" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_merge_width">#&nbsp;&nbsp</a>
+
+        <span class="name">max_merge_width</span>
     </div>
 
     
@@ -7081,6 +7287,174 @@ table file</p>
     </div>
 
     
+
+                            </div>
+                </section>
+                <section id="CompactOptions">
+                                <div class="attr class">
+        <a class="headerlink" href="#CompactOptions">#&nbsp;&nbsp</a>
+
+        
+        <span class="def">class</span>
+        <span class="name">CompactOptions</span>:
+    </div>
+
+        
+    
+
+                            <div id="CompactOptions.__init__" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#CompactOptions.__init__">#&nbsp;&nbsp</a>
+
+        
+            <span class="name">CompactOptions</span><span class="signature">()</span>
+    </div>
+
+        
+    
+
+                            </div>
+                            <div id="CompactOptions.set_exclusive_manual_compaction" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#CompactOptions.set_exclusive_manual_compaction">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">set_exclusive_manual_compaction</span><span class="signature">(self, /, v)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>If more than one thread calls manual compaction,
+only one will actually schedule it while the other threads will simply wait
+for the scheduled manual compaction to complete. If exclusive_manual_compaction
+is set to true, the call will disable scheduling of automatic compaction jobs
+and wait for existing automatic compaction jobs to finish.</p>
+</div>
+
+
+                            </div>
+                            <div id="CompactOptions.set_bottommost_level_compaction" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#CompactOptions.set_bottommost_level_compaction">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">set_bottommost_level_compaction</span><span class="signature">(self, /, lvl)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Sets bottommost level compaction.</p>
+</div>
+
+
+                            </div>
+                            <div id="CompactOptions.set_change_level" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#CompactOptions.set_change_level">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">set_change_level</span><span class="signature">(self, /, v)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>If true, compacted files will be moved to the minimum level capable
+of holding the data or given level (specified non-negative target_level).</p>
+</div>
+
+
+                            </div>
+                            <div id="CompactOptions.set_target_level" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#CompactOptions.set_target_level">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">set_target_level</span><span class="signature">(self, /, lvl)</span>:
+    </div>
+
+        
+            <div class="docstring"><p>If change_level is true and target_level have non-negative value, compacted
+files will be moved to target_level.</p>
+</div>
+
+
+                            </div>
+                </section>
+                <section id="BottommostLevelCompaction">
+                                <div class="attr class">
+        <a class="headerlink" href="#BottommostLevelCompaction">#&nbsp;&nbsp</a>
+
+        
+        <span class="def">class</span>
+        <span class="name">BottommostLevelCompaction</span>:
+    </div>
+
+        
+    
+
+                            <div id="BottommostLevelCompaction.__init__" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#BottommostLevelCompaction.__init__">#&nbsp;&nbsp</a>
+
+        
+            <span class="name">BottommostLevelCompaction</span><span class="signature">()</span>
+    </div>
+
+        
+    
+
+                            </div>
+                            <div id="BottommostLevelCompaction.skip" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#BottommostLevelCompaction.skip">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">skip</span><span class="signature">()</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Skip bottommost level compaction</p>
+</div>
+
+
+                            </div>
+                            <div id="BottommostLevelCompaction.if_have_compaction_filter" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#BottommostLevelCompaction.if_have_compaction_filter">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">if_have_compaction_filter</span><span class="signature">()</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Only compact bottommost level if there is a compaction filter
+This is the default option</p>
+</div>
+
+
+                            </div>
+                            <div id="BottommostLevelCompaction.force" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#BottommostLevelCompaction.force">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">force</span><span class="signature">()</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Always compact bottommost level</p>
+</div>
+
+
+                            </div>
+                            <div id="BottommostLevelCompaction.force_optimized" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#BottommostLevelCompaction.force_optimized">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">force_optimized</span><span class="signature">()</span>:
+    </div>
+
+        
+            <div class="docstring"><p>Always compact bottommost level but in bottommost level avoid
+double-compacting files created in the same compaction</p>
+</div>
+
 
                             </div>
                 </section>
