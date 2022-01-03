@@ -1,8 +1,8 @@
 [package]
 name = "RocksDict"
-version = "0.2.11"
+version = "0.2.12"
 edition = "2021"
-description = "On-disk Dict With RocksDB (dbm alternative)"
+description = "Rocksdb Python Binding"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

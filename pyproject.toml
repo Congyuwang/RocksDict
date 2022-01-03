@@ -1,7 +1,7 @@
 [project]
 name = "rocksdict"
-version = "0.2.11"
-description = "On-disk Dict With RocksDB (dbm alternative)"
+version = "0.2.12"
+description = "Rocksdb Python Binding"
 long_description_content_type="text/markdown"
 readme = "README.md"
 keywords = ["rocksdb", "dbm", "dict", "key-value"]
