@@ -310,6 +310,14 @@ pub(crate) struct FifoCompactOptionsPy {
 #[pyo3(text_signature = "()")]
 pub(crate) struct IngestExternalFileOptionsPy(pub(crate) IngestExternalFileOptions);
 
+#[pyclass(name = "BottommostLevelCompaction")]
+#[derive(Clone)]
+pub(crate) struct BottommostLevelCompactionPy(BottommostLevelCompaction);
+
+#[pyclass(name = "CompactOptions")]
+#[pyo3(text_signature = "()")]
+pub(crate) struct CompactOptionsPy(pub(crate) CompactOptions);
+
 #[pymethods]
 impl OptionsPy {
     #[new]
@@ -2862,6 +2870,77 @@ impl IngestExternalFileOptionsPy {
     #[pyo3(text_signature = "($self, v)")]
     pub fn set_ingest_behind(&mut self, v: bool) {
         self.0.set_ingest_behind(v)
+    }
+}
+
+#[pymethods]
+impl BottommostLevelCompactionPy {
+    /// Skip bottommost level compaction
+    #[staticmethod]
+    #[pyo3(text_signature = "()")]
+    pub fn skip() -> Self {
+        BottommostLevelCompactionPy(BottommostLevelCompaction::Skip)
+    }
+
+    /// Only compact bottommost level if there is a compaction filter
+    /// This is the default option
+    #[staticmethod]
+    #[pyo3(text_signature = "()")]
+    pub fn if_have_compaction_filter() -> Self {
+        BottommostLevelCompactionPy(BottommostLevelCompaction::IfHaveCompactionFilter)
+    }
+
+    /// Always compact bottommost level
+    #[staticmethod]
+    #[pyo3(text_signature = "()")]
+    pub fn force() -> Self {
+        BottommostLevelCompactionPy(BottommostLevelCompaction::Force)
+    }
+
+    /// Always compact bottommost level but in bottommost level avoid
+    /// double-compacting files created in the same compaction
+    #[staticmethod]
+    #[pyo3(text_signature = "()")]
+    pub fn force_optimized() -> Self {
+        BottommostLevelCompactionPy(BottommostLevelCompaction::ForceOptimized)
+    }
+}
+
+#[pymethods]
+impl CompactOptionsPy {
+    #[new]
+    pub fn default() -> Self {
+        CompactOptionsPy(CompactOptions::default())
+    }
+
+    /// If more than one thread calls manual compaction,
+    /// only one will actually schedule it while the other threads will simply wait
+    /// for the scheduled manual compaction to complete. If exclusive_manual_compaction
+    /// is set to true, the call will disable scheduling of automatic compaction jobs
+    /// and wait for existing automatic compaction jobs to finish.
+    #[pyo3(text_signature = "($self, v)")]
+    pub fn set_exclusive_manual_compaction(&mut self, v: bool) {
+        self.0.set_exclusive_manual_compaction(v)
+    }
+
+    /// Sets bottommost level compaction.
+    #[pyo3(text_signature = "($self, lvl)")]
+    pub fn set_bottommost_level_compaction(&mut self, lvl: BottommostLevelCompactionPy) {
+        self.0.set_bottommost_level_compaction(lvl.0)
+    }
+
+    /// If true, compacted files will be moved to the minimum level capable
+    /// of holding the data or given level (specified non-negative target_level).
+    #[pyo3(text_signature = "($self, v)")]
+    pub fn set_change_level(&mut self, v: bool) {
+        self.0.set_change_level(v)
+    }
+
+    /// If change_level is true and target_level have non-negative value, compacted
+    /// files will be moved to target_level.
+    #[pyo3(text_signature = "($self, lvl)")]
+    pub fn set_target_level(&mut self, lvl: c_int) {
+        self.0.set_target_level(lvl)
     }
 }
 
