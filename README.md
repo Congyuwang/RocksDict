@@ -36,7 +36,7 @@ It can be installed from pypi with `pip install rocksdict`.
 - [x] write batch
 - [x] delete range
 - [x] open as secondary, with-ttl, read-only
-- [ ] Snapshot
+- [x] Snapshot
 - [ ] support merge
 
 ## Supported key-value types:
@@ -114,8 +114,16 @@ Rdict.destroy(path)
 
 ## Examples
 
-For examples on column families, batch write, RocksDB options, SstFileWriter, delete_range, & etc,
-go to [example](https://github.com/Congyuwang/RocksDict/tree/main/examples) folder.
+Go to [example](https://github.com/Congyuwang/RocksDict/tree/main/examples) folder.
+
+There are examples about:
+
+- column families
+- batch write
+- RocksDB options
+- SstFileWriter
+- delete_range
+- snapshot
 
 ## Rocksdb Options
 

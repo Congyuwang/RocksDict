@@ -1,8 +1,8 @@
 use crate::encoder::{decode_value, encode_key, encode_value};
 use crate::iter::{RdictItems, RdictKeys, RdictValues};
 use crate::{
-    FlushOptionsPy, IngestExternalFileOptionsPy, OptionsPy, RdictIter, ReadOptionsPy, WriteBatchPy,
-    WriteOptionsPy,
+    FlushOptionsPy, IngestExternalFileOptionsPy, OptionsPy, RdictIter, ReadOptionsPy,
+    Snapshot, WriteBatchPy, WriteOptionsPy,
 };
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
@@ -37,26 +37,26 @@ use std::time::Duration;
 #[pyclass(name = "Rdict")]
 #[pyo3(text_signature = "(path, options, column_families, access_type)")]
 pub(crate) struct Rdict {
-    write_opt: WriteOptions,
-    flush_opt: FlushOptionsPy,
-    read_opt: ReadOptions,
-    pickle_loads: PyObject,
-    pickle_dumps: PyObject,
-    write_opt_py: WriteOptionsPy,
-    read_opt_py: ReadOptionsPy,
-    column_family: Option<Rc<ColumnFamily>>,
+    pub(crate) write_opt: WriteOptions,
+    pub(crate) flush_opt: FlushOptionsPy,
+    pub(crate) read_opt: ReadOptions,
+    pub(crate) pickle_loads: PyObject,
+    pub(crate) pickle_dumps: PyObject,
+    pub(crate) write_opt_py: WriteOptionsPy,
+    pub(crate) read_opt_py: ReadOptionsPy,
+    pub(crate) column_family: Option<Rc<ColumnFamily>>,
     // drop DB last
-    db: Option<Rc<RefCell<DB>>>,
+    pub(crate) db: Option<Rc<RefCell<DB>>>,
 }
 
 /// Define DB Access Types.
 ///
 /// Notes:
 ///     There are four access types:
-///         - ReadWrite: default value
-///         - ReadOnly
-///         - WithTTL
-///         - Secondary
+///      - ReadWrite: default value
+///      - ReadOnly
+///      - WithTTL
+///      - Secondary
 ///
 /// Examples:
 ///     ::
@@ -395,7 +395,7 @@ impl Rdict {
         )?)
     }
 
-    /// Iterate through all keys.
+    /// Iterate through all keys
     ///
     /// Examples:
     ///     ::
@@ -461,7 +461,7 @@ impl Rdict {
         )?)
     }
 
-    /// Manually flush all memory to disk.
+    /// Manually flush the current column family.
     ///
     /// Notes:
     ///     Manually call mem-table flush.
@@ -598,7 +598,42 @@ impl Rdict {
         }
     }
 
-    /// Loads a list of external SST files created with SstFileWriter into the DB
+    /// A snapshot of the current column family.
+    ///
+    /// Examples:
+    ///     ::
+    ///
+    ///         from rocksdict import Rdict
+    ///
+    ///         db = Rdict("tmp")
+    ///         for i in range(100):
+    ///             db[i] = i
+    ///
+    ///         # take a snapshot
+    ///         snapshot = db.snapshot()
+    ///
+    ///         for i in range(90):
+    ///             del db[i]
+    ///
+    ///         # 0-89 are no longer in db
+    ///         for k, v in db.items():
+    ///             print(f"{k} -> {v}")
+    ///
+    ///         # but they are still in the snapshot
+    ///         for i in range(100):
+    ///             assert snapshot[i] == i
+    ///
+    ///         # drop the snapshot
+    ///         del snapshot, db
+    ///
+    ///         Rdict.destroy("tmp")
+    #[pyo3(text_signature = "($self)")]
+    fn snapshot(&self) -> PyResult<Snapshot> {
+        Snapshot::new(self)
+    }
+
+    /// Loads a list of external SST files created with SstFileWriter
+    /// into the current column family.
     ///
     /// Args:
     ///     paths: a list a paths
@@ -652,35 +687,26 @@ impl Rdict {
         }
     }
 
-    /// write batch with WriteOptions of this Rdict instance.
+    /// WriteBatch
     ///
     /// Notes:
     ///     This WriteBatch does not write to the current column family.
     ///
     /// Args:
     ///     write_batch: WriteBatch instance. This instance will be consumed.
-    #[pyo3(text_signature = "($self, write_batch)")]
-    pub fn write(&self, write_batch: &mut WriteBatchPy) -> PyResult<()> {
+    ///     write_opt: has default value.
+    #[pyo3(text_signature = "($self, write_batch, write_opt)")]
+    #[args(opts = "Py::new(_py, WriteOptionsPy::new())?")]
+    pub fn write(
+        &self,
+        write_batch: &mut WriteBatchPy,
+        write_opt: Py<WriteOptionsPy>,
+        py: Python,
+    ) -> PyResult<()> {
         if let Some(db) = &self.db {
             let db = db.borrow();
-            match db.write_opt(write_batch.consume()?, &self.write_opt) {
-                Ok(_) => Ok(()),
-                Err(e) => Err(PyException::new_err(e.to_string())),
-            }
-        } else {
-            Err(PyException::new_err("DB already closed"))
-        }
-    }
-
-    /// write batch with explicit WriteOptions.
-    ///
-    /// Notes:
-    ///     This WriteBatch does not write to the current column family.
-    #[pyo3(text_signature = "($self, write_batch, opt)")]
-    pub fn write_opt(&self, write_batch: &mut WriteBatchPy, opt: &WriteOptionsPy) -> PyResult<()> {
-        if let Some(db) = &self.db {
-            let db = db.borrow();
-            match db.write_opt(write_batch.consume()?, &opt.into()) {
+            let opt = write_opt.borrow(py);
+            match db.write_opt(write_batch.consume()?, &opt.deref().into()) {
                 Ok(_) => Ok(()),
                 Err(e) => Err(PyException::new_err(e.to_string())),
             }
@@ -725,7 +751,7 @@ impl Rdict {
         }
     }
 
-    /// Flush memory to disk, and drop the database.
+    /// Flush memory to disk, and drop the current column family.
     ///
     /// Notes:
     ///     Calling `db.close()` is nearly equivalent to first calling
@@ -849,10 +875,10 @@ impl AccessType {
     ///
     /// Notes:
     ///     There are four access types:
-    ///         - ReadWrite: default value
-    ///         - ReadOnly
-    ///         - WithTTL
-    ///         - Secondary
+    ///      - ReadWrite: default value
+    ///      - ReadOnly
+    ///      - WithTTL
+    ///      - Secondary
     ///
     /// Examples:
     ///     ::
@@ -879,10 +905,10 @@ impl AccessType {
     ///
     /// Notes:
     ///     There are four access types:
-    ///         - ReadWrite: default value
-    ///         - ReadOnly
-    ///         - WithTTL
-    ///         - Secondary
+    ///       - ReadWrite: default value
+    ///       - ReadOnly
+    ///       - WithTTL
+    ///       - Secondary
     ///
     /// Examples:
     ///     ::
@@ -912,10 +938,10 @@ impl AccessType {
     ///
     /// Notes:
     ///     There are four access types:
-    ///         - ReadWrite: default value
-    ///         - ReadOnly
-    ///         - WithTTL
-    ///         - Secondary
+    ///      - ReadWrite: default value
+    ///      - ReadOnly
+    ///      - WithTTL
+    ///      - Secondary
     ///
     /// Examples:
     ///     ::
@@ -942,10 +968,10 @@ impl AccessType {
     ///
     /// Notes:
     ///     There are four access types:
-    ///         - ReadWrite: default value
-    ///         - ReadOnly
-    ///         - WithTTL
-    ///         - Secondary
+    ///      - ReadWrite: default value
+    ///      - ReadOnly
+    ///      - WithTTL
+    ///      - Secondary
     ///
     /// Examples:
     ///     ::
