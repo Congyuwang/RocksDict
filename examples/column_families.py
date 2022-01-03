@@ -42,6 +42,9 @@ db_cf1.close()
 db_cf2.close()
 db.close()
 
+assert cf1_name in Rdict.list_cf(path)
+assert cf2_name in Rdict.list_cf(path)
+
 # reopen db
 db = Rdict(path, column_families={cf1_name: Options(),
                                   cf2_name: cf2_opt})
@@ -54,6 +57,8 @@ for k, v in db_cf1.items():
     assert k == count
     assert v == count ** 2
     count += 1
+
+assert count == 10000
 
 rand_bytes.sort()
 assert list(db_cf2.keys()) == rand_bytes

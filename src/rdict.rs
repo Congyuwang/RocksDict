@@ -1,15 +1,15 @@
 use crate::encoder::{decode_value, encode_key, encode_value};
 use crate::iter::{RdictItems, RdictKeys, RdictValues};
 use crate::{
-    FlushOptionsPy, IngestExternalFileOptionsPy, OptionsPy, RdictIter, ReadOptionsPy,
-    Snapshot, WriteBatchPy, WriteOptionsPy,
+    FlushOptionsPy, IngestExternalFileOptionsPy, OptionsPy, RdictIter, ReadOptionsPy, Snapshot,
+    WriteBatchPy, WriteOptionsPy,
 };
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use pyo3::types::PyList;
+use pyo3::types::{PyDict, PyList};
 use rocksdb::{
-    ColumnFamily, ColumnFamilyDescriptor, Direction, FlushOptions, IteratorMode, ReadOptions,
-    WriteOptions, DB,
+    ColumnFamily, ColumnFamilyDescriptor, Direction, FlushOptions, IteratorMode, LiveFile,
+    ReadOptions, WriteOptions, DB,
 };
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -785,6 +785,123 @@ impl Rdict {
         }
     }
 
+    /// Return current database path.
+    #[pyo3(text_signature = "($self)")]
+    fn path(&self) -> PyResult<String> {
+        if let Some(db) = &self.db {
+            let db = db.borrow();
+            Ok(db.path().as_os_str().to_string_lossy().to_string())
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
+
+    // /// Runs a manual compaction on the Range of keys given for the current Column Family.
+    // #[pyo3(text_signature = "($self, start, end)")]
+    // fn compact_range(&self, start: &PyAny, end: &PyAny, opts: &CompactOptions){
+    //     if let Some(db) = &self.db {
+    //         let db = db.borrow();
+    //         db.compact_range_cf_opt()
+    //         db.compact_range(start, end)
+    //     } else {
+    //         Err(PyException::new_err("DB already closed"))
+    //     }
+    // }
+
+    /// Set options for the current column family.
+    #[pyo3(text_signature = "($self, options)")]
+    fn set_options(&self, options: HashMap<String, String>) -> PyResult<()> {
+        if let Some(db) = &self.db {
+            let db = db.borrow();
+            let options: Vec<(&str, &str)> = options
+                .iter()
+                .map(|(opt, v)| (opt.as_str(), v.as_str()))
+                .collect();
+            let set_opt_result = match &self.column_family {
+                None => db.set_options(&options),
+                Some(cf) => db.set_options_cf(cf.deref(), &options),
+            };
+            match set_opt_result {
+                Ok(_) => Ok(()),
+                Err(e) => Err(PyException::new_err(e.to_string())),
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
+
+    /// Retrieves a RocksDB property by name, for the current column family.
+    #[pyo3(text_signature = "($self, name)")]
+    fn property_value(&self, name: &str) -> PyResult<Option<String>> {
+        if let Some(db) = &self.db {
+            let db = db.borrow();
+            let result = match &self.column_family {
+                None => db.property_value(name),
+                Some(cf) => db.property_value_cf(cf.deref(), name),
+            };
+            match result {
+                Ok(v) => Ok(v),
+                Err(e) => Err(PyException::new_err(e.to_string())),
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
+
+    /// Retrieves a RocksDB property and casts it to an integer
+    /// (for the current column family).
+    ///
+    /// Full list of properties that return int values could be find
+    /// [here](https://github.com/facebook/rocksdb/blob/08809f5e6cd9cc4bc3958dd4d59457ae78c76660/include/rocksdb/db.h#L654-L689).
+    #[pyo3(text_signature = "($self, name)")]
+    fn property_int_value(&self, name: &str) -> PyResult<Option<u64>> {
+        if let Some(db) = &self.db {
+            let db = db.borrow();
+            let result = match &self.column_family {
+                None => db.property_int_value(name),
+                Some(cf) => db.property_int_value_cf(cf.deref(), name),
+            };
+            match result {
+                Ok(v) => Ok(v),
+                Err(e) => Err(PyException::new_err(e.to_string())),
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
+
+    /// The sequence number of the most recent transaction.
+    #[pyo3(text_signature = "($self)")]
+    fn latest_sequence_number(&self) -> PyResult<u64> {
+        if let Some(db) = &self.db {
+            let db = db.borrow();
+            Ok(db.latest_sequence_number())
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
+
+    /// Returns a list of all table files with their level, start key and end key
+    #[pyo3(text_signature = "($self)")]
+    fn live_files(&self, py: Python) -> PyResult<PyObject> {
+        if let Some(db) = &self.db {
+            let db = db.borrow();
+            let lfs = db.live_files();
+            match lfs {
+                Ok(lfs) => {
+                    let result = PyList::empty(py);
+                    for lf in lfs {
+                        result.append(display_live_file_dict(lf, py, &self.pickle_loads)?)?
+                    }
+                    Ok(result.to_object(py))
+                }
+                Err(e) => Err(PyException::new_err(e.to_string())),
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
+
     /// Delete the database.
     ///
     /// Args:
@@ -799,6 +916,51 @@ impl Rdict {
             Err(e) => Err(PyException::new_err(e.to_string())),
         }
     }
+
+    /// Repair the database.
+    ///
+    /// Args:
+    ///     path (str): path to this database
+    ///     options (rocksdict.Options): Rocksdb options object
+    #[staticmethod]
+    #[pyo3(text_signature = "(path, options)")]
+    #[args(options = "Py::new(_py, OptionsPy::new())?")]
+    fn repair(path: &str, options: Py<OptionsPy>, py: Python) -> PyResult<()> {
+        match DB::repair(&options.borrow(py).0, path) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(PyException::new_err(e.to_string())),
+        }
+    }
+
+    #[staticmethod]
+    #[pyo3(text_signature = "(path, options)")]
+    #[args(options = "Py::new(_py, OptionsPy::new())?")]
+    fn list_cf(path: &str, options: Py<OptionsPy>, py: Python) -> PyResult<Vec<String>> {
+        match DB::list_cf(&options.borrow(py).0, path) {
+            Ok(vec) => Ok(vec),
+            Err(e) => Err(PyException::new_err(e.to_string())),
+        }
+    }
+}
+
+fn display_live_file_dict(lf: LiveFile, py: Python, pickle_loads: &PyObject) -> PyResult<PyObject> {
+    let result = PyDict::new(py);
+    let start_key = match lf.start_key {
+        None => py.None(),
+        Some(k) => decode_value(py, &k, pickle_loads)?,
+    };
+    let end_key = match lf.end_key {
+        None => py.None(),
+        Some(k) => decode_value(py, &k, pickle_loads)?,
+    };
+    result.set_item("name", lf.name)?;
+    result.set_item("size", lf.size)?;
+    result.set_item("level", lf.level)?;
+    result.set_item("start_key", start_key)?;
+    result.set_item("end_key", end_key)?;
+    result.set_item("num_entries", lf.num_entries)?;
+    result.set_item("num_deletions", lf.num_deletions)?;
+    Ok(result.to_object(py))
 }
 
 #[inline(always)]
