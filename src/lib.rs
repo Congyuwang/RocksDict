@@ -2,6 +2,7 @@ mod encoder;
 mod iter;
 mod options;
 mod rdict;
+mod snapshot;
 mod sst_file_writer;
 mod util;
 mod write_batch;
@@ -9,6 +10,7 @@ mod write_batch;
 use crate::iter::*;
 use crate::options::*;
 use crate::rdict::*;
+use crate::snapshot::Snapshot;
 use crate::sst_file_writer::*;
 use crate::write_batch::*;
 use pyo3::prelude::*;
@@ -135,5 +137,6 @@ fn rocksdict(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<WriteBatchPy>()?;
     m.add_class::<ColumnFamilyPy>()?;
     m.add_class::<AccessType>()?;
+    m.add_class::<Snapshot>()?;
     Ok(())
 }
