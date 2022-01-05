@@ -10,17 +10,20 @@ pub(crate) struct WriteBatchPy {
     inner: Option<WriteBatch>,
     default_column_family: Option<ColumnFamilyPy>,
     pickle_dumps: PyObject,
+    pub(crate) raw_mode: bool,
 }
 
 #[pymethods]
 impl WriteBatchPy {
     #[new]
-    pub fn default(py: Python) -> PyResult<Self> {
+    #[args(raw_mode = "false")]
+    pub fn default(py: Python, raw_mode: bool) -> PyResult<Self> {
         let pickle = PyModule::import(py, "pickle")?.to_object(py);
         Ok(WriteBatchPy {
             inner: Some(WriteBatch::default()),
             default_column_family: None,
             pickle_dumps: pickle.getattr(py, "dumps")?,
+            raw_mode,
         })
     }
 
@@ -30,8 +33,8 @@ impl WriteBatchPy {
 
     pub fn __setitem__(&mut self, key: &PyAny, value: &PyAny, py: Python) -> PyResult<()> {
         if let Some(inner) = &mut self.inner {
-            let key = encode_key(key)?;
-            let value = encode_value(value, &self.pickle_dumps, py)?;
+            let key = encode_key(key, self.raw_mode)?;
+            let value = encode_value(value, &self.pickle_dumps, self.raw_mode, py)?;
             match &self.default_column_family {
                 None => inner.put(key, value),
                 Some(cf) => inner.put_cf(cf.cf.deref(), key, value),
@@ -46,7 +49,7 @@ impl WriteBatchPy {
 
     pub fn __delitem__(&mut self, key: &PyAny) -> PyResult<()> {
         if let Some(inner) = &mut self.inner {
-            let key = encode_key(key)?;
+            let key = encode_key(key, self.raw_mode)?;
             match &self.default_column_family {
                 None => inner.delete(key),
                 Some(cf) => inner.delete_cf(cf.cf.deref(), key),
@@ -129,8 +132,8 @@ impl WriteBatchPy {
         py: Python,
     ) -> PyResult<()> {
         if let Some(inner) = &mut self.inner {
-            let key = encode_key(key)?;
-            let value = encode_value(value, &self.pickle_dumps, py)?;
+            let key = encode_key(key, self.raw_mode)?;
+            let value = encode_value(value, &self.pickle_dumps, self.raw_mode, py)?;
             match column_family {
                 Some(cf) => inner.put_cf(cf.cf.deref(), key, value),
                 None => inner.put(key, value),
@@ -151,7 +154,7 @@ impl WriteBatchPy {
     #[args(column_family = "None")]
     pub fn delete(&mut self, key: &PyAny, column_family: Option<ColumnFamilyPy>) -> PyResult<()> {
         if let Some(inner) = &mut self.inner {
-            let key = encode_key(key)?;
+            let key = encode_key(key, self.raw_mode)?;
             match column_family {
                 Some(cf) => inner.delete_cf(cf.cf.deref(), key),
                 None => inner.delete(key),
@@ -184,8 +187,8 @@ impl WriteBatchPy {
         column_family: Option<ColumnFamilyPy>,
     ) -> PyResult<()> {
         if let Some(inner) = &mut self.inner {
-            let from = encode_key(begin)?;
-            let to = encode_key(end)?;
+            let from = encode_key(begin, self.raw_mode)?;
+            let to = encode_key(end, self.raw_mode)?;
             match column_family {
                 Some(cf) => inner.delete_range_cf(cf.cf.deref(), from, to),
                 None => inner.delete_range(from, to),

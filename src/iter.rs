@@ -1,6 +1,6 @@
 use crate::encoder::{decode_value, encode_key};
 use crate::util::error_message;
-use crate::ReadOpt;
+use crate::{ReadOpt, ReadOptionsPy};
 use core::slice;
 use libc::{c_char, c_uchar, size_t};
 use librocksdb_sys;
@@ -10,6 +10,7 @@ use pyo3::PyIterProtocol;
 use rocksdb::db::DBAccess;
 use rocksdb::{ColumnFamily, DB};
 use std::cell::RefCell;
+use std::ops::Deref;
 use std::ptr::null_mut;
 use std::rc::Rc;
 
@@ -28,6 +29,8 @@ pub(crate) struct RdictIter {
 
     /// use pickle loads to convert bytes to pyobjects
     pub(crate) pickle_loads: PyObject,
+
+    pub(crate) raw_mode: bool,
 }
 
 #[pyclass]
@@ -52,25 +55,34 @@ impl RdictIter {
     pub(crate) fn new(
         db: &Rc<RefCell<DB>>,
         cf: &Option<Rc<ColumnFamily>>,
-        readopts: ReadOpt,
+        readopts: Py<ReadOptionsPy>,
         pickle_loads: &PyObject,
-    ) -> Self {
-        RdictIter {
-            db: db.clone(),
-            inner: unsafe {
-                match cf {
-                    None => {
-                        librocksdb_sys::rocksdb_create_iterator(db.borrow().inner(), readopts.0)
+        raw_mode: bool,
+        py: Python,
+    ) -> PyResult<Self> {
+        if readopts.borrow(py).raw_mode != raw_mode {
+            Err(PyException::new_err(format!("ReadOptions should have raw_mode={}", raw_mode)))
+        } else {
+            let readopts_borrow = readopts.borrow(py);
+            let readopts: ReadOpt = readopts_borrow.deref().into();
+            Ok(RdictIter {
+                db: db.clone(),
+                inner: unsafe {
+                    match cf {
+                        None => {
+                            librocksdb_sys::rocksdb_create_iterator(db.borrow().inner(), readopts.0)
+                        }
+                        Some(cf) => librocksdb_sys::rocksdb_create_iterator_cf(
+                            db.borrow().inner(),
+                            readopts.0,
+                            cf.inner(),
+                        ),
                     }
-                    Some(cf) => librocksdb_sys::rocksdb_create_iterator_cf(
-                        db.borrow().inner(),
-                        readopts.0,
-                        cf.inner(),
-                    ),
-                }
-            },
-            readopts,
-            pickle_loads: pickle_loads.clone(),
+                },
+                readopts,
+                pickle_loads: pickle_loads.clone(),
+                raw_mode,
+            })
         }
     }
 }
@@ -190,7 +202,7 @@ impl RdictIter {
     ///         Rdict.destroy(path, Options())
     #[pyo3(text_signature = "($self, key)")]
     pub fn seek(&mut self, key: &PyAny) -> PyResult<()> {
-        let key = encode_key(key)?;
+        let key = encode_key(key, self.raw_mode)?;
 
         Ok(unsafe {
             librocksdb_sys::rocksdb_iter_seek(
@@ -224,7 +236,7 @@ impl RdictIter {
     ///         Rdict.destroy(path, Options())
     #[pyo3(text_signature = "($self, key)")]
     pub fn seek_for_prev(&mut self, key: &PyAny) -> PyResult<()> {
-        let key = encode_key(key)?;
+        let key = encode_key(key, self.raw_mode)?;
 
         Ok(unsafe {
             librocksdb_sys::rocksdb_iter_seek_for_prev(
@@ -263,7 +275,7 @@ impl RdictIter {
                 let key_ptr =
                     librocksdb_sys::rocksdb_iter_key(self.inner, key_len_ptr) as *const c_uchar;
                 let key = slice::from_raw_parts(key_ptr, key_len as usize);
-                Ok(decode_value(py, key, &self.pickle_loads)?)
+                Ok(decode_value(py, key, &self.pickle_loads, self.raw_mode)?)
             }
         } else {
             Ok(py.None())
@@ -282,7 +294,7 @@ impl RdictIter {
                 let val_ptr =
                     librocksdb_sys::rocksdb_iter_value(self.inner, val_len_ptr) as *const c_uchar;
                 let value = slice::from_raw_parts(val_ptr, val_len as usize);
-                Ok(decode_value(py, value, &self.pickle_loads)?)
+                Ok(decode_value(py, value, &self.pickle_loads, self.raw_mode)?)
             }
         } else {
             Ok(py.None())

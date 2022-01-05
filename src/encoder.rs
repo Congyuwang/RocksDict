@@ -25,7 +25,11 @@ pub(crate) fn encoding_byte(v_type: &ValueTypes) -> u8 {
 }
 
 #[inline(always)]
-pub(crate) fn encode_key(key: &PyAny) -> PyResult<Box<[u8]>> {
+pub(crate) fn encode_key(key: &PyAny, raw_mode: bool) -> PyResult<Box<[u8]>> {
+    if raw_mode {
+        let bytes: Vec<u8> = key.extract()?;
+        return Ok(bytes.into_boxed_slice());
+    }
     let bytes = py_to_value_types(key)?;
     let type_encoding = encoding_byte(&bytes);
     match bytes {
@@ -58,8 +62,13 @@ pub(crate) fn encode_key(key: &PyAny) -> PyResult<Box<[u8]>> {
 pub(crate) fn encode_value(
     value: &PyAny,
     pickle_dumps: &PyObject,
+    raw_mode: bool,
     py: Python,
 ) -> PyResult<Box<[u8]>> {
+    if raw_mode {
+        let bytes: Vec<u8> = value.extract()?;
+        return Ok(bytes.into_boxed_slice());
+    }
     let bytes = py_to_value_types(value)?;
     let type_encoding = encoding_byte(&bytes);
     match bytes {
@@ -109,7 +118,11 @@ pub(crate) fn decode_value(
     py: Python,
     bytes: &[u8],
     pickle_loads: &PyObject,
+    raw_mode: bool,
 ) -> PyResult<PyObject> {
+    if raw_mode {
+        return Ok(PyBytes::new(py, bytes).to_object(py));
+    }
     match bytes.first() {
         None => Err(PyException::new_err("Unknown value type")),
         Some(byte) => match byte {

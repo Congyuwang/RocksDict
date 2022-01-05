@@ -46,6 +46,7 @@ pub struct Snapshot {
     pub(crate) read_opt: ReadOptions,
     // decrease db Rc last
     pub(crate) db: Rc<RefCell<DB>>,
+    pub(crate) raw_mode: bool,
 }
 
 #[pymethods]
@@ -53,19 +54,25 @@ impl Snapshot {
     /// Creates an iterator over the data in this snapshot under the given column family, using
     /// the default read options.
     #[pyo3(text_signature = "($self, read_opt)")]
-    #[args(read_opt = "Py::new(_py, ReadOptionsPy::default(_py)?)?")]
-    fn iter(&self, read_opt: Py<ReadOptionsPy>, py: Python) -> PyResult<RdictIter> {
-        let opt_py = read_opt.borrow(py);
-        let opt: ReadOpt = opt_py.deref().into();
+    #[args(read_opt = "_py.None().into_ref(_py)")]
+    fn iter(&self, read_opt: &PyAny, py: Python) -> PyResult<RdictIter> {
+        let read_opt: Py<ReadOptionsPy> = if read_opt.is_none() {
+            Py::new(py, ReadOptionsPy::default(self.raw_mode, py)?)?
+        } else {
+            read_opt.extract()?
+        };
+        let opt: ReadOpt = read_opt.borrow(py).deref().into();
         unsafe {
             set_snapshot(opt.0, self.inner);
         }
         Ok(RdictIter::new(
             &self.db,
             &self.column_family,
-            opt,
+            read_opt,
             &self.pickle_loads,
-        ))
+            self.raw_mode,
+            py
+        )?)
     }
 
     /// Iterate through all keys and values pairs.
@@ -73,13 +80,13 @@ impl Snapshot {
     #[args(
         backwards = "false",
         from_key = "_py.None().into_ref(_py)",
-        read_opt = "Py::new(_py, ReadOptionsPy::default(_py)?)?"
+        read_opt = "_py.None().into_ref(_py)"
     )]
     fn items(
         &self,
         backwards: bool,
         from_key: &PyAny,
-        read_opt: Py<ReadOptionsPy>,
+        read_opt: &PyAny,
         py: Python,
     ) -> PyResult<RdictItems> {
         Ok(RdictItems::new(
@@ -94,13 +101,13 @@ impl Snapshot {
     #[args(
         backwards = "false",
         from_key = "_py.None().into_ref(_py)",
-        read_opt = "Py::new(_py, ReadOptionsPy::default(_py)?)?"
+        read_opt = "_py.None().into_ref(_py)"
     )]
     fn keys(
         &self,
         backwards: bool,
         from_key: &PyAny,
-        read_opt: Py<ReadOptionsPy>,
+        read_opt: &PyAny,
         py: Python,
     ) -> PyResult<RdictKeys> {
         Ok(RdictKeys::new(
@@ -115,13 +122,13 @@ impl Snapshot {
     #[args(
         backwards = "false",
         from_key = "_py.None().into_ref(_py)",
-        read_opt = "Py::new(_py, ReadOptionsPy::default(_py)?)?"
+        read_opt = "_py.None().into_ref(_py)"
     )]
     fn values(
         &self,
         backwards: bool,
         from_key: &PyAny,
-        read_opt: Py<ReadOptionsPy>,
+        read_opt: &PyAny,
         py: Python,
     ) -> PyResult<RdictValues> {
         Ok(RdictValues::new(
@@ -133,7 +140,7 @@ impl Snapshot {
 
     /// read from snapshot
     fn __getitem__(&self, key: &PyAny, py: Python) -> PyResult<PyObject> {
-        let key = encode_key(key)?;
+        let key = encode_key(key, self.raw_mode)?;
         let db = self.db.borrow();
         let value_result = if let Some(cf) = &self.column_family {
             db.get_pinned_cf_opt(cf.deref(), &key[..], &self.read_opt)
@@ -143,7 +150,7 @@ impl Snapshot {
         match value_result {
             Ok(value) => match value {
                 None => Err(PyException::new_err("key not found")),
-                Some(slice) => decode_value(py, slice.as_ref(), &self.pickle_loads),
+                Some(slice) => decode_value(py, slice.as_ref(), &self.pickle_loads, self.raw_mode),
             },
             Err(e) => Err(PyException::new_err(e.to_string())),
         }
@@ -165,6 +172,7 @@ impl Snapshot {
                 pickle_loads: rdict.pickle_loads.clone(),
                 read_opt: r_opt,
                 db: db.clone(),
+                raw_mode: rdict.opt_py.raw_mode,
             })
         } else {
             Err(PyException::new_err("DB already closed"))

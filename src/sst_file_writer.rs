@@ -38,6 +38,7 @@ pub struct SstFileWriterPy {
     pub(crate) inner: *mut librocksdb_sys::rocksdb_sstfilewriter_t,
     opts: Options,
     pickle_dumps: PyObject,
+    raw_mode: bool,
 }
 
 unsafe impl Send for SstFileWriterPy {}
@@ -66,10 +67,11 @@ impl Default for EnvOptions {
 impl SstFileWriterPy {
     /// Initializes SstFileWriter with given DB options.
     #[new]
-    #[args(options = "Py::new(_py, OptionsPy::new())?")]
+    #[args(options = "Py::new(_py, OptionsPy::new(false))?")]
     fn create(options: Py<OptionsPy>, py: Python) -> PyResult<Self> {
         let env_options = EnvOptions::default();
-        let options = &options.borrow(py).0;
+        let opt_borrow = &options.borrow(py);
+        let options = &opt_borrow.inner_opt;
         let writer = Self::create_raw(options, &env_options);
         let pickle = PyModule::import(py, "pickle")?.to_object(py);
         let pickle_dumps = pickle.getattr(py, "dumps")?;
@@ -78,6 +80,7 @@ impl SstFileWriterPy {
             inner: writer,
             opts: options.clone(),
             pickle_dumps,
+            raw_mode: opt_borrow.raw_mode,
         })
     }
 
@@ -108,8 +111,8 @@ impl SstFileWriterPy {
     /// Adds a Put key with value to currently opened file
     /// REQUIRES: key is after any previously added key according to comparator.
     fn __setitem__(&mut self, key: &PyAny, value: &PyAny, py: Python) -> PyResult<()> {
-        let key = encode_key(key)?;
-        let value = encode_value(value, &self.pickle_dumps, py)?;
+        let key = encode_key(key, self.raw_mode)?;
+        let value = encode_value(value, &self.pickle_dumps, self.raw_mode, py)?;
 
         unsafe {
             ffi_try!(librocksdb_sys::rocksdb_sstfilewriter_put(
@@ -126,7 +129,7 @@ impl SstFileWriterPy {
     /// Adds a deletion key to currently opened file
     /// REQUIRES: key is after any previously added key according to comparator.
     fn __delitem__(&mut self, key: &PyAny) -> PyResult<()> {
-        let key = encode_key(key)?;
+        let key = encode_key(key, self.raw_mode)?;
 
         unsafe {
             ffi_try!(librocksdb_sys::rocksdb_sstfilewriter_delete(
