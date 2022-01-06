@@ -34,6 +34,14 @@ use std::time::Duration;
 ///         db = Rdict("./test_dir")
 ///         assert(db[0] == 1)
 ///
+/// Args:
+///     path (str): path to the database
+///     options (Options): Options object
+///     column_families (dict): (name, options) pairs, these `Options`
+///         must have the same `raw_mode` argument as the main `Options`.
+///     access_type (AccessType): there are four access types:
+///         ReadWrite, ReadOnly, WithTTL, and Secondary, use
+///         AccessType class to create.
 #[pyclass(name = "Rdict")]
 #[pyo3(text_signature = "(path, options, column_families, access_type)")]
 pub(crate) struct Rdict {
@@ -73,7 +81,6 @@ pub(crate) struct Rdict {
 ///         # open as secondary
 ///         db = Rdict("./main_path", access_type = AccessType.secondary("./secondary_path"))
 ///
-///
 #[derive(Clone)]
 #[pyclass(name = "AccessType")]
 pub(crate) struct AccessType(AccessTypeInner);
@@ -81,14 +88,6 @@ pub(crate) struct AccessType(AccessTypeInner);
 #[pymethods]
 impl Rdict {
     /// Create a new database or open an existing one.
-    ///
-    /// Args:
-    ///     path (str): path to the database
-    ///     options (Options): Options object
-    ///     column_families (dict): (name, options) pairs
-    ///     access_type (AccessType): there are four access types:
-    ///         ReadWrite, ReadOnly, WithTTL, and Secondary, use
-    ///         AccessType class to create.
     #[new]
     #[args(
         options = "Py::new(_py, OptionsPy::new(false))?",
@@ -363,7 +362,7 @@ impl Rdict {
     ///         Rdict.destroy(path)
     ///
     /// Args:
-    ///     read_opt: ReadOptions
+    ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
     ///
     /// Returns: Reversible
     #[pyo3(text_signature = "($self, read_opt)")]
@@ -397,11 +396,11 @@ impl Rdict {
     ///             print(f"{k} -> {v}")
     ///
     /// Args:
-    ///     inner: the inner Rdict
     ///     backwards: iteration direction, forward if `False`.
     ///     from_key: iterate from key, first seek to this key
     ///         or the nearest next key for iteration
     ///         (depending on iteration direction).
+    ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
     #[pyo3(text_signature = "($self, backwards, from_key, read_opt)")]
     #[args(
         backwards = "false",
@@ -430,11 +429,11 @@ impl Rdict {
     ///         all_keys = [k for k in db.keys()]
     ///
     /// Args:
-    ///     inner: the inner Rdict
     ///     backwards: iteration direction, forward if `False`.
     ///     from_key: iterate from key, first seek to this key
     ///         or the nearest next key for iteration
     ///         (depending on iteration direction).
+    ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
     #[pyo3(text_signature = "($self, backwards, from_key, read_opt)")]
     #[args(
         backwards = "false",
@@ -463,11 +462,11 @@ impl Rdict {
     ///         all_keys = [v for v in db.values()]
     ///
     /// Args:
-    ///     inner: the inner Rdict
     ///     backwards: iteration direction, forward if `False`.
     ///     from_key: iterate from key, first seek to this key
     ///         or the nearest next key for iteration
     ///         (depending on iteration direction).
+    ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
     #[pyo3(text_signature = "($self, backwards, from_key, read_opt)")]
     #[args(
         backwards = "false",
@@ -729,7 +728,7 @@ impl Rdict {
     ///     write_batch: WriteBatch instance. This instance will be consumed.
     ///     write_opt: has default value.
     #[pyo3(text_signature = "($self, write_batch, write_opt)")]
-    #[args(opts = "Py::new(_py, WriteOptionsPy::new())?")]
+    #[args(write_opt = "Py::new(_py, WriteOptionsPy::new())?")]
     pub fn write(
         &self,
         write_batch: &mut WriteBatchPy,

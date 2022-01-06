@@ -41,6 +41,11 @@ use std::path::{Path, PathBuf};
 ///
 ///             return Rdict(path, opts)
 ///
+/// Args:
+///     raw_mode (bool): set this to True to operate in raw mode (i.e.
+///         it will only allow bytes as key-value pairs, and is compatible
+///         with other RockDB database).
+///
 #[pyclass(name = "Options")]
 #[pyo3(text_signature = "(raw_mode)")]
 #[derive(Clone)]
@@ -120,8 +125,13 @@ pub(crate) struct FlushOptionsPy {
     pub(crate) wait: bool,
 }
 
+/// ReadOptions allows setting iterator bounds and so on.
+///
+/// Args:
+///     raw_mode (bool): this must be the same as `Options` raw_mode
+///         argument.
 #[pyclass(name = "ReadOptions")]
-#[pyo3(text_signature = "()")]
+#[pyo3(text_signature = "(raw_mode)")]
 #[derive(Clone)]
 pub(crate) struct ReadOptionsPy {
     fill_cache: bool,
@@ -1909,14 +1919,14 @@ impl ReadOptionsPy {
 
     /// Sets the upper bound for an iterator.
     /// The upper bound itself is not included on the iteration result.
-    #[pyo3(text_signature = "($self, key, raw_mode)")]
+    #[pyo3(text_signature = "($self, key)")]
     pub fn set_iterate_upper_bound(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
         Ok(self.iterate_upper_bound =
             Some(encode_value(key, &self.pickle_dumps, self.raw_mode, py)?))
     }
 
     /// Sets the lower bound for an iterator.
-    #[pyo3(text_signature = "($self, key, raw_mode)")]
+    #[pyo3(text_signature = "($self, key)")]
     pub fn set_iterate_lower_bound(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
         Ok(self.iterate_lower_bound =
             Some(encode_value(key, &self.pickle_dumps, self.raw_mode, py)?))

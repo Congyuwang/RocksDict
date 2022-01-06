@@ -225,7 +225,7 @@
                                 <a class="function" href="#WriteOptions.set_memtable_insert_hint_per_batch">set_memtable_insert_hint_per_batch</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.memtable_insert_hint_per_batch">memtable_insert_hint_per_batch</a>
+                                <a class="variable" href="#WriteOptions.no_slowdown">no_slowdown</a>
                         </li>
                         <li>
                                 <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
@@ -234,7 +234,7 @@
                                 <a class="variable" href="#WriteOptions.sync">sync</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.no_slowdown">no_slowdown</a>
+                                <a class="variable" href="#WriteOptions.memtable_insert_hint_per_batch">memtable_insert_hint_per_batch</a>
                         </li>
                         <li>
                                 <a class="variable" href="#WriteOptions.low_pri">low_pri</a>
@@ -789,16 +789,16 @@
                                 <a class="function" href="#PlainTableFactoryOptions.__init__">PlainTableFactoryOptions</a>
                         </li>
                         <li>
-                                <a class="variable" href="#PlainTableFactoryOptions.bloom_bits_per_key">bloom_bits_per_key</a>
-                        </li>
-                        <li>
                                 <a class="variable" href="#PlainTableFactoryOptions.index_sparseness">index_sparseness</a>
                         </li>
                         <li>
-                                <a class="variable" href="#PlainTableFactoryOptions.user_key_length">user_key_length</a>
+                                <a class="variable" href="#PlainTableFactoryOptions.bloom_bits_per_key">bloom_bits_per_key</a>
                         </li>
                         <li>
                                 <a class="variable" href="#PlainTableFactoryOptions.hash_table_ratio">hash_table_ratio</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#PlainTableFactoryOptions.user_key_length">user_key_length</a>
                         </li>
                 </ul>
 
@@ -852,22 +852,22 @@
                                 <a class="function" href="#UniversalCompactOptions.set_stop_style">set_stop_style</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.min_merge_width">min_merge_width</a>
+                                <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.max_size_amplification_percent">max_size_amplification_percent</a>
+                                <a class="variable" href="#UniversalCompactOptions.min_merge_width">min_merge_width</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.compression_size_percent">compression_size_percent</a>
                         </li>
                         <li>
+                                <a class="variable" href="#UniversalCompactOptions.max_merge_width">max_merge_width</a>
+                        </li>
+                        <li>
                                 <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#UniversalCompactOptions.max_merge_width">max_merge_width</a>
+                                <a class="variable" href="#UniversalCompactOptions.max_size_amplification_percent">max_size_amplification_percent</a>
                         </li>
                 </ul>
 
@@ -1181,16 +1181,13 @@ db = Rdict(path)
 # storing numbers
 db[1.0] = 1
 db[1] = 1.0
-# very big integer
 db["huge integer"] = 2343546543243564534233536434567543
-# boolean values
 db["good"] = True
 db["bad"] = False
-# bytes
 db["bytes"] = b"bytes"
-# store anything
 db["this is a list"] = [1, 2, 3]
 db["store a dict"] = {0: 1}
+
 # for example numpy array
 import numpy as np
 import pandas as pd
@@ -1303,6 +1300,18 @@ db = Rdict("./test_dir")
 assert(db[0] == 1)
 </code></pre>
 </blockquote>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>path (str):</strong>  path to the database</li>
+<li><strong>options (Options):</strong>  Options object</li>
+<li><strong>column_families (dict):</strong>  (name, options) pairs, these <code><a href="#Options">Options</a></code>
+must have the same <code>raw_mode</code> argument as the main <code><a href="#Options">Options</a></code>.</li>
+<li><strong>access_type (AccessType):</strong>  there are four access types:
+ReadWrite, ReadOnly, WithTTL, and Secondary, use
+AccessType class to create.</li>
+</ul>
 </div>
 
 
@@ -1426,7 +1435,7 @@ del iter, db
 <h6 id="args">Args</h6>
 
 <ul>
-<li><strong>read_opt:</strong>  ReadOptions</li>
+<li><strong>read_opt:</strong>  ReadOptions, must have the same <code>raw_mode</code> argument.</li>
 </ul>
 
 <p>Returns: Reversible</p>
@@ -1458,11 +1467,11 @@ del iter, db
 <h6 id="args">Args</h6>
 
 <ul>
-<li><strong>inner:</strong>  the inner Rdict</li>
 <li><strong>backwards:</strong>  iteration direction, forward if <code>False</code>.</li>
 <li><strong>from_key:</strong>  iterate from key, first seek to this key
 or the nearest next key for iteration
 (depending on iteration direction).</li>
+<li><strong>read_opt:</strong>  ReadOptions, must have the same <code>raw_mode</code> argument.</li>
 </ul>
 </div>
 
@@ -1491,11 +1500,11 @@ or the nearest next key for iteration
 <h6 id="args">Args</h6>
 
 <ul>
-<li><strong>inner:</strong>  the inner Rdict</li>
 <li><strong>backwards:</strong>  iteration direction, forward if <code>False</code>.</li>
 <li><strong>from_key:</strong>  iterate from key, first seek to this key
 or the nearest next key for iteration
 (depending on iteration direction).</li>
+<li><strong>read_opt:</strong>  ReadOptions, must have the same <code>raw_mode</code> argument.</li>
 </ul>
 </div>
 
@@ -1524,11 +1533,11 @@ or the nearest next key for iteration
 <h6 id="args">Args</h6>
 
 <ul>
-<li><strong>inner:</strong>  the inner Rdict</li>
 <li><strong>backwards:</strong>  iteration direction, forward if <code>False</code>.</li>
 <li><strong>from_key:</strong>  iterate from key, first seek to this key
 or the nearest next key for iteration
 (depending on iteration direction).</li>
+<li><strong>read_opt:</strong>  ReadOptions, must have the same <code>raw_mode</code> argument.</li>
 </ul>
 </div>
 
@@ -2002,7 +2011,22 @@ log files.</p>
     </div>
 
         
-    
+            <div class="docstring"><p>WriteBatch class. Use db.write() to ingest WriteBatch.</p>
+
+<h6 id="notes">Notes</h6>
+
+<blockquote>
+  <p>A WriteBatch instance can only be ingested once,
+  otherwise an Exception will be raised.</p>
+</blockquote>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>raw_mode (bool):</strong>  make sure that this is consistent with the Rdict.</li>
+</ul>
+</div>
+
 
                             <div id="WriteBatch.__init__" class="classattr">
                                         <div class="attr function"><a class="headerlink" href="#WriteBatch.__init__">#&nbsp;&nbsp</a>
@@ -2176,6 +2200,12 @@ log files.</p>
         
             <div class="docstring"><p>SstFileWriter is used to create sst files that can be added to database later
 All keys in files generated by SstFileWriter will have sequence number = 0.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>options:</strong>  this options must have the same <code>raw_mode</code> as the Rdict DB.</li>
+</ul>
 </div>
 
 
@@ -2633,10 +2663,10 @@ option will be ignored.</p>
 
 
                             </div>
-                            <div id="WriteOptions.memtable_insert_hint_per_batch" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.memtable_insert_hint_per_batch">#&nbsp;&nbsp</a>
+                            <div id="WriteOptions.no_slowdown" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.no_slowdown">#&nbsp;&nbsp</a>
 
-        <span class="name">memtable_insert_hint_per_batch</span>
+        <span class="name">no_slowdown</span>
     </div>
 
     
@@ -2660,10 +2690,10 @@ option will be ignored.</p>
     
 
                             </div>
-                            <div id="WriteOptions.no_slowdown" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.no_slowdown">#&nbsp;&nbsp</a>
+                            <div id="WriteOptions.memtable_insert_hint_per_batch" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#WriteOptions.memtable_insert_hint_per_batch">#&nbsp;&nbsp</a>
 
-        <span class="name">no_slowdown</span>
+        <span class="name">memtable_insert_hint_per_batch</span>
     </div>
 
     
@@ -2747,6 +2777,12 @@ del snapshot, db
         
             <div class="docstring"><p>Creates an iterator over the data in this snapshot under the given column family, using
 the default read options.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>read_opt:</strong>  ReadOptions, must have the same <code>raw_mode</code> argument.</li>
+</ul>
 </div>
 
 
@@ -2761,6 +2797,16 @@ the default read options.</p>
 
         
             <div class="docstring"><p>Iterate through all keys and values pairs.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>backwards:</strong>  iteration direction, forward if <code>False</code>.</li>
+<li><strong>from_key:</strong>  iterate from key, first seek to this key
+or the nearest next key for iteration
+(depending on iteration direction).</li>
+<li><strong>read_opt:</strong>  ReadOptions, must have the same <code>raw_mode</code> argument.</li>
+</ul>
 </div>
 
 
@@ -2775,6 +2821,16 @@ the default read options.</p>
 
         
             <div class="docstring"><p>Iterate through all keys.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>backwards:</strong>  iteration direction, forward if <code>False</code>.</li>
+<li><strong>from_key:</strong>  iterate from key, first seek to this key
+or the nearest next key for iteration
+(depending on iteration direction).</li>
+<li><strong>read_opt:</strong>  ReadOptions, must have the same <code>raw_mode</code> argument.</li>
+</ul>
 </div>
 
 
@@ -2789,6 +2845,16 @@ the default read options.</p>
 
         
             <div class="docstring"><p>Iterate through all values.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>backwards:</strong>  iteration direction, forward if <code>False</code>.</li>
+<li><strong>from_key:</strong>  iterate from key, first seek to this key
+or the nearest next key for iteration
+(depending on iteration direction).</li>
+<li><strong>read_opt:</strong>  ReadOptions, must have the same <code>raw_mode</code> argument.</li>
+</ul>
 </div>
 
 
@@ -3113,6 +3179,14 @@ def badly_tuned_for_somebody_elses_disk():
     return Rdict(path, opts)
 </code></pre>
 </blockquote>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>raw_mode (bool):</strong>  set this to True to operate in raw mode (i.e.
+it will only allow bytes as key-value pairs, and is compatible
+with other RockDB database).</li>
+</ul>
 </div>
 
 
@@ -5275,7 +5349,16 @@ can potentially reduce CPU usage for point-look-ups.</p>
     </div>
 
         
-    
+            <div class="docstring"><p>ReadOptions allows setting iterator bounds and so on.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>raw_mode (bool):</strong>  this must be the same as <code><a href="#Options">Options</a></code> raw_mode
+argument.</li>
+</ul>
+</div>
+
 
                             <div id="ReadOptions.__init__" class="classattr">
                                         <div class="attr function"><a class="headerlink" href="#ReadOptions.__init__">#&nbsp;&nbsp</a>
@@ -6098,15 +6181,6 @@ information.</p>
     
 
                             </div>
-                            <div id="PlainTableFactoryOptions.bloom_bits_per_key" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.bloom_bits_per_key">#&nbsp;&nbsp</a>
-
-        <span class="name">bloom_bits_per_key</span>
-    </div>
-
-    
-
-                            </div>
                             <div id="PlainTableFactoryOptions.index_sparseness" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.index_sparseness">#&nbsp;&nbsp</a>
 
@@ -6116,10 +6190,10 @@ information.</p>
     
 
                             </div>
-                            <div id="PlainTableFactoryOptions.user_key_length" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.user_key_length">#&nbsp;&nbsp</a>
+                            <div id="PlainTableFactoryOptions.bloom_bits_per_key" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.bloom_bits_per_key">#&nbsp;&nbsp</a>
 
-        <span class="name">user_key_length</span>
+        <span class="name">bloom_bits_per_key</span>
     </div>
 
     
@@ -6129,6 +6203,15 @@ information.</p>
                                             <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.hash_table_ratio">#&nbsp;&nbsp</a>
 
         <span class="name">hash_table_ratio</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="PlainTableFactoryOptions.user_key_length" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#PlainTableFactoryOptions.user_key_length">#&nbsp;&nbsp</a>
+
+        <span class="name">user_key_length</span>
     </div>
 
     
@@ -6397,19 +6480,19 @@ will be compressed iff
 
 
                             </div>
-                            <div id="UniversalCompactOptions.min_merge_width" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.min_merge_width">#&nbsp;&nbsp</a>
+                            <div id="UniversalCompactOptions.size_ratio" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.size_ratio">#&nbsp;&nbsp</a>
 
-        <span class="name">min_merge_width</span>
+        <span class="name">size_ratio</span>
     </div>
 
     
 
                             </div>
-                            <div id="UniversalCompactOptions.max_size_amplification_percent" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_size_amplification_percent">#&nbsp;&nbsp</a>
+                            <div id="UniversalCompactOptions.min_merge_width" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.min_merge_width">#&nbsp;&nbsp</a>
 
-        <span class="name">max_size_amplification_percent</span>
+        <span class="name">min_merge_width</span>
     </div>
 
     
@@ -6424,6 +6507,15 @@ will be compressed iff
     
 
                             </div>
+                            <div id="UniversalCompactOptions.max_merge_width" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_merge_width">#&nbsp;&nbsp</a>
+
+        <span class="name">max_merge_width</span>
+    </div>
+
+    
+
+                            </div>
                             <div id="UniversalCompactOptions.stop_style" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.stop_style">#&nbsp;&nbsp</a>
 
@@ -6433,19 +6525,10 @@ will be compressed iff
     
 
                             </div>
-                            <div id="UniversalCompactOptions.size_ratio" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.size_ratio">#&nbsp;&nbsp</a>
+                            <div id="UniversalCompactOptions.max_size_amplification_percent" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_size_amplification_percent">#&nbsp;&nbsp</a>
 
-        <span class="name">size_ratio</span>
-    </div>
-
-    
-
-                            </div>
-                            <div id="UniversalCompactOptions.max_merge_width" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#UniversalCompactOptions.max_merge_width">#&nbsp;&nbsp</a>
-
-        <span class="name">max_merge_width</span>
+        <span class="name">max_size_amplification_percent</span>
     </div>
 
     

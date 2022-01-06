@@ -5,6 +5,14 @@ use pyo3::prelude::*;
 use rocksdb::WriteBatch;
 use std::ops::Deref;
 
+/// WriteBatch class. Use db.write() to ingest WriteBatch.
+///
+/// Notes:
+///     A WriteBatch instance can only be ingested once,
+///     otherwise an Exception will be raised.
+///
+/// Args:
+///     raw_mode (bool): make sure that this is consistent with the Rdict.
 #[pyclass(name = "WriteBatch")]
 pub(crate) struct WriteBatchPy {
     inner: Option<WriteBatch>,
@@ -15,6 +23,14 @@ pub(crate) struct WriteBatchPy {
 
 #[pymethods]
 impl WriteBatchPy {
+    /// WriteBatch class. Use db.write() to ingest WriteBatch.
+    ///
+    /// Notes:
+    ///     A WriteBatch instance can only be ingested once,
+    ///     otherwise an Exception will be raised.
+    ///
+    /// Args:
+    ///     raw_mode (bool): make sure that this is consistent with the Rdict.
     #[new]
     #[args(raw_mode = "false")]
     pub fn default(py: Python, raw_mode: bool) -> PyResult<Self> {

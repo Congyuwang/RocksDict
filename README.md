@@ -7,55 +7,28 @@
 ![PyPI](https://img.shields.io/pypi/wheel/rocksdict)
 [![Support python versions](https://img.shields.io/pypi/pyversions/rocksdict.svg)](https://pypi.org/project/rocksdict/)
 
-## Abstract
-
-This library provides a solution for on-disk key-value storage for python.
-
-It has a nice user-friendly interface that is familiar to python users.
-
-It is not intended to be used as a rocksdb python client.
-For that purpose, use rust-rocksdb or java-rocksdb instead.
-
-### Installation
-
-This package is built for macOS (x86/arm), Windows 64/32, and Linux x86.
-It can be installed from pypi with `pip install rocksdict`.
-
-## Plans
-
-- [x] set, get, del
-- [x] multi get
-- [x] support string, float, int, bytes
-- [x] support other python objects through pickle
-- [x] support BigInt
-- [x] compare BigInt by value size
-- [x] keys, values, items iterator
-- [x] options, read options, write options, all options
-- [x] SstFileWriter and bulk ingest
-- [x] column families
-- [x] write batch
-- [x] delete range
-- [x] open as secondary, with-ttl, read-only
-- [x] Snapshot
-- [ ] support merge
-
-## Supported key-value types:
-
-- key: `int, float, bool, str, bytes`
-- value: `int, float, bool, str, bytes` and anything that supports `pickle`.
-
 ## Introduction
 
-Below is a minimal example that shows how to do the following:
+This library has two purposes.
 
-- Create Rdict
-- Store something on disk
-- Close Rdict
-- Open Rdict again
-- Check Rdict elements
-- Iterate from Rdict
-- Batch get
-- Delete storage
+1. As an on-disk key-value storage solution for Python.
+2. As a RocksDB interface.
+
+These two purposes operate in different modes:
+
+- **Default mode**, which allows storing `int`, `float`, 
+`bool`, `str`, `bytes`, and other python objects.
+
+- **Raw mode** (`options=Options(raw_mode=True)`),
+which allows storing only `bytes`.
+
+## Installation
+
+Wheels available, just `pip install rocksdict`.
+
+## Examples
+
+### A minimal example
 
 ```python
 from rocksdict import Rdict
@@ -66,28 +39,21 @@ path = str("./test_dict")
 
 # create a Rdict with default options at `path`
 db = Rdict(path)
-
 db[1.0] = 1
-db[1] = 1.0
 db["huge integer"] = 2343546543243564534233536434567543
 db["good"] = True
-db["bad"] = False
 db["bytes"] = b"bytes"
 db["this is a list"] = [1, 2, 3]
 db["store a dict"] = {0: 1}
 db[b"numpy"] = np.array([1, 2, 3])
 db["a table"] = pd.DataFrame({"a": [1, 2], "b": [2, 1]})
 
-# close Rdict
-db.close()
-
 # reopen Rdict from disk
+db.close()
 db = Rdict(path)
 assert db[1.0] == 1
-assert db[1] == 1.0
 assert db["huge integer"] == 2343546543243564534233536434567543
 assert db["good"] == True
-assert db["bad"] == False
 assert db["bytes"] == b"bytes"
 assert db["this is a list"] == [1, 2, 3]
 assert db["store a dict"] == {0: 1}
@@ -107,32 +73,38 @@ db.close()
 Rdict.destroy(path)
 ```
 
-## Supported key value types
+### An Example of `raw_mode=True`
 
-- key: `int, float, bool, str, bytes`
-- value: `int, float, bool, str, bytes` and anything that supports `pickle`.
+This mode allows only bytes as keys and values.
 
-## Examples
+```python
+from rocksdict import Rdict, Options
+
+PATH_TO_ROCKSDB = str("path")
+
+# open raw_mode, which allows only bytes
+db = Rdict(path=PATH_TO_ROCKSDB, options=Options(raw_mode=True))
+
+db[b'a'] = b'a'
+db[b'b'] = b'b'
+db[b'c'] = b'c'
+db[b'd'] = b'd'
+
+for k, v in db.items():
+    print(f"{k} -> {v}")
+
+# close and delete
+db.close()
+Rdict.destroy(PATH_TO_ROCKSDB)
+```
+
+## More Examples on BatchWrite, SstFileWrite, Snapshot, RocksDB Options, and stc.
 
 Go to [example](https://github.com/Congyuwang/RocksDict/tree/main/examples) folder.
 
-There are examples about:
-
-- column families
-- batch write
-- RocksDB options
-- SstFileWriter
-- delete_range
-- snapshot
-
-## Rocksdb Options
-
-Since the backend is implemented using rocksdb,
-most of rocksdb options are supported.
-
 ## Limitations
 
-Currently do not have good support for merge operation.
+Currently, do not support merge operation and custom comparator.
 
 ## Full Documentation
 

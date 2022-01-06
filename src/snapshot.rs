@@ -53,6 +53,9 @@ pub struct Snapshot {
 impl Snapshot {
     /// Creates an iterator over the data in this snapshot under the given column family, using
     /// the default read options.
+    ///
+    /// Args:
+    ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
     #[pyo3(text_signature = "($self, read_opt)")]
     #[args(read_opt = "_py.None().into_ref(_py)")]
     fn iter(&self, read_opt: &PyAny, py: Python) -> PyResult<RdictIter> {
@@ -76,6 +79,13 @@ impl Snapshot {
     }
 
     /// Iterate through all keys and values pairs.
+    ///
+    /// Args:
+    ///     backwards: iteration direction, forward if `False`.
+    ///     from_key: iterate from key, first seek to this key
+    ///         or the nearest next key for iteration
+    ///         (depending on iteration direction).
+    ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
     #[pyo3(text_signature = "($self, backwards, from_key, read_opt)")]
     #[args(
         backwards = "false",
@@ -97,6 +107,13 @@ impl Snapshot {
     }
 
     /// Iterate through all keys.
+    ///
+    /// Args:
+    ///     backwards: iteration direction, forward if `False`.
+    ///     from_key: iterate from key, first seek to this key
+    ///         or the nearest next key for iteration
+    ///         (depending on iteration direction).
+    ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
     #[pyo3(text_signature = "($self, backwards, from_key, read_opt)")]
     #[args(
         backwards = "false",
@@ -118,6 +135,13 @@ impl Snapshot {
     }
 
     /// Iterate through all values.
+    ///
+    /// Args:
+    ///     backwards: iteration direction, forward if `False`.
+    ///     from_key: iterate from key, first seek to this key
+    ///         or the nearest next key for iteration
+    ///         (depending on iteration direction).
+    ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
     #[pyo3(text_signature = "($self, backwards, from_key, read_opt)")]
     #[args(
         backwards = "false",

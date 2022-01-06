@@ -55,16 +55,13 @@ use pyo3::prelude::*;
 ///         # storing numbers
 ///         db[1.0] = 1
 ///         db[1] = 1.0
-///         # very big integer
 ///         db["huge integer"] = 2343546543243564534233536434567543
-///         # boolean values
 ///         db["good"] = True
 ///         db["bad"] = False
-///         # bytes
 ///         db["bytes"] = b"bytes"
-///         # store anything
 ///         db["this is a list"] = [1, 2, 3]
 ///         db["store a dict"] = {0: 1}
+///
 ///         # for example numpy array
 ///         import numpy as np
 ///         import pandas as pd
