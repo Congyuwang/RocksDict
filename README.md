@@ -73,7 +73,7 @@ db.close()
 Rdict.destroy(path)
 ```
 
-### An Example of `raw_mode=True`
+### An Example of Raw Mode
 
 This mode allows only bytes as keys and values.
 
@@ -98,7 +98,7 @@ db.close()
 Rdict.destroy(PATH_TO_ROCKSDB)
 ```
 
-## More Examples on BatchWrite, SstFileWrite, Snapshot, RocksDB Options, and stc.
+## More Examples on BatchWrite, SstFileWrite, Snapshot, RocksDB Options, and etc.
 
 Go to [example](https://github.com/Congyuwang/RocksDict/tree/main/examples) folder.
 
