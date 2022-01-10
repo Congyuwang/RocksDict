@@ -19,7 +19,7 @@ jobs:
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: nightly
           profile: minimal
           default: true
       - name: Build wheels - universal2
@@ -61,7 +61,7 @@ jobs:
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: nightly
           profile: minimal
           default: true
       - name: Build wheels
@@ -97,7 +97,7 @@ jobs:
     - name: Build Wheels
       uses: messense/maturin-action@v1
       with:
-        rust-toolchain: stable
+        rust-toolchain: nightly
         target: ${{ matrix.target }}
         manylinux: 2014
         args: --release --out dist --no-sdist
