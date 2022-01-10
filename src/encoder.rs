@@ -27,8 +27,11 @@ pub(crate) fn encoding_byte(v_type: &ValueTypes) -> u8 {
 #[inline(always)]
 pub(crate) fn encode_key(key: &PyAny, raw_mode: bool) -> PyResult<Box<[u8]>> {
     if raw_mode {
-        let bytes: Vec<u8> = key.extract()?;
-        return Ok(bytes.into_boxed_slice());
+        return if let Ok(value) = <PyBytes as PyTryFrom>::try_from(key) {
+            Ok(value.as_bytes().to_vec().into_boxed_slice())
+        } else {
+            Err(PyException::new_err("raw mode only support bytes"))
+        }
     }
     let bytes = py_to_value_types(key)?;
     let type_encoding = encoding_byte(&bytes);
@@ -66,8 +69,11 @@ pub(crate) fn encode_value(
     py: Python,
 ) -> PyResult<Box<[u8]>> {
     if raw_mode {
-        let bytes: Vec<u8> = value.extract()?;
-        return Ok(bytes.into_boxed_slice());
+        return if let Ok(value) = <PyBytes as PyTryFrom>::try_from(value) {
+            Ok(value.as_bytes().to_vec().into_boxed_slice())
+        } else {
+            Err(PyException::new_err("raw mode only support bytes"))
+        }
     }
     let bytes = py_to_value_types(value)?;
     let type_encoding = encoding_byte(&bytes);
