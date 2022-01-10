@@ -115,8 +115,6 @@ which are all cross-platform key-value storage solutions.
 ![image](https://github.com/Congyuwang/RocksDict/blob/main/benchmark/bench_plot/read_sequential(num_keys%3D10000-%20ksize%3D16-%20vsize%3D100).png)
 #### random read
 ![image](https://github.com/Congyuwang/RocksDict/blob/main/benchmark/bench_plot/random_read(num_keys%3D10000-%20ksize%3D16-%20vsize%3D100).png)
-#### deletion
-![image](https://github.com/Congyuwang/RocksDict/blob/main/benchmark/bench_plot/delete_sequential(num_keys%3D10000-%20ksize%3D16-%20vsize%3D100).png)
 
 ### Large Value: 100 kb value
 
@@ -126,8 +124,6 @@ which are all cross-platform key-value storage solutions.
 ![image](https://github.com/Congyuwang/RocksDict/blob/main/benchmark/bench_plot/read_sequential(num_keys%3D1000-%20ksize%3D16-%20vsize%3D100000).png)
 #### random read
 ![image](https://github.com/Congyuwang/RocksDict/blob/main/benchmark/bench_plot/random_read(num_keys%3D1000-%20ksize%3D16-%20vsize%3D100000).png)
-#### deletion
-![image](https://github.com/Congyuwang/RocksDict/blob/main/benchmark/bench_plot/delete_sequential(num_keys%3D1000-%20ksize%3D16-%20vsize%3D100000).png)
 
 ## Limitations
 
