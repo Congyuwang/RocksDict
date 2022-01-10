@@ -7,17 +7,19 @@ BENCH_RESULT_FOLDER = Path("./bench_result")
 
 
 def cmd(dbname, num, k_size, v_size, b_size):
-    return f"pytest " \
-           f"-s --dbname {dbname} " \
-           f"--num {num} " \
-           f"--k_size {k_size} " \
-           f"--v_size {v_size} " \
-           f"--batch_size {b_size} " \
-           f"--percent 1.0 " \
-           f"benchmark.py " \
-           f"--benchmark-json " \
-           f"./{BENCH_RESULT_FOLDER}/" \
-           f"bench_{dbname}_n{num}_k{k_size}_v{v_size}.json".split()
+    command = f"pytest " \
+              f"-s --dbname {dbname} " \
+              f"--num {num} " \
+              f"--k_size {k_size} " \
+              f"--v_size {v_size} " \
+              f"--batch_size {b_size} " \
+              f"--percent 1.0 " \
+              f"benchmark.py " \
+              f"--benchmark-json " \
+              f"./{BENCH_RESULT_FOLDER}/" \
+              f"bench_{dbname}_n{num}_k{k_size}_v{v_size}.json".split()
+    print(" ".join(command))
+    return command
 
 
 if __name__ == '__main__':
