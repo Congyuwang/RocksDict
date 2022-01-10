@@ -241,14 +241,14 @@ def test_read_sequential_raw(db_insert_raw_before_after, benchmark):
 
 def test_delete_sequential(db_insert_before_after, benchmark):
     try:
-        benchmark.pedantic(delete, args=(db_insert_before_after,), iterations=10, rounds=1)
+        benchmark.pedantic(delete, args=(db_insert_before_after,), iterations=1, rounds=1)
     except NotImplementedError:
         pytest.skip("method unimplemented")
 
 
 def test_delete_sequential_raw(db_insert_raw_before_after, benchmark):
     try:
-        benchmark.pedantic(delete_raw, args=(db_insert_raw_before_after,), iterations=10, rounds=1)
+        benchmark.pedantic(delete_raw, args=(db_insert_raw_before_after,), iterations=1, rounds=1)
     except NotImplementedError:
         pytest.skip("method unimplemented")
 
