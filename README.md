@@ -102,6 +102,33 @@ Rdict.destroy(PATH_TO_ROCKSDB)
 
 Go to [example](https://github.com/Congyuwang/RocksDict/tree/main/examples) folder.
 
+## A Simple Benchmark
+
+Compared to [PyVidarDB](https://github.com/vidardb/PyVidarDB) and [semidbm](https://github.com/jamesls/semidbm),
+which are all cross-platform key-value storage solutions.
+
+### Small Value: 100 byte value
+
+#### sequetial insertion
+![image](https://github.com/Congyuwang/RocksDict/blob/main/benchmark/bench_plot/insert_sequential(num_keys%3D10000-%20ksize%3D16-%20vsize%3D100).png)
+#### sequential read
+![image](https://github.com/Congyuwang/RocksDict/blob/main/benchmark/bench_plot/read_sequential(num_keys%3D10000-%20ksize%3D16-%20vsize%3D100).png)
+#### random read
+![image](https://github.com/Congyuwang/RocksDict/blob/main/benchmark/bench_plot/random_read(num_keys%3D10000-%20ksize%3D16-%20vsize%3D100).png)
+#### deletion
+![image](https://github.com/Congyuwang/RocksDict/blob/main/benchmark/bench_plot/delete_sequential(num_keys%3D10000-%20ksize%3D16-%20vsize%3D100).png)
+
+### Large Value: 100 kb value
+
+#### sequetial insertion
+![image](https://github.com/Congyuwang/RocksDict/blob/main/benchmark/bench_plot/insert_sequential(num_keys%3D1000-%20ksize%3D16-%20vsize%3D100000).png)
+#### sequential read
+![image](https://github.com/Congyuwang/RocksDict/blob/main/benchmark/bench_plot/read_sequential(num_keys%3D1000-%20ksize%3D16-%20vsize%3D100000).png)
+#### random read
+![image](https://github.com/Congyuwang/RocksDict/blob/main/benchmark/bench_plot/random_read(num_keys%3D1000-%20ksize%3D16-%20vsize%3D100000).png)
+#### deletion
+![image](https://github.com/Congyuwang/RocksDict/blob/main/benchmark/bench_plot/delete_sequential(num_keys%3D1000-%20ksize%3D16-%20vsize%3D100000).png)
+
 ## Limitations
 
 Currently, do not support merge operation and custom comparator.
