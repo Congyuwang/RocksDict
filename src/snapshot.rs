@@ -1,4 +1,4 @@
-use crate::encoder::{decode_value, encode_key};
+use crate::encoder::{decode_value, encode_key, encode_raw};
 use crate::{Rdict, RdictItems, RdictIter, RdictKeys, RdictValues, ReadOpt, ReadOptionsPy};
 use librocksdb_sys;
 use pyo3::exceptions::PyException;
@@ -74,7 +74,7 @@ impl Snapshot {
             read_opt,
             &self.pickle_loads,
             self.raw_mode,
-            py
+            py,
         )?)
     }
 
@@ -164,12 +164,21 @@ impl Snapshot {
 
     /// read from snapshot
     fn __getitem__(&self, key: &PyAny, py: Python) -> PyResult<PyObject> {
-        let key = encode_key(key, self.raw_mode)?;
         let db = self.db.borrow();
-        let value_result = if let Some(cf) = &self.column_family {
-            db.get_pinned_cf_opt(cf.deref(), &key[..], &self.read_opt)
+        let value_result = if self.raw_mode {
+            let key = encode_raw(key)?;
+            if let Some(cf) = &self.column_family {
+                db.get_pinned_cf_opt(cf.deref(), &key[..], &self.read_opt)
+            } else {
+                db.get_pinned_opt(&key[..], &self.read_opt)
+            }
         } else {
-            db.get_pinned_opt(&key[..], &self.read_opt)
+            let key = encode_key(key, self.raw_mode)?;
+            if let Some(cf) = &self.column_family {
+                db.get_pinned_cf_opt(cf.deref(), &key[..], &self.read_opt)
+            } else {
+                db.get_pinned_opt(&key[..], &self.read_opt)
+            }
         };
         match value_result {
             Ok(value) => match value {

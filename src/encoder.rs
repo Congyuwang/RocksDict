@@ -2,6 +2,7 @@ use num_bigint::BigInt;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::{PyBool, PyBytes, PyFloat, PyInt, PyString};
+use std::intrinsics::unlikely;
 
 pub(crate) enum ValueTypes<'a, 'b> {
     Bytes(&'a [u8]),
@@ -25,13 +26,22 @@ pub(crate) fn encoding_byte(v_type: &ValueTypes) -> u8 {
 }
 
 #[inline(always)]
+pub(crate) fn encode_raw(key: &PyAny) -> PyResult<&[u8]> {
+    if let Ok(value) = <PyBytes as PyTryFrom>::try_from(key) {
+        Ok(value.as_bytes())
+    } else {
+        Err(PyException::new_err("raw mode only support bytes"))
+    }
+}
+
+#[inline(always)]
 pub(crate) fn encode_key(key: &PyAny, raw_mode: bool) -> PyResult<Box<[u8]>> {
     if raw_mode {
         return if let Ok(value) = <PyBytes as PyTryFrom>::try_from(key) {
             Ok(value.as_bytes().to_vec().into_boxed_slice())
         } else {
             Err(PyException::new_err("raw mode only support bytes"))
-        }
+        };
     }
     let bytes = py_to_value_types(key)?;
     let type_encoding = encoding_byte(&bytes);
@@ -68,33 +78,34 @@ pub(crate) fn encode_value(
     raw_mode: bool,
     py: Python,
 ) -> PyResult<Box<[u8]>> {
-    if raw_mode {
-        return if let Ok(value) = <PyBytes as PyTryFrom>::try_from(value) {
+    if unlikely(raw_mode) {
+        if let Ok(value) = <PyBytes as PyTryFrom>::try_from(value) {
             Ok(value.as_bytes().to_vec().into_boxed_slice())
         } else {
             Err(PyException::new_err("raw mode only support bytes"))
         }
-    }
-    let bytes = py_to_value_types(value)?;
-    let type_encoding = encoding_byte(&bytes);
-    match bytes {
-        ValueTypes::Bytes(value) => Ok(concat_type_encoding(type_encoding, value)),
-        ValueTypes::String(value) => Ok(concat_type_encoding(type_encoding, value.as_bytes())),
-        ValueTypes::Int(value) => Ok(concat_type_encoding(
-            type_encoding,
-            &value.to_signed_bytes_be()[..],
-        )),
-        ValueTypes::Float(value) => Ok(concat_type_encoding(
-            type_encoding,
-            &value.to_be_bytes()[..],
-        )),
-        ValueTypes::Bool(value) => Ok(concat_type_encoding(
-            type_encoding,
-            if value { &[1u8] } else { &[0u8] },
-        )),
-        ValueTypes::Any(value) => {
-            let pickle_bytes: Vec<u8> = pickle_dumps.call1(py, (value,))?.extract(py)?;
-            Ok(concat_type_encoding(type_encoding, &pickle_bytes[..]))
+    } else {
+        let bytes = py_to_value_types(value)?;
+        let type_encoding = encoding_byte(&bytes);
+        match bytes {
+            ValueTypes::Bytes(value) => Ok(concat_type_encoding(type_encoding, value)),
+            ValueTypes::String(value) => Ok(concat_type_encoding(type_encoding, value.as_bytes())),
+            ValueTypes::Int(value) => Ok(concat_type_encoding(
+                type_encoding,
+                &value.to_signed_bytes_be()[..],
+            )),
+            ValueTypes::Float(value) => Ok(concat_type_encoding(
+                type_encoding,
+                &value.to_be_bytes()[..],
+            )),
+            ValueTypes::Bool(value) => Ok(concat_type_encoding(
+                type_encoding,
+                if value { &[1u8] } else { &[0u8] },
+            )),
+            ValueTypes::Any(value) => {
+                let pickle_bytes: Vec<u8> = pickle_dumps.call1(py, (value,))?.extract(py)?;
+                Ok(concat_type_encoding(type_encoding, &pickle_bytes[..]))
+            }
         }
     }
 }

@@ -1,3 +1,4 @@
+#![feature(core_intrinsics)]
 mod encoder;
 mod iter;
 mod options;

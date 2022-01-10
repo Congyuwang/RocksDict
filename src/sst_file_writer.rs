@@ -1,4 +1,4 @@
-use crate::encoder::{encode_key, encode_value};
+use crate::encoder::{encode_key, encode_raw, encode_value};
 use crate::util::{error_message, to_cpath};
 use crate::OptionsPy;
 use libc::{self, c_char, size_t};
@@ -117,34 +117,57 @@ impl SstFileWriterPy {
     /// Adds a Put key with value to currently opened file
     /// REQUIRES: key is after any previously added key according to comparator.
     fn __setitem__(&mut self, key: &PyAny, value: &PyAny, py: Python) -> PyResult<()> {
-        let key = encode_key(key, self.raw_mode)?;
-        let value = encode_value(value, &self.pickle_dumps, self.raw_mode, py)?;
-
-        unsafe {
-            ffi_try!(librocksdb_sys::rocksdb_sstfilewriter_put(
-                self.inner,
-                key.as_ptr() as *const c_char,
-                key.len() as size_t,
-                value.as_ptr() as *const c_char,
-                value.len() as size_t,
-            ));
-            Ok(())
+        if self.raw_mode {
+            let key = encode_raw(key)?;
+            let value = encode_raw(value)?;
+            unsafe {
+                ffi_try!(librocksdb_sys::rocksdb_sstfilewriter_put(
+                    self.inner,
+                    key.as_ptr() as *const c_char,
+                    key.len() as size_t,
+                    value.as_ptr() as *const c_char,
+                    value.len() as size_t,
+                ));
+            }
+        } else {
+            let key = encode_key(key, self.raw_mode)?;
+            let value = encode_value(value, &self.pickle_dumps, self.raw_mode, py)?;
+            unsafe {
+                ffi_try!(librocksdb_sys::rocksdb_sstfilewriter_put(
+                    self.inner,
+                    key.as_ptr() as *const c_char,
+                    key.len() as size_t,
+                    value.as_ptr() as *const c_char,
+                    value.len() as size_t,
+                ));
+            }
         }
+        Ok(())
     }
 
     /// Adds a deletion key to currently opened file
     /// REQUIRES: key is after any previously added key according to comparator.
     fn __delitem__(&mut self, key: &PyAny) -> PyResult<()> {
-        let key = encode_key(key, self.raw_mode)?;
-
-        unsafe {
-            ffi_try!(librocksdb_sys::rocksdb_sstfilewriter_delete(
-                self.inner,
-                key.as_ptr() as *const c_char,
-                key.len() as size_t,
-            ));
-            Ok(())
+        if self.raw_mode {
+            let key = encode_raw(key)?;
+            unsafe {
+                ffi_try!(librocksdb_sys::rocksdb_sstfilewriter_delete(
+                    self.inner,
+                    key.as_ptr() as *const c_char,
+                    key.len() as size_t,
+                ));
+            }
+        } else {
+            let key = encode_key(key, self.raw_mode)?;
+            unsafe {
+                ffi_try!(librocksdb_sys::rocksdb_sstfilewriter_delete(
+                    self.inner,
+                    key.as_ptr() as *const c_char,
+                    key.len() as size_t,
+                ));
+            }
         }
+        Ok(())
     }
 }
 

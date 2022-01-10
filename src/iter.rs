@@ -1,4 +1,4 @@
-use crate::encoder::{decode_value, encode_key};
+use crate::encoder::{decode_value, encode_key, encode_raw};
 use crate::util::error_message;
 use crate::{ReadOpt, ReadOptionsPy};
 use core::slice;
@@ -61,7 +61,10 @@ impl RdictIter {
         py: Python,
     ) -> PyResult<Self> {
         if readopts.borrow(py).raw_mode != raw_mode {
-            Err(PyException::new_err(format!("ReadOptions should have raw_mode={}", raw_mode)))
+            Err(PyException::new_err(format!(
+                "ReadOptions should have raw_mode={}",
+                raw_mode
+            )))
         } else {
             let readopts_borrow = readopts.borrow(py);
             let readopts: ReadOpt = readopts_borrow.deref().into();
@@ -202,15 +205,26 @@ impl RdictIter {
     ///         Rdict.destroy(path, Options())
     #[pyo3(text_signature = "($self, key)")]
     pub fn seek(&mut self, key: &PyAny) -> PyResult<()> {
-        let key = encode_key(key, self.raw_mode)?;
-
-        Ok(unsafe {
-            librocksdb_sys::rocksdb_iter_seek(
-                self.inner,
-                key.as_ptr() as *const c_char,
-                key.len() as size_t,
-            );
-        })
+        if self.raw_mode {
+            let key = encode_raw(key)?;
+            unsafe {
+                librocksdb_sys::rocksdb_iter_seek(
+                    self.inner,
+                    key.as_ptr() as *const c_char,
+                    key.len() as size_t,
+                );
+            }
+        } else {
+            let key = encode_key(key, self.raw_mode)?;
+            unsafe {
+                librocksdb_sys::rocksdb_iter_seek(
+                    self.inner,
+                    key.as_ptr() as *const c_char,
+                    key.len() as size_t,
+                );
+            }
+        }
+        Ok(())
     }
 
     /// Seeks to the specified key, or the first key that lexicographically precedes it.
@@ -236,15 +250,26 @@ impl RdictIter {
     ///         Rdict.destroy(path, Options())
     #[pyo3(text_signature = "($self, key)")]
     pub fn seek_for_prev(&mut self, key: &PyAny) -> PyResult<()> {
-        let key = encode_key(key, self.raw_mode)?;
-
-        Ok(unsafe {
-            librocksdb_sys::rocksdb_iter_seek_for_prev(
-                self.inner,
-                key.as_ptr() as *const c_char,
-                key.len() as size_t,
-            );
-        })
+        if self.raw_mode {
+            let key = encode_raw(key)?;
+            unsafe {
+                librocksdb_sys::rocksdb_iter_seek_for_prev(
+                    self.inner,
+                    key.as_ptr() as *const c_char,
+                    key.len() as size_t,
+                );
+            }
+        } else {
+            let key = encode_key(key, self.raw_mode)?;
+            unsafe {
+                librocksdb_sys::rocksdb_iter_seek_for_prev(
+                    self.inner,
+                    key.as_ptr() as *const c_char,
+                    key.len() as size_t,
+                );
+            }
+        }
+        Ok(())
     }
 
     /// Seeks to the next key.

@@ -1,4 +1,4 @@
-use crate::encoder::{decode_value, encode_key, encode_value};
+use crate::encoder::{decode_value, encode_key, encode_raw, encode_value};
 use crate::iter::{RdictItems, RdictKeys, RdictValues};
 use crate::{
     CompactOptionsPy, FlushOptionsPy, IngestExternalFileOptionsPy, OptionsPy, RdictIter,
@@ -112,7 +112,10 @@ impl Rdict {
                     // check options_raw_mode for column families
                     for (_, cf_opt) in cf.iter() {
                         if cf_opt.raw_mode != opt_py.raw_mode {
-                            return Err(PyException::new_err(format!("Options should have raw_mode={}", opt_py.raw_mode)))
+                            return Err(PyException::new_err(format!(
+                                "Options should have raw_mode={}",
+                                opt_py.raw_mode
+                            )));
                         }
                     }
                     let cfs = cf
@@ -155,7 +158,8 @@ impl Rdict {
             } {
                 Ok(db) => {
                     let r_opt = ReadOptionsPy::default(opt_borrow.raw_mode, py)?;
-                    let w_opt = WriteOptionsPy::new();
+                    let mut w_opt = WriteOptionsPy::new();
+                    w_opt.set_sync(false);
                     Ok(Rdict {
                         db: Some(Rc::new(RefCell::new(db))),
                         write_opt: (&w_opt).into(),
@@ -235,12 +239,21 @@ impl Rdict {
                 )?
                 .to_object(py));
             }
-            let key = encode_key(key, self.opt_py.raw_mode)?;
             let db = db.borrow();
-            let value_result = if let Some(cf) = &self.column_family {
-                db.get_pinned_cf_opt(cf.deref(), &key[..], &self.read_opt)
+            let value_result = if self.opt_py.raw_mode {
+                let key = encode_raw(key)?;
+                if let Some(cf) = &self.column_family {
+                    db.get_pinned_cf_opt(cf.deref(), key, &self.read_opt)
+                } else {
+                    db.get_pinned_opt(key, &self.read_opt)
+                }
             } else {
-                db.get_pinned_opt(&key[..], &self.read_opt)
+                let key = encode_key(key, self.opt_py.raw_mode)?;
+                if let Some(cf) = &self.column_family {
+                    db.get_pinned_cf_opt(cf.deref(), key, &self.read_opt)
+                } else {
+                    db.get_pinned_opt(key, &self.read_opt)
+                }
             };
             match value_result {
                 Ok(value) => match value {
@@ -258,17 +271,31 @@ impl Rdict {
 
     fn __setitem__(&self, key: &PyAny, value: &PyAny, py: Python) -> PyResult<()> {
         if let Some(db) = &self.db {
-            let key = encode_key(key, self.opt_py.raw_mode)?;
-            let value = encode_value(value, &self.pickle_dumps, self.opt_py.raw_mode, py)?;
             let db = db.borrow();
-            let put_result = if let Some(cf) = &self.column_family {
-                db.put_cf_opt(cf.deref(), &key[..], value, &self.write_opt)
+            if self.opt_py.raw_mode {
+                let key = encode_raw(key)?;
+                let value = encode_raw(value)?;
+                let put_result = if let Some(cf) = &self.column_family {
+                    db.put_cf_opt(cf.deref(), key, value, &self.write_opt)
+                } else {
+                    db.put_opt(key, value, &self.write_opt)
+                };
+                match put_result {
+                    Ok(_) => Ok(()),
+                    Err(e) => Err(PyException::new_err(e.to_string())),
+                }
             } else {
-                db.put_opt(&key[..], value, &self.write_opt)
-            };
-            match put_result {
-                Ok(_) => Ok(()),
-                Err(e) => Err(PyException::new_err(e.to_string())),
+                let key = encode_key(key, self.opt_py.raw_mode)?;
+                let value = encode_value(value, &self.pickle_dumps, self.opt_py.raw_mode, py)?;
+                let put_result = if let Some(cf) = &self.column_family {
+                    db.put_cf_opt(cf.deref(), key, value, &self.write_opt)
+                } else {
+                    db.put_opt(key, value, &self.write_opt)
+                };
+                match put_result {
+                    Ok(_) => Ok(()),
+                    Err(e) => Err(PyException::new_err(e.to_string())),
+                }
             }
         } else {
             Err(PyException::new_err("DB already closed"))
@@ -277,18 +304,37 @@ impl Rdict {
 
     fn __contains__(&self, key: &PyAny) -> PyResult<bool> {
         if let Some(db) = &self.db {
-            let key = encode_key(key, self.opt_py.raw_mode)?;
             let db = db.borrow();
-            let may_exist = if let Some(cf) = &self.column_family {
-                db.key_may_exist_cf_opt(cf.deref(), &key[..], &self.read_opt)
+            let may_exist = if self.opt_py.raw_mode {
+                let key = encode_raw(key)?;
+                if let Some(cf) = &self.column_family {
+                    db.key_may_exist_cf_opt(cf.deref(), &key[..], &self.read_opt)
+                } else {
+                    db.key_may_exist_opt(&key[..], &self.read_opt)
+                }
             } else {
-                db.key_may_exist_opt(&key[..], &self.read_opt)
+                let key = encode_key(key, self.opt_py.raw_mode)?;
+                if let Some(cf) = &self.column_family {
+                    db.key_may_exist_cf_opt(cf.deref(), &key[..], &self.read_opt)
+                } else {
+                    db.key_may_exist_opt(&key[..], &self.read_opt)
+                }
             };
             if may_exist {
-                let value_result = if let Some(cf) = &self.column_family {
-                    db.get_pinned_cf_opt(cf.deref(), &key[..], &self.read_opt)
+                let value_result = if self.opt_py.raw_mode {
+                    let key = encode_raw(key)?;
+                    if let Some(cf) = &self.column_family {
+                        db.get_pinned_cf_opt(cf.deref(), &key[..], &self.read_opt)
+                    } else {
+                        db.get_pinned_opt(&key[..], &self.read_opt)
+                    }
                 } else {
-                    db.get_pinned_opt(&key[..], &self.read_opt)
+                    let key = encode_key(key, self.opt_py.raw_mode)?;
+                    if let Some(cf) = &self.column_family {
+                        db.get_pinned_cf_opt(cf.deref(), &key[..], &self.read_opt)
+                    } else {
+                        db.get_pinned_opt(&key[..], &self.read_opt)
+                    }
                 };
                 match value_result {
                     Ok(value) => match value {
@@ -307,12 +353,21 @@ impl Rdict {
 
     fn __delitem__(&self, key: &PyAny) -> PyResult<()> {
         if let Some(db) = &self.db {
-            let key = encode_key(key, self.opt_py.raw_mode)?;
             let db = db.borrow();
-            let del_result = if let Some(cf) = &self.column_family {
-                db.delete_cf_opt(cf.deref(), &key[..], &self.write_opt)
+            let del_result = if self.opt_py.raw_mode {
+                let key = encode_raw(key)?;
+                if let Some(cf) = &self.column_family {
+                    db.delete_cf_opt(cf.deref(), &key[..], &self.write_opt)
+                } else {
+                    db.delete_opt(&key[..], &self.write_opt)
+                }
             } else {
-                db.delete_opt(&key[..], &self.write_opt)
+                let key = encode_key(key, self.opt_py.raw_mode)?;
+                if let Some(cf) = &self.column_family {
+                    db.delete_cf_opt(cf.deref(), &key[..], &self.write_opt)
+                } else {
+                    db.delete_opt(&key[..], &self.write_opt)
+                }
             };
             match del_result {
                 Ok(_) => Ok(()),
@@ -535,7 +590,10 @@ impl Rdict {
         py: Python,
     ) -> PyResult<Rdict> {
         if options.borrow(py).raw_mode != self.opt_py.raw_mode {
-            return Err(PyException::new_err(format!("Options should have raw_mode={}", self.opt_py.raw_mode)))
+            return Err(PyException::new_err(format!(
+                "Options should have raw_mode={}",
+                self.opt_py.raw_mode
+            )));
         }
         if let Some(db) = &self.db {
             let create_result = db
@@ -1048,17 +1106,35 @@ fn get_batch_inner<'a>(
     column_family: &Option<Rc<ColumnFamily>>,
     raw_mode: bool,
 ) -> PyResult<&'a PyList> {
-    let mut keys_batch = Vec::new();
-    for key in keys {
-        keys_batch.push(encode_key(key, raw_mode)?);
-    }
     let db = db.borrow();
-    let values = if let Some(cf) = column_family {
-        let keys_cols: Vec<(&ColumnFamily, Box<[u8]>)> =
-            keys_batch.into_iter().map(|k| (cf.deref(), k)).collect();
-        db.multi_get_cf_opt(keys_cols, read_opt)
+    let values = if raw_mode {
+        if let Some(cf) = column_family {
+            let mut keys_cols: Vec<(&ColumnFamily, &[u8])> = Vec::with_capacity(keys.len());
+            for key in keys {
+                keys_cols.push((cf.deref(), encode_raw(key)?));
+            }
+            db.multi_get_cf_opt(keys_cols, read_opt)
+        } else {
+            let mut keys_batch = Vec::with_capacity(keys.len());
+            for key in keys {
+                keys_batch.push(encode_raw(key)?);
+            }
+            db.multi_get_opt(keys_batch, read_opt)
+        }
     } else {
-        db.multi_get_opt(keys_batch, read_opt)
+        if let Some(cf) = column_family {
+            let mut keys_cols: Vec<(&ColumnFamily, Box<[u8]>)> = Vec::with_capacity(keys.len());
+            for key in keys {
+                keys_cols.push((cf.deref(), encode_key(key, raw_mode)?));
+            }
+            db.multi_get_cf_opt(keys_cols, read_opt)
+        } else {
+            let mut keys_batch = Vec::with_capacity(keys.len());
+            for key in keys {
+                keys_batch.push(encode_key(key, raw_mode)?);
+            }
+            db.multi_get_opt(keys_batch, read_opt)
+        }
     };
     let result = PyList::empty(py);
     for v in values {

@@ -1,4 +1,4 @@
-use crate::encoder::{encode_key, encode_value};
+use crate::encoder::{encode_key, encode_raw, encode_value};
 use crate::ColumnFamilyPy;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
@@ -49,11 +49,20 @@ impl WriteBatchPy {
 
     pub fn __setitem__(&mut self, key: &PyAny, value: &PyAny, py: Python) -> PyResult<()> {
         if let Some(inner) = &mut self.inner {
-            let key = encode_key(key, self.raw_mode)?;
-            let value = encode_value(value, &self.pickle_dumps, self.raw_mode, py)?;
-            match &self.default_column_family {
-                None => inner.put(key, value),
-                Some(cf) => inner.put_cf(cf.cf.deref(), key, value),
+            if self.raw_mode {
+                let key = encode_raw(key)?;
+                let value = encode_raw(value)?;
+                match &self.default_column_family {
+                    None => inner.put(key, value),
+                    Some(cf) => inner.put_cf(cf.cf.deref(), key, value),
+                }
+            } else {
+                let key = encode_key(key, self.raw_mode)?;
+                let value = encode_value(value, &self.pickle_dumps, self.raw_mode, py)?;
+                match &self.default_column_family {
+                    None => inner.put(key, value),
+                    Some(cf) => inner.put_cf(cf.cf.deref(), key, value),
+                }
             }
             Ok(())
         } else {
@@ -65,10 +74,18 @@ impl WriteBatchPy {
 
     pub fn __delitem__(&mut self, key: &PyAny) -> PyResult<()> {
         if let Some(inner) = &mut self.inner {
-            let key = encode_key(key, self.raw_mode)?;
-            match &self.default_column_family {
-                None => inner.delete(key),
-                Some(cf) => inner.delete_cf(cf.cf.deref(), key),
+            if self.raw_mode {
+                let key = encode_raw(key)?;
+                match &self.default_column_family {
+                    None => inner.delete(key),
+                    Some(cf) => inner.delete_cf(cf.cf.deref(), key),
+                }
+            } else {
+                let key = encode_key(key, self.raw_mode)?;
+                match &self.default_column_family {
+                    None => inner.delete(key),
+                    Some(cf) => inner.delete_cf(cf.cf.deref(), key),
+                }
             }
             Ok(())
         } else {
@@ -148,11 +165,20 @@ impl WriteBatchPy {
         py: Python,
     ) -> PyResult<()> {
         if let Some(inner) = &mut self.inner {
-            let key = encode_key(key, self.raw_mode)?;
-            let value = encode_value(value, &self.pickle_dumps, self.raw_mode, py)?;
-            match column_family {
-                Some(cf) => inner.put_cf(cf.cf.deref(), key, value),
-                None => inner.put(key, value),
+            if self.raw_mode {
+                let key = encode_raw(key)?;
+                let value = encode_raw(value)?;
+                match column_family {
+                    Some(cf) => inner.put_cf(cf.cf.deref(), key, value),
+                    None => inner.put(key, value),
+                }
+            } else {
+                let key = encode_key(key, self.raw_mode)?;
+                let value = encode_value(value, &self.pickle_dumps, self.raw_mode, py)?;
+                match column_family {
+                    Some(cf) => inner.put_cf(cf.cf.deref(), key, value),
+                    None => inner.put(key, value),
+                }
             }
             Ok(())
         } else {
@@ -170,10 +196,18 @@ impl WriteBatchPy {
     #[args(column_family = "None")]
     pub fn delete(&mut self, key: &PyAny, column_family: Option<ColumnFamilyPy>) -> PyResult<()> {
         if let Some(inner) = &mut self.inner {
-            let key = encode_key(key, self.raw_mode)?;
-            match column_family {
-                Some(cf) => inner.delete_cf(cf.cf.deref(), key),
-                None => inner.delete(key),
+            if self.raw_mode {
+                let key = encode_raw(key)?;
+                match column_family {
+                    Some(cf) => inner.delete_cf(cf.cf.deref(), key),
+                    None => inner.delete(key),
+                }
+            } else {
+                let key = encode_key(key, self.raw_mode)?;
+                match column_family {
+                    Some(cf) => inner.delete_cf(cf.cf.deref(), key),
+                    None => inner.delete(key),
+                }
             }
             Ok(())
         } else {
