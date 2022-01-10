@@ -218,7 +218,7 @@ class PyVidarDB(ADB):
         self.db.put(key, value)
 
     def get_raw(self, key: bytes) -> bytes:
-        return self.db.get(key)
+        return self.db.get(key)[0]
 
     def delete_raw(self, key: bytes) -> None:
         self.db.delete(key)
@@ -237,39 +237,16 @@ class SemiDBM(ADB):
         self.path = path
         self.db = semidbm.open(os.path.join(path, name), 'c')
 
-    def insert(self, key: Any, value: Any) -> None:
+    def insert_raw(self, key: bytes, value: bytes) -> None:
         self.db[key] = value
 
-    def get(self, key: Any) -> Any:
+    def get_raw(self, key: bytes) -> bytes:
         return self.db[key]
 
-    def delete(self, key: Any) -> None:
+    def delete_raw(self, key: bytes) -> None:
         del self.db[key]
 
-    def contains(self, key: Any) -> bool:
-        return key in self.db
-
-    def destroy(self) -> None:
-        self.db.close()
-        shutil.rmtree(self.path)
-
-
-class CannonDB(ADB):
-    def __init__(self, path='./my_db_cannon/', name='my_db'):
-        os.makedirs(path)
-        self.path = path
-        self.db = cannondb.connect(os.path.join(path, name))
-
-    def insert(self, key: Any, value: Any) -> None:
-        self.db.insert(key, value)
-
-    def get(self, key: Any) -> Any:
-        return self.db.get(key)
-
-    def delete(self, key: Any) -> None:
-        self.db.remove(key)
-
-    def contains(self, key: Any) -> bool:
+    def contains_raw(self, key: bytes) -> bool:
         return key in self.db
 
     def destroy(self) -> None:

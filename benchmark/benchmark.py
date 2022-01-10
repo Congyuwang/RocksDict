@@ -50,12 +50,10 @@ def db_factory(db_name: str):
         return PyVidarDB()
     elif db_name == "semi_dbm":
         return SemiDBM()
-    elif db_name == "cannon_db":
-        return CannonDB()
     else:
         raise Exception("dn_name should be one of: rocks_db, rocks_db_raw, " +
                         "sqlite_db, sqlite_db_raw, shelve_db, dbm, py_vidar_db,"
-                        " semi_dbm, cannon_db")
+                        " semi_dbm")
 
 
 def sample_factory(num: int, k_size: int, v_size: int,
