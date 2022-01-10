@@ -103,14 +103,10 @@ if __name__ == '__main__':
     if not BENCH_PLOT_FOLDER.exists():
         os.mkdir(BENCH_PLOT_FOLDER)
     for r in range(TOTAL_ROUNDS):
-        run(cmd("rocks_db", 10000, 16, 100, 1000, r))
         run(cmd("rocks_db_raw", 10000, 16, 100, 1000, r))
-        run(cmd("shelve_db", 10000, 16, 100, 1000, r))
         run(cmd("py_vidar_db", 10000, 16, 100, 1000, r))
         run(cmd("semi_dbm", 10000, 16, 100, 1000, r))
-        run(cmd("rocks_db", 1000, 16, 100000, 100, r))
         run(cmd("rocks_db_raw", 1000, 16, 100000, 100, r))
-        run(cmd("shelve_db", 1000, 16, 100000, 100, r))
         run(cmd("py_vidar_db", 1000, 16, 100000, 100, r))
         run(cmd("semi_dbm", 1000, 16, 100000, 100, r))
 
