@@ -43,5 +43,11 @@ class ADB(ABC):
     def delete_range_raw(self, start: bytes, end: bytes) -> None:
         raise NotImplementedError("method unimplemented")
 
+    def contains(self, key: Any) -> bool:
+        raise NotImplementedError("method unimplemented")
+
+    def contains_raw(self, key: bytes) -> bool:
+        raise NotImplementedError("method unimplemented")
+
     @abstractmethod
     def destroy(self) -> None: ...

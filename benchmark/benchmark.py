@@ -116,22 +116,22 @@ def insert_raw(db: ADB):
 
 def get(db: ADB):
     for key in data_sample.keys:
-        db.get(key)
+        assert db.get(key) == data_sample.value
 
 
 def get_raw(db: ADB):
     for key in data_sample.bytes_keys:
-        db.get_raw(key)
+        assert db.get_raw(key) == data_sample.value
 
 
 def random_get(db: ADB):
     for key in data_sample.random_selected_keys:
-        db.get(key)
+        assert db.get(key) == data_sample.value
 
 
 def random_get_raw(db: ADB):
     for key in data_sample.random_selected_bytes_keys:
-        db.get_raw(key)
+        assert db.get_raw(key) == data_sample.value
 
 
 def batch_insert(db: ADB):
@@ -146,12 +146,14 @@ def batch_insert_raw(db: ADB):
 
 def multi_get(db: ADB):
     for batch in data_sample.batched_kv:
-        db.multi_get([k for k, _ in batch])
+        expected = [data_sample.value] * len(batch)
+        assert db.multi_get([k for k, _ in batch]) == expected
 
 
 def multi_get_raw(db: ADB):
     for batch in data_sample.bytes_batched_kv:
-        db.multi_get_raw([k for k, _ in batch])
+        expected = [data_sample.value] * len(batch)
+        assert db.multi_get_raw([k for k, _ in batch]) == expected
 
 
 def delete(db: ADB):
