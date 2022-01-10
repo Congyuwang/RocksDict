@@ -2,8 +2,6 @@ from .db_impl import *
 from random import choices
 import pytest
 
-VALUE_1B = b'a'
-
 
 def pos_cover_num_to_str(x: int, size: int) -> str:
     """Generate fixed size string number for uniqueness."""
@@ -21,12 +19,13 @@ class Dataset:
     def __init__(self, num: int, keys_size: int = 16,
                  value_size: int = 100, batch_size: int = 100,
                  random_percent: float = 0.01):
-        self.value = VALUE_1B * value_size
+        self.value = 'a' * value_size
+        self.bytes_value = b'a' * value_size
         self.keys = [pos_cover_num_to_str(i, keys_size) for i in range(num)]
         self.bytes_keys = [bytes(k, 'utf-8') for k in self.keys]
         self.batched_kv = [[(k, self.value) for k in b]
                            for b in chunks(self.keys, batch_size)]
-        self.bytes_batched_kv = [[(k, self.value) for k in b]
+        self.bytes_batched_kv = [[(k, self.bytes_value) for k in b]
                                  for b in chunks(self.bytes_keys, batch_size)]
         self.keys_len = len(self.keys)
         num_keys = int(self.keys_len * random_percent)
@@ -111,7 +110,7 @@ def insert(db: ADB):
 
 def insert_raw(db: ADB):
     for key in data_sample.bytes_keys:
-        db.insert_raw(key, data_sample.value)
+        db.insert_raw(key, data_sample.bytes_value)
 
 
 def get(db: ADB):
@@ -121,7 +120,7 @@ def get(db: ADB):
 
 def get_raw(db: ADB):
     for key in data_sample.bytes_keys:
-        assert db.get_raw(key) == data_sample.value
+        assert db.get_raw(key) == data_sample.bytes_value
 
 
 def random_get(db: ADB):
@@ -131,7 +130,7 @@ def random_get(db: ADB):
 
 def random_get_raw(db: ADB):
     for key in data_sample.random_selected_bytes_keys:
-        assert db.get_raw(key) == data_sample.value
+        assert db.get_raw(key) == data_sample.bytes_value
 
 
 def batch_insert(db: ADB):
@@ -152,7 +151,7 @@ def multi_get(db: ADB):
 
 def multi_get_raw(db: ADB):
     for batch in data_sample.bytes_batched_kv:
-        expected = [data_sample.value] * len(batch)
+        expected = [data_sample.bytes_value] * len(batch)
         assert db.multi_get_raw([k for k, _ in batch]) == expected
 
 
@@ -199,83 +198,95 @@ def db_insert_raw_before_after(name):
 
 def test_fill_sequential(db_before_after, benchmark):
     try:
-        benchmark(insert, db_before_after)
+        benchmark.pedantic(insert, args=(db_before_after,),
+                           iterations=1, rounds=1)
     except NotImplementedError:
         pytest.skip("method unimplemented")
 
 
 def test_fill_raw_sequential(db_before_after, benchmark):
     try:
-        benchmark(insert_raw, db_before_after)
+        benchmark.pedantic(insert_raw, args=(db_before_after,),
+                           iterations=1, rounds=1)
     except NotImplementedError:
         pytest.skip("method unimplemented")
 
 
 def test_read_hot(db_insert_before_after, benchmark):
     try:
-        benchmark(random_get, db_insert_before_after)
+        benchmark.pedantic(random_get, args=(db_insert_before_after,),
+                           iterations=1, rounds=1)
     except NotImplementedError:
         pytest.skip("method unimplemented")
 
 
 def test_read_hot_raw(db_insert_raw_before_after, benchmark):
     try:
-        benchmark(random_get_raw, db_insert_raw_before_after)
+        benchmark.pedantic(random_get_raw, args=(db_insert_raw_before_after,),
+                           iterations=1, rounds=1)
     except NotImplementedError:
         pytest.skip("method unimplemented")
 
 
 def test_read_sequential(db_insert_before_after, benchmark):
     try:
-        benchmark(get, db_insert_before_after)
+        benchmark.pedantic(get, args=(db_insert_before_after,),
+                           iterations=1, rounds=1)
     except NotImplementedError:
         pytest.skip("method unimplemented")
 
 
 def test_read_sequential_raw(db_insert_raw_before_after, benchmark):
     try:
-        benchmark(get_raw, db_insert_raw_before_after)
+        benchmark.pedantic(get_raw, args=(db_insert_raw_before_after,),
+                           iterations=1, rounds=1)
     except NotImplementedError:
         pytest.skip("method unimplemented")
 
 
 def test_delete_sequential(db_insert_before_after, benchmark):
     try:
-        benchmark.pedantic(delete, args=(db_insert_before_after,), iterations=1, rounds=1)
+        benchmark.pedantic(delete, args=(db_insert_before_after,),
+                           iterations=1, rounds=1)
     except NotImplementedError:
         pytest.skip("method unimplemented")
 
 
 def test_delete_sequential_raw(db_insert_raw_before_after, benchmark):
     try:
-        benchmark.pedantic(delete_raw, args=(db_insert_raw_before_after,), iterations=1, rounds=1)
+        benchmark.pedantic(delete_raw, args=(db_insert_raw_before_after,),
+                           iterations=1, rounds=1)
     except NotImplementedError:
         pytest.skip("method unimplemented")
 
 
 def test_fill_batch_sequential(db_before_after, benchmark):
     try:
-        benchmark(batch_insert, db_before_after)
+        benchmark.pedantic(batch_insert, args=(db_before_after,),
+                           iterations=1, rounds=1)
     except NotImplementedError:
         pytest.skip("method unimplemented")
 
 
 def test_fill_raw_batch_sequential(db_before_after, benchmark):
     try:
-        benchmark(batch_insert_raw, db_before_after)
+        benchmark.pedantic(batch_insert_raw, args=(db_before_after,),
+                           iterations=1, rounds=1)
     except NotImplementedError:
         pytest.skip("method unimplemented")
 
 
 def test_get_batch_sequential(db_insert_before_after, benchmark):
     try:
-        benchmark(multi_get, db_insert_before_after)
+        benchmark.pedantic(multi_get, args=(db_insert_before_after,),
+                           iterations=1, rounds=1)
     except NotImplementedError:
         pytest.skip("method unimplemented")
 
 
 def test_get_raw_batch_sequential(db_insert_raw_before_after, benchmark):
     try:
-        benchmark(multi_get_raw, db_insert_raw_before_after)
+        benchmark.pedantic(multi_get_raw, args=(db_insert_raw_before_after,),
+                           iterations=1, rounds=1)
     except NotImplementedError:
         pytest.skip("method unimplemented")
