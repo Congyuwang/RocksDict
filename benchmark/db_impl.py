@@ -43,6 +43,9 @@ class RocksDB(ADB):
     def delete_range(self, start: Any, end: Any) -> None:
         self.db.delete_range(begin=start, end=end)
 
+    def contains(self, key: Any) -> bool:
+        return key in self.db
+
     def destroy(self) -> None:
         path = self.db.path()
         self.db.close()
@@ -75,6 +78,9 @@ class RocksDBRaw(ADB):
     def delete_range_raw(self, start: bytes, end: bytes) -> None:
         self.db.delete_range(begin=start, end=end)
 
+    def contains_raw(self, key: bytes) -> bool:
+        return key in self.db
+
     def destroy(self) -> None:
         path = self.db.path()
         self.db.close()
@@ -82,13 +88,19 @@ class RocksDBRaw(ADB):
 
 
 class SqliteDB(ADB):
-    def __init__(self, path='./my_db_sqlite/', name='my_db.sqlite'):
+    def __init__(self, path='./my_db_sqlite/', name='my_db.sqlite',
+                 commit_every: int = 1000):
         os.makedirs(path)
         self.path = path
-        self.db = SqliteDict(Path(path) / name, autocommit=True, flag="c")
+        self.db = SqliteDict(Path(path) / name, autocommit=False, flag="c")
+        self.commit_every = commit_every
+        self.counter = 0
 
     def insert(self, key: Any, value: Any) -> None:
         self.db[key] = value
+        self.counter += 1
+        if self.counter % self.commit_every == 0:
+            self.db.commit(blocking=True)
 
     def get(self, key: Any) -> Any:
         return self.db[key]
@@ -98,9 +110,15 @@ class SqliteDB(ADB):
         for k, v in kv_list:
             wb[k] = v
         self.db.update(wb)
+        self.db.commit(blocking=True)
 
     def delete(self, key: Any) -> None:
         del self.db[key]
+        if self.counter % self.commit_every == 0:
+            self.db.commit(blocking=True)
+
+    def contains(self, key: Any) -> bool:
+        return key in self.db
 
     def destroy(self) -> None:
         self.db.close()
@@ -108,13 +126,18 @@ class SqliteDB(ADB):
 
 
 class SqliteDBRAW(ADB):
-    def __init__(self, path='./my_db_sqlite_raw/', name='my_db.sqlite'):
+    def __init__(self, path='./my_db_sqlite_raw/', name='my_db.sqlite',
+                 commit_every: int = 1000):
         os.makedirs(path)
         self.path = path
-        self.db = SqliteDict(Path(path) / name, autocommit=True, flag="c")
+        self.db = SqliteDict(Path(path) / name, autocommit=False, flag="c")
+        self.commit_every = commit_every
+        self.counter = 0
 
     def insert_raw(self, key: bytes, value: bytes) -> None:
         self.db[key] = value
+        if self.counter % self.commit_every == 0:
+            self.db.commit(blocking=True)
 
     def get_raw(self, key: Any) -> Any:
         return self.db[key]
@@ -127,6 +150,11 @@ class SqliteDBRAW(ADB):
 
     def delete_raw(self, key: bytes) -> None:
         del self.db[key]
+        if self.counter % self.commit_every == 0:
+            self.db.commit(blocking=True)
+
+    def contains_raw(self, key: bytes) -> bool:
+        return key in self.db
 
     def destroy(self) -> None:
         self.db.close()
@@ -148,6 +176,9 @@ class ShelveDB(ADB):
     def delete(self, key: Any) -> None:
         del self.db[key]
 
+    def contains(self, key: Any) -> bool:
+        return key in self.db
+
     def destroy(self) -> None:
         self.db.close()
         shutil.rmtree(self.path)
@@ -157,7 +188,7 @@ class DBM(ADB):
     def __init__(self, path='./my_db_dbm/', name='my_db'):
         os.makedirs(path)
         self.path = path
-        self.db = dbm.open(os.path.join(path, name))
+        self.db = dbm.open(os.path.join(path, name), "c")
 
     def insert_raw(self, key: bytes, value: bytes) -> None:
         self.db[key] = value
@@ -167,6 +198,9 @@ class DBM(ADB):
 
     def delete_raw(self, key: bytes) -> None:
         del self.db[key]
+
+    def contains_raw(self, key: bytes) -> bool:
+        return key in self.db
 
     def destroy(self) -> None:
         self.db.close()
@@ -189,6 +223,9 @@ class PyVidarDB(ADB):
     def delete_raw(self, key: bytes) -> None:
         self.db.delete(key)
 
+    def contains_raw(self, key: bytes) -> bool:
+        return key in self.db
+
     def destroy(self) -> None:
         self.db.close()
         shutil.rmtree(self.path)
@@ -209,6 +246,9 @@ class SemiDBM(ADB):
     def delete(self, key: Any) -> None:
         del self.db[key]
 
+    def contains(self, key: Any) -> bool:
+        return key in self.db
+
     def destroy(self) -> None:
         self.db.close()
         shutil.rmtree(self.path)
@@ -228,6 +268,9 @@ class CannonDB(ADB):
 
     def delete(self, key: Any) -> None:
         self.db.remove(key)
+
+    def contains(self, key: Any) -> bool:
+        return key in self.db
 
     def destroy(self) -> None:
         self.db.close()
