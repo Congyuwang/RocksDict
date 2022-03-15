@@ -17,7 +17,7 @@ This library has two purposes.
 These two purposes operate in different modes:
 
 - **Default mode**, which allows storing `int`, `float`, 
-`bool`, `str`, `bytes`, and other python objects.
+`bool`, `str`, `bytes`, and other python objects (with `Pickle`).
 
 - **Raw mode** (`options=Options(raw_mode=True)`),
 which allows storing only `bytes`.
