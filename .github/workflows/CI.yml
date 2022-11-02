@@ -12,7 +12,7 @@ jobs:
         py_version: [3.7, 3.8, 3.9, "3.10", "3.11"]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.py_version }}
           architecture: x64
@@ -44,15 +44,15 @@ jobs:
         target: [x64, x86]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.11"
           architecture: ${{ matrix.target }}
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
           architecture: ${{ matrix.target }}
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.9
           architecture: ${{ matrix.target }}
@@ -89,36 +89,36 @@ jobs:
       matrix:
         target: [x86_64, i686, aarch64]
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: "3.11"
-        architecture: x64
-    - uses: actions/setup-python@v2
-      with:
-        python-version: "3.10"
-        architecture: x64
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.9
-        architecture: x64
-    - name: Build Wheels
-      uses: messense/maturin-action@v1
-      with:
-        rust-toolchain: stable
-        target: ${{ matrix.target }}
-        manylinux: auto
-        args: --release --out dist --no-sdist
-    - name: Install built wheel and test
-      if: matrix.target == 'x86_64'
-      run: |
-        pip install rocksdict --no-index --find-links dist --force-reinstall
-        python -m unittest discover -v test
-    - name: Upload wheels
-      uses: actions/upload-artifact@v2
-      with:
-        name: wheels
-        path: dist
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          architecture: x64
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          architecture: x64
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+          architecture: x64
+      - name: Build Wheels
+        uses: messense/maturin-action@v1
+        with:
+          rust-toolchain: stable
+          target: ${{ matrix.target }}
+          manylinux: auto
+          args: --release --out dist --no-sdist
+      - name: Install built wheel and test
+        if: matrix.target == 'x86_64'
+        run: |
+          pip install rocksdict --no-index --find-links dist --force-reinstall
+          python -m unittest discover -v test
+      - name: Upload wheels
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: dist
 
   linux-cross:
     runs-on: ubuntu-latest
@@ -127,13 +127,13 @@ jobs:
         target: [aarch64, s390x, ppc64le, ppc64]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.11"
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.9
       - name: Build Wheels
@@ -171,7 +171,7 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: wheels
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.9
       - name: Publish to PyPi
