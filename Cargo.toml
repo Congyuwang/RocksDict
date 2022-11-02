@@ -11,8 +11,8 @@ name = "rocksdict"
 crate-type = ["cdylib"]
 
 [dependencies]
-rocksdb = { git = "https://github.com/Congyuwang/rust-rocksdb", branch = "rocksdb" }
-librocksdb-sys = { git = "https://github.com/Congyuwang/rust-rocksdb", branch = "rocksdb" }
+rocksdb = { git = "https://github.com/Congyuwang/rust-rocksdb", branch = "rocksdict" }
+librocksdb-sys = { git = "https://github.com/Congyuwang/rust-rocksdb", branch = "rocksdict" }
 ahash = "0.8.1"
 num-bigint = "^0.4.3"
 libc = "0.2.112"
