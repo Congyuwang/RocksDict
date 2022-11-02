@@ -106,8 +106,9 @@ impl WriteBatchPy {
         &mut self,
         column_family: Option<ColumnFamilyPy>,
     ) -> PyResult<()> {
-        if let Some(_) = &self.inner {
-            Ok(self.default_column_family = column_family)
+        if self.inner.is_some() {
+            self.default_column_family = column_family;
+            Ok(())
         } else {
             Err(PyException::new_err(
                 "this batch is already consumed, create a new one by calling `WriteBatch()`",
@@ -255,7 +256,8 @@ impl WriteBatchPy {
     #[pyo3(text_signature = "($self)")]
     pub fn clear(&mut self) -> PyResult<()> {
         if let Some(inner) = &mut self.inner {
-            Ok(inner.clear())
+            inner.clear();
+            Ok(())
         } else {
             Err(PyException::new_err(
                 "this batch is already consumed, create a new one by calling `WriteBatch()`",

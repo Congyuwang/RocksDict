@@ -293,7 +293,7 @@ impl RdictIter {
                 let key_len_ptr: *mut size_t = &mut key_len;
                 let key_ptr =
                     librocksdb_sys::rocksdb_iter_key(self.inner, key_len_ptr) as *const c_uchar;
-                let key = slice::from_raw_parts(key_ptr, key_len as usize);
+                let key = slice::from_raw_parts(key_ptr, key_len);
                 Ok(decode_value(py, key, &self.pickle_loads, self.raw_mode)?)
             }
         } else {
@@ -312,7 +312,7 @@ impl RdictIter {
                 let val_len_ptr: *mut size_t = &mut val_len;
                 let val_ptr =
                     librocksdb_sys::rocksdb_iter_value(self.inner, val_len_ptr) as *const c_uchar;
-                let value = slice::from_raw_parts(val_ptr, val_len as usize);
+                let value = slice::from_raw_parts(val_ptr, val_len);
                 Ok(decode_value(py, value, &self.pickle_loads, self.raw_mode)?)
             }
         } else {

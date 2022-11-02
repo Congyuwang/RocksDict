@@ -65,13 +65,13 @@ impl Snapshot {
         unsafe {
             set_snapshot(opt_pointer.0, self.inner);
         }
-        Ok(RdictIter::new(
+        RdictIter::new(
             &self.db,
             &self.column_family,
             read_opt,
             &self.pickle_loads,
             self.raw_mode,
-        )?)
+        )
     }
 
     /// Iterate through all keys and values pairs.
@@ -91,11 +91,11 @@ impl Snapshot {
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictItems> {
-        Ok(RdictItems::new(
+        RdictItems::new(
             self.iter(read_opt, py)?,
             backwards,
             from_key,
-        )?)
+        )
     }
 
     /// Iterate through all keys.
@@ -115,11 +115,11 @@ impl Snapshot {
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictKeys> {
-        Ok(RdictKeys::new(
+        RdictKeys::new(
             self.iter(read_opt, py)?,
             backwards,
             from_key,
-        )?)
+        )
     }
 
     /// Iterate through all values.
@@ -139,11 +139,11 @@ impl Snapshot {
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictValues> {
-        Ok(RdictValues::new(
+        RdictValues::new(
             self.iter(read_opt, py)?,
             backwards,
             from_key,
-        )?)
+        )
     }
 
     /// read from snapshot
@@ -152,9 +152,9 @@ impl Snapshot {
         let value_result = if self.raw_mode {
             let key = encode_raw(key)?;
             if let Some(cf) = &self.column_family {
-                db.get_pinned_cf_opt(cf.deref(), &key[..], &self.read_opt)
+                db.get_pinned_cf_opt(cf.deref(), key, &self.read_opt)
             } else {
-                db.get_pinned_opt(&key[..], &self.read_opt)
+                db.get_pinned_opt(key, &self.read_opt)
             }
         } else {
             let key = encode_key(key, self.raw_mode)?;

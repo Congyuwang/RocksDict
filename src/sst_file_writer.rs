@@ -92,7 +92,7 @@ impl SstFileWriterPy {
     /// Prepare SstFileWriter to write into file located at "file_path".
     #[pyo3(text_signature = "($self, path)")]
     fn open(&self, path: &str) -> PyResult<()> {
-        let cpath = to_cpath(&path)?;
+        let cpath = to_cpath(path)?;
         self.open_raw(&cpath)
     }
 

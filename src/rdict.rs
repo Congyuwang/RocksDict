@@ -143,10 +143,10 @@ impl Rdict {
                     }
                 } else {
                     match access_type.0 {
-                        AccessTypeInner::ReadWrite => DB::open(opt_inner, &path),
+                        AccessTypeInner::ReadWrite => DB::open(opt_inner, path),
                         AccessTypeInner::ReadOnly {
                             error_if_log_file_exist,
-                        } => DB::open_for_read_only(opt_inner, &path, error_if_log_file_exist),
+                        } => DB::open_for_read_only(opt_inner, path, error_if_log_file_exist),
                         AccessTypeInner::Secondary { secondary_path } => {
                             DB::open_as_secondary(opt_inner, path, Path::new(&secondary_path))
                         }
@@ -305,9 +305,9 @@ impl Rdict {
             let may_exist = if self.opt_py.raw_mode {
                 let key = encode_raw(key)?;
                 if let Some(cf) = &self.column_family {
-                    db.key_may_exist_cf_opt(cf.deref(), &key[..], &self.read_opt)
+                    db.key_may_exist_cf_opt(cf.deref(), key, &self.read_opt)
                 } else {
-                    db.key_may_exist_opt(&key[..], &self.read_opt)
+                    db.key_may_exist_opt(key, &self.read_opt)
                 }
             } else {
                 let key = encode_key(key, self.opt_py.raw_mode)?;
@@ -321,9 +321,9 @@ impl Rdict {
                 let value_result = if self.opt_py.raw_mode {
                     let key = encode_raw(key)?;
                     if let Some(cf) = &self.column_family {
-                        db.get_pinned_cf_opt(cf.deref(), &key[..], &self.read_opt)
+                        db.get_pinned_cf_opt(cf.deref(), key, &self.read_opt)
                     } else {
-                        db.get_pinned_opt(&key[..], &self.read_opt)
+                        db.get_pinned_opt(key, &self.read_opt)
                     }
                 } else {
                     let key = encode_key(key, self.opt_py.raw_mode)?;
@@ -354,9 +354,9 @@ impl Rdict {
             let del_result = if self.opt_py.raw_mode {
                 let key = encode_raw(key)?;
                 if let Some(cf) = &self.column_family {
-                    db.delete_cf_opt(cf.deref(), &key[..], &self.write_opt)
+                    db.delete_cf_opt(cf.deref(), key, &self.write_opt)
                 } else {
-                    db.delete_opt(&key[..], &self.write_opt)
+                    db.delete_opt(key, &self.write_opt)
                 }
             } else {
                 let key = encode_key(key, self.opt_py.raw_mode)?;
@@ -460,11 +460,11 @@ impl Rdict {
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictItems> {
-        Ok(RdictItems::new(
+        RdictItems::new(
             self.iter(read_opt, py)?,
             backwards,
             from_key,
-        )?)
+        )
     }
 
     /// Iterate through all keys
@@ -489,11 +489,11 @@ impl Rdict {
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictKeys> {
-        Ok(RdictKeys::new(
+        RdictKeys::new(
             self.iter(read_opt, py)?,
             backwards,
             from_key,
-        )?)
+        )
     }
 
     /// Iterate through all values.
@@ -518,11 +518,11 @@ impl Rdict {
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictValues> {
-        Ok(RdictValues::new(
+        RdictValues::new(
             self.iter(read_opt, py)?,
             backwards,
             from_key,
-        )?)
+        )
     }
 
     /// Manually flush the current column family.
@@ -616,11 +616,11 @@ impl Rdict {
                 Some(cf) => Ok(Self {
                     db: Some(db.clone()),
                     write_opt: (&self.write_opt_py).into(),
-                    flush_opt: self.flush_opt.clone(),
+                    flush_opt: self.flush_opt,
                     read_opt: (&self.read_opt_py).into(),
                     pickle_loads: self.pickle_loads.clone(),
                     pickle_dumps: self.pickle_dumps.clone(),
-                    column_family: Some(cf.clone()),
+                    column_family: Some(cf),
                     write_opt_py: self.write_opt_py.clone(),
                     read_opt_py: self.read_opt_py.clone(),
                     opt_py: self.opt_py.clone(),
@@ -655,7 +655,7 @@ impl Rdict {
                     name
                 ))),
                 Some(cf) => Ok(ColumnFamilyPy {
-                    cf: cf.clone(),
+                    cf,
                     db: db.clone(),
                 }),
             }
@@ -749,7 +749,8 @@ impl Rdict {
     #[pyo3(text_signature = "($self, wait)")]
     pub fn cancel_all_background(&self, wait: bool) -> PyResult<()> {
         if let Some(db) = &self.db {
-            Ok(db.borrow().cancel_all_background_work(wait))
+            db.borrow().cancel_all_background_work(wait);
+            Ok(())
         } else {
             Err(PyException::new_err("DB already closed"))
         }

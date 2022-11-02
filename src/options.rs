@@ -255,7 +255,7 @@ pub(crate) struct SliceTransformPy(SliceTransformType);
 pub(crate) enum SliceTransformType {
     Fixed(size_t),
     MaxLen(usize),
-    NOOP,
+    Noop,
 }
 
 #[pyclass(name = "DBPath")]
@@ -593,7 +593,8 @@ impl OptionsPy {
                 },
             );
         }
-        Ok(self.inner_opt.set_db_paths(&db_paths))
+        self.inner_opt.set_db_paths(&db_paths);
+        Ok(())
     }
 
     /// Use the specified object to interact with the environment,
@@ -650,7 +651,8 @@ impl OptionsPy {
             let level_type: &PyCell<DBCompressionTypePy> = PyTryFrom::try_from(py_any)?;
             result.push(level_type.borrow().0)
         }
-        Ok(self.inner_opt.set_compression_per_level(&result))
+        self.inner_opt.set_compression_per_level(&result);
+        Ok(())
     }
 
     /// Maximum size of dictionaries used to prime the compression library.
@@ -756,9 +758,10 @@ impl OptionsPy {
                     ))
                 }
             },
-            SliceTransformType::NOOP => SliceTransform::create_noop(),
+            SliceTransformType::Noop => SliceTransform::create_noop(),
         };
-        Ok(self.inner_opt.set_prefix_extractor(transform))
+        self.inner_opt.set_prefix_extractor(transform);
+        Ok(())
     }
 
     // pub fn add_comparator(&mut self, name: &str, compare_fn: CompareFn) {
@@ -1896,15 +1899,17 @@ impl ReadOptionsPy {
     /// The upper bound itself is not included on the iteration result.
     #[pyo3(text_signature = "($self, key)")]
     pub fn set_iterate_upper_bound(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
-        Ok(self.iterate_upper_bound =
-            Some(encode_value(key, &self.pickle_dumps, self.raw_mode, py)?))
+        self.iterate_upper_bound =
+        Some(encode_value(key, &self.pickle_dumps, self.raw_mode, py)?);
+        Ok(())
     }
 
     /// Sets the lower bound for an iterator.
     #[pyo3(text_signature = "($self, key)")]
     pub fn set_iterate_lower_bound(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
-        Ok(self.iterate_lower_bound =
-            Some(encode_value(key, &self.pickle_dumps, self.raw_mode, py)?))
+        self.iterate_lower_bound =
+        Some(encode_value(key, &self.pickle_dumps, self.raw_mode, py)?);
+        Ok(())
     }
 
     /// Enforce that the iterator only iterates over the same
@@ -2502,7 +2507,7 @@ impl SliceTransformPy {
     #[staticmethod]
     #[pyo3(text_signature = "()")]
     pub fn create_noop() -> Self {
-        SliceTransformPy(SliceTransformType::NOOP)
+        SliceTransformPy(SliceTransformType::Noop)
     }
 }
 
