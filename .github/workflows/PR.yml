@@ -42,20 +42,13 @@ jobs:
     strategy:
       matrix:
         target: [x64, x86]
+        py_version: [ 3.7, 3.8, 3.9, "3.10", "3.11" ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
-          architecture: ${{ matrix.target }}
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-          architecture: ${{ matrix.target }}
-      - uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
-          architecture: ${{ matrix.target }}
+          python-version: ${{ matrix.target }}
+          architecture: ${{ matrix.py_version }}
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v1
         with:
@@ -87,20 +80,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        target: [x86_64, i686, aarch64]
+        target: [x86_64, i686]
+        py_version: [3.7, 3.8, 3.9, "3.10", "3.11"]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
-          architecture: x64
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-          architecture: x64
-      - uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
+          python-version: ${{ matrix.py_version }}
           architecture: x64
       - name: Build Wheels
         uses: messense/maturin-action@v1
@@ -125,17 +111,12 @@ jobs:
     strategy:
       matrix:
         target: [aarch64, s390x, ppc64le, ppc64]
+        py_version: [3.7, 3.8, 3.9, "3.10", "3.11"]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-      - uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
+          python-version: ${{ matrix.py_version }}
       - name: Build Wheels
         uses: messense/maturin-action@v1
         with:
