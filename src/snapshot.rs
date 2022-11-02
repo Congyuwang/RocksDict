@@ -1,13 +1,11 @@
 use crate::encoder::{decode_value, encode_key, encode_raw};
 use crate::{Rdict, RdictItems, RdictIter, RdictKeys, RdictValues, ReadOpt, ReadOptionsPy};
-use librocksdb_sys;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use rocksdb::db::DBAccess;
 use rocksdb::{ColumnFamily, ReadOptions, DB};
 use std::cell::RefCell;
 use std::ops::Deref;
-use std::rc::Rc;
+use std::sync::Arc;
 
 /// A consistent view of the database at the point of creation.
 ///
@@ -41,11 +39,11 @@ use std::rc::Rc;
 #[pyclass]
 pub struct Snapshot {
     pub(crate) inner: *const librocksdb_sys::rocksdb_snapshot_t,
-    pub(crate) column_family: Option<Rc<ColumnFamily>>,
+    pub(crate) column_family: Option<Arc<ColumnFamily>>,
     pub(crate) pickle_loads: PyObject,
     pub(crate) read_opt: ReadOptions,
     // decrease db Rc last
-    pub(crate) db: Rc<RefCell<DB>>,
+    pub(crate) db: Arc<RefCell<DB>>,
     pub(crate) raw_mode: bool,
 }
 
@@ -57,16 +55,15 @@ impl Snapshot {
     /// Args:
     ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
     #[pyo3(text_signature = "($self, read_opt)")]
-    #[args(read_opt = "_py.None().into_ref(_py)")]
-    fn iter(&self, read_opt: &PyAny, py: Python) -> PyResult<RdictIter> {
-        let read_opt: Py<ReadOptionsPy> = if read_opt.is_none() {
-            Py::new(py, ReadOptionsPy::default(self.raw_mode, py)?)?
-        } else {
-            read_opt.extract()?
+    #[args(read_opt = "None")]
+    fn iter(&self, read_opt: Option<&ReadOptionsPy>, py: Python) -> PyResult<RdictIter> {
+        let read_opt: ReadOptionsPy = match read_opt {
+            None => ReadOptionsPy::default(self.raw_mode, py)?,
+            Some(opt) => opt.clone(),
         };
-        let opt: ReadOpt = read_opt.borrow(py).deref().into();
+        let opt_pointer = ReadOpt::from(&read_opt);
         unsafe {
-            set_snapshot(opt.0, self.inner);
+            set_snapshot(opt_pointer.0, self.inner);
         }
         Ok(RdictIter::new(
             &self.db,
@@ -74,7 +71,6 @@ impl Snapshot {
             read_opt,
             &self.pickle_loads,
             self.raw_mode,
-            py,
         )?)
     }
 
@@ -87,16 +83,12 @@ impl Snapshot {
     ///         (depending on iteration direction).
     ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
     #[pyo3(text_signature = "($self, backwards, from_key, read_opt)")]
-    #[args(
-        backwards = "false",
-        from_key = "_py.None().into_ref(_py)",
-        read_opt = "_py.None().into_ref(_py)"
-    )]
+    #[args(backwards = "false", from_key = "None", read_opt = "None")]
     fn items(
         &self,
         backwards: bool,
-        from_key: &PyAny,
-        read_opt: &PyAny,
+        from_key: Option<&PyAny>,
+        read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictItems> {
         Ok(RdictItems::new(
@@ -115,16 +107,12 @@ impl Snapshot {
     ///         (depending on iteration direction).
     ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
     #[pyo3(text_signature = "($self, backwards, from_key, read_opt)")]
-    #[args(
-        backwards = "false",
-        from_key = "_py.None().into_ref(_py)",
-        read_opt = "_py.None().into_ref(_py)"
-    )]
+    #[args(backwards = "false", from_key = "None", read_opt = "None")]
     fn keys(
         &self,
         backwards: bool,
-        from_key: &PyAny,
-        read_opt: &PyAny,
+        from_key: Option<&PyAny>,
+        read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictKeys> {
         Ok(RdictKeys::new(
@@ -143,16 +131,12 @@ impl Snapshot {
     ///         (depending on iteration direction).
     ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
     #[pyo3(text_signature = "($self, backwards, from_key, read_opt)")]
-    #[args(
-        backwards = "false",
-        from_key = "_py.None().into_ref(_py)",
-        read_opt = "_py.None().into_ref(_py)"
-    )]
+    #[args(backwards = "false", from_key = "None", read_opt = "None")]
     fn values(
         &self,
         backwards: bool,
-        from_key: &PyAny,
-        read_opt: &PyAny,
+        from_key: Option<&PyAny>,
+        read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictValues> {
         Ok(RdictValues::new(

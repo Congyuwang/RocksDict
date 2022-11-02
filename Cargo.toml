@@ -1,6 +1,6 @@
 [package]
 name = "RocksDict"
-version = "0.2.16"
+version = "0.3.0"
 edition = "2021"
 description = "Rocksdb Python Binding"
 
@@ -11,15 +11,14 @@ name = "rocksdict"
 crate-type = ["cdylib"]
 
 [dependencies]
-# modified to make rocksdb::db::DBAccess trait public
-rocksdb = { git = "https://github.com/Congyuwang/rust-rocksdb", branch = "rocksdict" }
-librocksdb-sys = "=6.20.3"
-ahash = "^0.7"
+rocksdb = { git = "https://github.com/Congyuwang/rust-rocksdb", branch = "rocksdb" }
+librocksdb-sys = { git = "https://github.com/Congyuwang/rust-rocksdb", branch = "rocksdb" }
+ahash = "0.8.1"
 num-bigint = "^0.4.3"
 libc = "0.2.112"
 
 [dependencies.pyo3]
-version = "~0.15"
+version = "0.17.3"
 features = ["extension-module", "num-bigint"]
 
 [package.metadata.maturin]

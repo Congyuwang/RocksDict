@@ -5,7 +5,7 @@ use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 use rocksdb::*;
-use std::ops::Deref;
+use std::ffi::c_double;
 use std::os::raw::{c_int, c_uint};
 use std::path::{Path, PathBuf};
 
@@ -1620,14 +1620,6 @@ impl OptionsPy {
         self.inner_opt.set_manifest_preallocation_size(size)
     }
 
-    /// Enable/disable purging of duplicate/deleted keys when a memtable is flushed to storage.
-    ///
-    /// Default: true
-    #[pyo3(text_signature = "($self, enabled)")]
-    pub fn set_purge_redundant_kvs_while_flush(&mut self, enabled: bool) {
-        self.inner_opt.set_purge_redundant_kvs_while_flush(enabled)
-    }
-
     /// If true, then DB::Open() will not update the statistics used to optimize
     /// compaction decision by loading table properties from many files.
     /// Turning off this feature will improve DBOpen time especially in disk environment.
@@ -1690,7 +1682,7 @@ impl OptionsPy {
     ///
     /// Default: disable
     ///
-    #[pyo3(text_signature = "($self, rate_bytes_per_sec)")]
+    #[pyo3(text_signature = "($self, rate_bytes_per_sec, refill_period_us, fairness)")]
     pub fn set_ratelimiter(
         &mut self,
         rate_bytes_per_sec: i64,
@@ -1753,30 +1745,6 @@ impl OptionsPy {
         self.inner_opt.set_recycle_log_file_num(num)
     }
 
-    /// Sets the soft rate limit.
-    ///
-    /// Puts are delayed 0-1 ms when any level has a compaction score that exceeds
-    /// soft_rate_limit. This is ignored when == 0.0.
-    /// CONSTRAINT: soft_rate_limit <= hard_rate_limit. If this constraint does not
-    /// hold, RocksDB will set soft_rate_limit = hard_rate_limit
-    ///
-    /// Default: 0.0 (disabled)
-    #[pyo3(text_signature = "($self, limit)")]
-    pub fn set_soft_rate_limit(&mut self, limit: f64) {
-        self.inner_opt.set_soft_rate_limit(limit)
-    }
-
-    /// Sets the hard rate limit.
-    ///
-    /// Puts are delayed 1ms at a time when any level has a compaction score that
-    /// exceeds hard_rate_limit. This is ignored when <= 1.0.
-    ///
-    /// Default: 0.0 (disabled)
-    #[pyo3(text_signature = "($self, limit)")]
-    pub fn set_hard_rate_limit(&mut self, limit: f64) {
-        self.inner_opt.set_hard_rate_limit(limit)
-    }
-
     /// Sets the threshold at which all writes will be slowed down to at least delayed_write_rate if estimated
     /// bytes needed to be compaction exceed this threshold.
     ///
@@ -1795,15 +1763,6 @@ impl OptionsPy {
     pub fn set_hard_pending_compaction_bytes_limit(&mut self, limit: usize) {
         self.inner_opt
             .set_hard_pending_compaction_bytes_limit(limit)
-    }
-
-    /// Sets the max time a put will be stalled when hard_rate_limit is enforced.
-    /// If 0, then there is no limit.
-    ///
-    /// Default: 1000
-    #[pyo3(text_signature = "($self, millis)")]
-    pub fn set_rate_limit_delay_max_milliseconds(&mut self, millis: c_uint) {
-        self.inner_opt.set_rate_limit_delay_max_milliseconds(millis)
     }
 
     /// Sets the size of one block in arena memory allocation.
@@ -2231,7 +2190,7 @@ impl BlockBasedOptionsPy {
 
     /// Sets the filter policy to reduce disk read
     #[pyo3(text_signature = "($self, bits_per_key)")]
-    pub fn set_bloom_filter(&mut self, bits_per_key: c_int, block_based: bool) {
+    pub fn set_bloom_filter(&mut self, bits_per_key: c_double, block_based: bool) {
         self.0.set_bloom_filter(bits_per_key, block_based)
     }
 
@@ -2752,12 +2711,12 @@ impl UniversalCompactOptionsPy {
 impl From<&UniversalCompactOptionsPy> for UniversalCompactOptions {
     fn from(u_opt: &UniversalCompactOptionsPy) -> Self {
         let mut uni = UniversalCompactOptions::default();
-        uni.size_ratio = u_opt.size_ratio;
-        uni.min_merge_width = u_opt.min_merge_width;
-        uni.max_merge_width = u_opt.max_merge_width;
-        uni.max_size_amplification_percent = u_opt.max_size_amplification_percent;
-        uni.compression_size_percent = u_opt.compression_size_percent;
-        uni.stop_style = u_opt.stop_style.0;
+        uni.set_size_ratio(u_opt.size_ratio);
+        uni.set_min_merge_width(u_opt.min_merge_width);
+        uni.set_max_merge_width(u_opt.max_merge_width);
+        uni.set_max_size_amplification_percent(u_opt.max_size_amplification_percent);
+        uni.set_compression_size_percent(u_opt.compression_size_percent);
+        uni.set_stop_style(u_opt.stop_style.0);
         uni
     }
 }

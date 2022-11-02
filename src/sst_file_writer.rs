@@ -2,7 +2,6 @@ use crate::encoder::{encode_key, encode_raw, encode_value};
 use crate::util::{error_message, to_cpath};
 use crate::OptionsPy;
 use libc::{self, c_char, size_t};
-use librocksdb_sys;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::PyResult;
@@ -73,11 +72,11 @@ impl SstFileWriterPy {
     /// Args:
     ///     options: this options must have the same `raw_mode` as the Rdict DB.
     #[new]
-    #[args(options = "Py::new(_py, OptionsPy::new(false))?")]
-    fn create(options: Py<OptionsPy>, py: Python) -> PyResult<Self> {
+    #[args(options = "OptionsPy::new(false)")]
+    fn create(options: OptionsPy, py: Python) -> PyResult<Self> {
         let env_options = EnvOptions::default();
-        let opt_borrow = &options.borrow(py);
-        let options = &opt_borrow.inner_opt;
+        let raw_mode = options.raw_mode;
+        let options = &options.inner_opt;
         let writer = Self::create_raw(options, &env_options);
         let pickle = PyModule::import(py, "pickle")?.to_object(py);
         let pickle_dumps = pickle.getattr(py, "dumps")?;
@@ -86,7 +85,7 @@ impl SstFileWriterPy {
             inner: writer,
             opts: options.clone(),
             pickle_dumps,
-            raw_mode: opt_borrow.raw_mode,
+            raw_mode,
         })
     }
 
