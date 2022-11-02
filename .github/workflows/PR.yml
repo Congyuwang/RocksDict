@@ -79,14 +79,14 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         target: [x86_64, i686]
-        py_version: [3.7, 3.8, 3.9, "3.10", "3.11"]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.py_version }}
+          python-version: 3.9
           architecture: x64
       - name: Build Wheels
         uses: messense/maturin-action@v1
@@ -94,7 +94,7 @@ jobs:
           rust-toolchain: stable
           target: ${{ matrix.target }}
           manylinux: auto
-          args: --release --out dist
+          args: --release --out dist --interpreter '3.7 3.8 3.9 3.10 3.11'
       - name: Install built wheel and test
         if: matrix.target == 'x86_64'
         run: |
@@ -109,21 +109,21 @@ jobs:
   linux-cross:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         target: [aarch64, s390x, ppc64le, ppc64]
-        py_version: [3.7, 3.8, 3.9, "3.10", "3.11"]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.py_version }}
+          python-version: 3.9
       - name: Build Wheels
         uses: messense/maturin-action@v1
         with:
           rust-toolchain: stable
           target: ${{ matrix.target }}
           manylinux: auto
-          args: --release --out dist
+          args: --release --out dist --interpreter '3.7 3.8 3.9 3.10 3.11'
       - uses: uraimo/run-on-arch-action@v2.0.5
         if: matrix.target != 'ppc64'
         name: Install built wheel and test
