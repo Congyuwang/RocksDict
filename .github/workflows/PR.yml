@@ -93,8 +93,9 @@ jobs:
         with:
           rust-toolchain: stable
           target: ${{ matrix.target }}
-          manylinux: auto
+          manylinux: 2014
           args: --release --out dist --interpreter '3.7 3.8 3.9 3.10 3.11'
+          container: messense/manylinux2014-cross:${{ matrix.target }}
       - name: Install built wheel and test
         if: matrix.target == 'x86_64'
         run: |
@@ -111,7 +112,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [aarch64, s390x, ppc64le, ppc64]
+        target: [aarch64]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v4
@@ -122,8 +123,9 @@ jobs:
         with:
           rust-toolchain: stable
           target: ${{ matrix.target }}
-          manylinux: auto
+          manylinux: 2014
           args: --release --out dist --interpreter '3.7 3.8 3.9 3.10 3.11'
+          container: messense/manylinux2014-cross:${{ matrix.target }}
       - uses: uraimo/run-on-arch-action@v2.0.5
         if: matrix.target != 'ppc64'
         name: Install built wheel and test
