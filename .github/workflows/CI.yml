@@ -24,7 +24,7 @@ jobs:
       - name: Build wheels - universal2
         uses: messense/maturin-action@v1
         with:
-          args: --release --universal2 --out dist --no-sdist
+          args: --release --universal2 --out dist
       - name: Install built wheel - universal2
         run: |
           pip install rocksdict --no-index --find-links dist --force-reinstall
@@ -70,7 +70,7 @@ jobs:
         uses: messense/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --no-sdist
+          args: --release --out dist
         env:
           LIBCLANG_PATH: ${{ runner.temp }}/llvm-11.0/lib
       - name: Install built wheel and test
@@ -108,7 +108,7 @@ jobs:
           rust-toolchain: stable
           target: ${{ matrix.target }}
           manylinux: auto
-          args: --release --out dist --no-sdist
+          args: --release --out dist
       - name: Install built wheel and test
         if: matrix.target == 'x86_64'
         run: |
@@ -142,7 +142,7 @@ jobs:
           rust-toolchain: stable
           target: ${{ matrix.target }}
           manylinux: auto
-          args: --release --out dist --no-sdist
+          args: --release --out dist
       - uses: uraimo/run-on-arch-action@v2.0.5
         if: matrix.target != 'ppc64'
         name: Install built wheel and test
