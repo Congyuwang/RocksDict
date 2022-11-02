@@ -460,11 +460,7 @@ impl Rdict {
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictItems> {
-        RdictItems::new(
-            self.iter(read_opt, py)?,
-            backwards,
-            from_key,
-        )
+        RdictItems::new(self.iter(read_opt, py)?, backwards, from_key)
     }
 
     /// Iterate through all keys
@@ -489,11 +485,7 @@ impl Rdict {
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictKeys> {
-        RdictKeys::new(
-            self.iter(read_opt, py)?,
-            backwards,
-            from_key,
-        )
+        RdictKeys::new(self.iter(read_opt, py)?, backwards, from_key)
     }
 
     /// Iterate through all values.
@@ -518,11 +510,7 @@ impl Rdict {
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictValues> {
-        RdictValues::new(
-            self.iter(read_opt, py)?,
-            backwards,
-            from_key,
-        )
+        RdictValues::new(self.iter(read_opt, py)?, backwards, from_key)
     }
 
     /// Manually flush the current column family.
@@ -654,10 +642,7 @@ impl Rdict {
                     "column name `{}` does not exist, use `create_cf` to creat it",
                     name
                 ))),
-                Some(cf) => Ok(ColumnFamilyPy {
-                    cf,
-                    db: db.clone(),
-                }),
+                Some(cf) => Ok(ColumnFamilyPy { cf, db: db.clone() }),
             }
         } else {
             Err(PyException::new_err("DB already closed"))

@@ -1899,16 +1899,14 @@ impl ReadOptionsPy {
     /// The upper bound itself is not included on the iteration result.
     #[pyo3(text_signature = "($self, key)")]
     pub fn set_iterate_upper_bound(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
-        self.iterate_upper_bound =
-        Some(encode_value(key, &self.pickle_dumps, self.raw_mode, py)?);
+        self.iterate_upper_bound = Some(encode_value(key, &self.pickle_dumps, self.raw_mode, py)?);
         Ok(())
     }
 
     /// Sets the lower bound for an iterator.
     #[pyo3(text_signature = "($self, key)")]
     pub fn set_iterate_lower_bound(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
-        self.iterate_lower_bound =
-        Some(encode_value(key, &self.pickle_dumps, self.raw_mode, py)?);
+        self.iterate_lower_bound = Some(encode_value(key, &self.pickle_dumps, self.raw_mode, py)?);
         Ok(())
     }
 

@@ -91,11 +91,7 @@ impl Snapshot {
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictItems> {
-        RdictItems::new(
-            self.iter(read_opt, py)?,
-            backwards,
-            from_key,
-        )
+        RdictItems::new(self.iter(read_opt, py)?, backwards, from_key)
     }
 
     /// Iterate through all keys.
@@ -115,11 +111,7 @@ impl Snapshot {
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictKeys> {
-        RdictKeys::new(
-            self.iter(read_opt, py)?,
-            backwards,
-            from_key,
-        )
+        RdictKeys::new(self.iter(read_opt, py)?, backwards, from_key)
     }
 
     /// Iterate through all values.
@@ -139,11 +131,7 @@ impl Snapshot {
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictValues> {
-        RdictValues::new(
-            self.iter(read_opt, py)?,
-            backwards,
-            from_key,
-        )
+        RdictValues::new(self.iter(read_opt, py)?, backwards, from_key)
     }
 
     /// read from snapshot
