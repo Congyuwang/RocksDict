@@ -19,6 +19,11 @@ jobs:
         with:
           python-version: ${{ matrix.py_version }}
           architecture: x64
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v1
+        with:
+          version: 11.0
+          directory: ${{ runner.temp }}/llvm-11.0
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -95,6 +100,7 @@ jobs:
         uses: messense/maturin-action@v1
         with:
           rust-toolchain: stable
+          rustup-components: rustfmt
           target: ${{ matrix.target }}
           manylinux: 2014
           args: --release --out dist --interpreter '3.7 3.8 3.9 3.10 3.11'
@@ -125,6 +131,7 @@ jobs:
         uses: messense/maturin-action@v1
         with:
           rust-toolchain: stable
+          rustup-components: rustfmt
           target: ${{ matrix.target }}
           manylinux: 2014
           args: --release --out dist --interpreter '3.7 3.8 3.9 3.10 3.11'
