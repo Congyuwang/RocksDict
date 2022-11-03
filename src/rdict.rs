@@ -544,6 +544,23 @@ impl Rdict {
         }
     }
 
+    /// Flushes the WAL buffer. If `sync` is set to `true`, also syncs
+    /// the data to disk.
+    #[pyo3(text_signature = "($self, sync)")]
+    #[args(sync = "true")]
+    fn flush_wal(&self, sync: bool) -> PyResult<()> {
+        if let Some(db) = &self.db {
+            let db = db.borrow();
+            let flush_result = db.flush_wal(sync);
+            match flush_result {
+                Ok(_) => Ok(()),
+                Err(e) => Err(PyException::new_err(e.into_string())),
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
+
     /// Creates column family with given name and options.
     ///
     /// Args:
