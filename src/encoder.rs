@@ -2,7 +2,6 @@ use num_bigint::BigInt;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::{PyBool, PyBytes, PyFloat, PyInt, PyString};
-use std::intrinsics::unlikely;
 
 pub(crate) enum ValueTypes<'a, 'b> {
     Bytes(&'a [u8]),
@@ -78,7 +77,7 @@ pub(crate) fn encode_value(
     raw_mode: bool,
     py: Python,
 ) -> PyResult<Box<[u8]>> {
-    if unlikely(raw_mode) {
+    if raw_mode {
         if let Ok(value) = <PyBytes as PyTryFrom>::try_from(value) {
             Ok(value.as_bytes().to_vec().into_boxed_slice())
         } else {

@@ -1,6 +1,6 @@
 [project]
 name = "rocksdict"
-version = "0.2.16"
+version = "0.3.0"
 description = "Rocksdb Python Binding"
 long_description_content_type="text/markdown"
 readme = "README.md"
@@ -12,13 +12,15 @@ classifiers=[
     'Operating System :: MacOS :: MacOS X',
     'Operating System :: Microsoft :: Windows',
     'Operating System :: POSIX :: Linux',
-    'Programming Language :: Python :: 3.6',
+    'Topic :: Database',
+    'Topic :: Software Development :: Embedded Systems',
     'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
 ]
 
 [build-system]
-requires = ["maturin>=0.11,<0.12"]
+requires = ["maturin>=0.13,<0.14"]
 build-backend = "maturin"

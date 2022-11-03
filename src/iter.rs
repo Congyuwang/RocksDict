@@ -3,22 +3,18 @@ use crate::util::error_message;
 use crate::{ReadOpt, ReadOptionsPy};
 use core::slice;
 use libc::{c_char, c_uchar, size_t};
-use librocksdb_sys;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use pyo3::PyIterProtocol;
-use rocksdb::db::DBAccess;
-use rocksdb::{ColumnFamily, DB};
+use rocksdb::{AsColumnFamilyRef, ColumnFamily, DB};
 use std::cell::RefCell;
-use std::ops::Deref;
 use std::ptr::null_mut;
-use std::rc::Rc;
+use std::sync::Arc;
 
 #[pyclass]
 #[allow(dead_code)]
 pub(crate) struct RdictIter {
     /// iterator must keep a reference count of DB to keep DB alive.
-    pub(crate) db: Rc<RefCell<DB>>,
+    pub(crate) db: Arc<RefCell<DB>>,
 
     pub(crate) inner: *mut librocksdb_sys::rocksdb_iterator_t,
 
@@ -53,21 +49,19 @@ pub(crate) struct RdictValues {
 
 impl RdictIter {
     pub(crate) fn new(
-        db: &Rc<RefCell<DB>>,
-        cf: &Option<Rc<ColumnFamily>>,
-        readopts: Py<ReadOptionsPy>,
+        db: &Arc<RefCell<DB>>,
+        cf: &Option<Arc<ColumnFamily>>,
+        readopts: ReadOptionsPy,
         pickle_loads: &PyObject,
         raw_mode: bool,
-        py: Python,
     ) -> PyResult<Self> {
-        if readopts.borrow(py).raw_mode != raw_mode {
+        if readopts.raw_mode != raw_mode {
             Err(PyException::new_err(format!(
                 "ReadOptions should have raw_mode={}",
                 raw_mode
             )))
         } else {
-            let readopts_borrow = readopts.borrow(py);
-            let readopts: ReadOpt = readopts_borrow.deref().into();
+            let readopts = ReadOpt::from(&readopts);
             Ok(RdictIter {
                 db: db.clone(),
                 inner: unsafe {
@@ -299,7 +293,7 @@ impl RdictIter {
                 let key_len_ptr: *mut size_t = &mut key_len;
                 let key_ptr =
                     librocksdb_sys::rocksdb_iter_key(self.inner, key_len_ptr) as *const c_uchar;
-                let key = slice::from_raw_parts(key_ptr, key_len as usize);
+                let key = slice::from_raw_parts(key_ptr, key_len);
                 Ok(decode_value(py, key, &self.pickle_loads, self.raw_mode)?)
             }
         } else {
@@ -318,7 +312,7 @@ impl RdictIter {
                 let val_len_ptr: *mut size_t = &mut val_len;
                 let val_ptr =
                     librocksdb_sys::rocksdb_iter_value(self.inner, val_len_ptr) as *const c_uchar;
-                let value = slice::from_raw_parts(val_ptr, val_len as usize);
+                let value = slice::from_raw_parts(val_ptr, val_len);
                 Ok(decode_value(py, value, &self.pickle_loads, self.raw_mode)?)
             }
         } else {
@@ -339,8 +333,8 @@ unsafe impl Send for RdictIter {}
 
 macro_rules! impl_iter {
     ($iter_name: ident, $($field: ident),*) => {
-        #[pyproto]
-        impl PyIterProtocol for $iter_name {
+        #[pymethods]
+        impl $iter_name {
             fn __iter__(slf: PyRef<Self>) -> PyRef<Self> {
                 slf
             }
@@ -361,18 +355,20 @@ macro_rules! impl_iter {
         }
 
         impl $iter_name {
-            pub(crate) fn new(inner: RdictIter, backwards: bool, from_key: &PyAny) -> PyResult<Self> {
+            pub(crate) fn new(inner: RdictIter, backwards: bool, from_key: Option<&PyAny>) -> PyResult<Self> {
                 let mut inner = inner;
-                if from_key.is_none() {
+                if let Some(from_key) = from_key {
+                    if backwards {
+                        inner.seek_for_prev(from_key)?;
+                    } else {
+                        inner.seek(from_key)?;
+                    }
+                } else {
                     if backwards {
                         inner.seek_to_last();
                     } else {
                         inner.seek_to_first();
                     }
-                } else if backwards {
-                    inner.seek_for_prev(from_key)?;
-                } else {
-                    inner.seek(from_key)?;
                 }
                 Ok(Self {
                     inner,

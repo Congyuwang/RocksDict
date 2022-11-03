@@ -5,7 +5,7 @@ use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 use rocksdb::*;
-use std::ops::Deref;
+use std::ffi::c_double;
 use std::os::raw::{c_int, c_uint};
 use std::path::{Path, PathBuf};
 
@@ -82,21 +82,54 @@ pub(crate) struct OptionsPy {
 #[pyo3(text_signature = "()")]
 #[derive(Clone)]
 pub(crate) struct WriteOptionsPy {
+    /// Sets the sync mode. If true, the write will be flushed
+    /// from the operating system buffer cache before the write is considered complete.
+    /// If this flag is true, writes will be slower.
+    ///
+    /// Default: false
     #[pyo3(get, set)]
     sync: bool,
 
+    /// Sets whether WAL should be active or not.
+    /// If true, writes will not first go to the write ahead log,
+    /// and the write may got lost after a crash.
+    ///
+    /// Default: false
     #[pyo3(get, set)]
     disable_wal: bool,
 
+    /// If true and if user is trying to write to column families that don't exist (they were dropped),
+    /// ignore the write (don't return an error). If there are multiple writes in a WriteBatch,
+    /// other writes will succeed.
+    ///
+    /// Default: false
     #[pyo3(get, set)]
     ignore_missing_column_families: bool,
 
+    /// If true and we need to wait or sleep for the write request, fails
+    /// immediately with Status::Incomplete().
+    ///
+    /// Default: false
     #[pyo3(get, set)]
     no_slowdown: bool,
 
+    /// If true, this write request is of lower priority if compaction is
+    /// behind. In this case, no_slowdown = true, the request will be cancelled
+    /// immediately with Status::Incomplete() returned. Otherwise, it will be
+    /// slowed down. The slowdown value is determined by RocksDB to guarantee
+    /// it introduces minimum impacts to high priority writes.
+    ///
+    /// Default: false
     #[pyo3(get, set)]
     low_pri: bool,
 
+    /// If true, writebatch will maintain the last insert positions of each
+    /// memtable as hints in concurrent write. It can improve write performance
+    /// in concurrent writes if keys in one writebatch are sequential. In
+    /// non-concurrent writes (when concurrent_memtable_writes is false) this
+    /// option will be ignored.
+    ///
+    /// Default: false
     #[pyo3(get, set)]
     memtable_insert_hint_per_batch: bool,
 }
@@ -121,6 +154,17 @@ pub(crate) struct WriteOptionsPy {
 #[derive(Copy, Clone)]
 #[pyo3(text_signature = "()")]
 pub(crate) struct FlushOptionsPy {
+    /// Waits until the flush is done.
+    ///
+    /// Default: true
+    ///
+    /// Example:
+    ///     ::
+    ///
+    ///         from rocksdb import FlushOptions
+    ///
+    ///         let options = FlushOptions()
+    ///         options.set_wait(False)
     #[pyo3(get, set)]
     pub(crate) wait: bool,
 }
@@ -211,7 +255,7 @@ pub(crate) struct SliceTransformPy(SliceTransformType);
 pub(crate) enum SliceTransformType {
     Fixed(size_t),
     MaxLen(usize),
-    NOOP,
+    Noop,
 }
 
 #[pyclass(name = "DBPath")]
@@ -290,21 +334,66 @@ pub(crate) struct EnvPy(Env);
 #[pyclass(name = "UniversalCompactOptions")]
 #[pyo3(text_signature = "()")]
 pub(crate) struct UniversalCompactOptionsPy {
+    /// Sets the percentage flexibility while comparing file size.
+    /// If the candidate file(s) size is 1% smaller than the next file's size,
+    /// then include next file into this candidate set.
+    ///
+    /// Default: 1
     #[pyo3(get, set)]
     size_ratio: c_int,
 
+    /// Sets the minimum number of files in a single compaction run.
+    ///
+    /// Default: 2
     #[pyo3(get, set)]
     min_merge_width: c_int,
 
+    /// Sets the maximum number of files in a single compaction run.
+    ///
+    /// Default: UINT_MAX
     #[pyo3(get, set)]
     max_merge_width: c_int,
 
+    /// sets the size amplification.
+    ///
+    /// It is defined as the amount (in percentage) of
+    /// additional storage needed to store a single byte of data in the database.
+    /// For example, a size amplification of 2% means that a database that
+    /// contains 100 bytes of user-data may occupy upto 102 bytes of
+    /// physical storage. By this definition, a fully compacted database has
+    /// a size amplification of 0%. Rocksdb uses the following heuristic
+    /// to calculate size amplification: it assumes that all files excluding
+    /// the earliest file contribute to the size amplification.
+    ///
+    /// Default: 200, which means that a 100 byte database could require upto 300 bytes of storage.
     #[pyo3(get, set)]
     max_size_amplification_percent: c_int,
 
+    /// Sets the percentage of compression size.
+    ///
+    /// If this option is set to be -1, all the output files
+    /// will follow compression type specified.
+    ///
+    /// If this option is not negative, we will try to make sure compressed
+    /// size is just above this value. In normal cases, at least this percentage
+    /// of data will be compressed.
+    /// When we are compacting to a new file, here is the criteria whether
+    /// it needs to be compressed: assuming here are the list of files sorted
+    /// by generation time:
+    ///    A1...An B1...Bm C1...Ct
+    /// where A1 is the newest and Ct is the oldest, and we are going to compact
+    /// B1...Bm, we calculate the total size of all the files as total_size, as
+    /// well as  the total size of C1...Ct as total_C, the compaction output file
+    /// will be compressed iff
+    ///   total_C / total_size < this percentage
+    ///
+    /// Default: -1
     #[pyo3(get, set)]
     compression_size_percent: c_int,
 
+    /// Sets the algorithm used to stop picking files into a single compaction run.
+    ///
+    /// Default: ::Total
     #[pyo3(get, set)]
     stop_style: UniversalCompactionStopStylePy,
 }
@@ -316,6 +405,12 @@ pub(crate) struct UniversalCompactionStopStylePy(UniversalCompactionStopStyle);
 #[pyclass(name = "FifoCompactOptions")]
 #[pyo3(text_signature = "()")]
 pub(crate) struct FifoCompactOptionsPy {
+    /// Sets the max table file size.
+    ///
+    /// Once the total sum of table files reaches this, we will delete the oldest
+    /// table file
+    ///
+    /// Default: 1GB
     #[pyo3(get, set)]
     max_table_files_size: u64,
 }
@@ -498,7 +593,8 @@ impl OptionsPy {
                 },
             );
         }
-        Ok(self.inner_opt.set_db_paths(&db_paths))
+        self.inner_opt.set_db_paths(&db_paths);
+        Ok(())
     }
 
     /// Use the specified object to interact with the environment,
@@ -555,7 +651,8 @@ impl OptionsPy {
             let level_type: &PyCell<DBCompressionTypePy> = PyTryFrom::try_from(py_any)?;
             result.push(level_type.borrow().0)
         }
-        Ok(self.inner_opt.set_compression_per_level(&result))
+        self.inner_opt.set_compression_per_level(&result);
+        Ok(())
     }
 
     /// Maximum size of dictionaries used to prime the compression library.
@@ -661,9 +758,10 @@ impl OptionsPy {
                     ))
                 }
             },
-            SliceTransformType::NOOP => SliceTransform::create_noop(),
+            SliceTransformType::Noop => SliceTransform::create_noop(),
         };
-        Ok(self.inner_opt.set_prefix_extractor(transform))
+        self.inner_opt.set_prefix_extractor(transform);
+        Ok(())
     }
 
     // pub fn add_comparator(&mut self, name: &str, compare_fn: CompareFn) {
@@ -1525,14 +1623,6 @@ impl OptionsPy {
         self.inner_opt.set_manifest_preallocation_size(size)
     }
 
-    /// Enable/disable purging of duplicate/deleted keys when a memtable is flushed to storage.
-    ///
-    /// Default: true
-    #[pyo3(text_signature = "($self, enabled)")]
-    pub fn set_purge_redundant_kvs_while_flush(&mut self, enabled: bool) {
-        self.inner_opt.set_purge_redundant_kvs_while_flush(enabled)
-    }
-
     /// If true, then DB::Open() will not update the statistics used to optimize
     /// compaction decision by loading table properties from many files.
     /// Turning off this feature will improve DBOpen time especially in disk environment.
@@ -1595,7 +1685,7 @@ impl OptionsPy {
     ///
     /// Default: disable
     ///
-    #[pyo3(text_signature = "($self, rate_bytes_per_sec)")]
+    #[pyo3(text_signature = "($self, rate_bytes_per_sec, refill_period_us, fairness)")]
     pub fn set_ratelimiter(
         &mut self,
         rate_bytes_per_sec: i64,
@@ -1658,30 +1748,6 @@ impl OptionsPy {
         self.inner_opt.set_recycle_log_file_num(num)
     }
 
-    /// Sets the soft rate limit.
-    ///
-    /// Puts are delayed 0-1 ms when any level has a compaction score that exceeds
-    /// soft_rate_limit. This is ignored when == 0.0.
-    /// CONSTRAINT: soft_rate_limit <= hard_rate_limit. If this constraint does not
-    /// hold, RocksDB will set soft_rate_limit = hard_rate_limit
-    ///
-    /// Default: 0.0 (disabled)
-    #[pyo3(text_signature = "($self, limit)")]
-    pub fn set_soft_rate_limit(&mut self, limit: f64) {
-        self.inner_opt.set_soft_rate_limit(limit)
-    }
-
-    /// Sets the hard rate limit.
-    ///
-    /// Puts are delayed 1ms at a time when any level has a compaction score that
-    /// exceeds hard_rate_limit. This is ignored when <= 1.0.
-    ///
-    /// Default: 0.0 (disabled)
-    #[pyo3(text_signature = "($self, limit)")]
-    pub fn set_hard_rate_limit(&mut self, limit: f64) {
-        self.inner_opt.set_hard_rate_limit(limit)
-    }
-
     /// Sets the threshold at which all writes will be slowed down to at least delayed_write_rate if estimated
     /// bytes needed to be compaction exceed this threshold.
     ///
@@ -1700,15 +1766,6 @@ impl OptionsPy {
     pub fn set_hard_pending_compaction_bytes_limit(&mut self, limit: usize) {
         self.inner_opt
             .set_hard_pending_compaction_bytes_limit(limit)
-    }
-
-    /// Sets the max time a put will be stalled when hard_rate_limit is enforced.
-    /// If 0, then there is no limit.
-    ///
-    /// Default: 1000
-    #[pyo3(text_signature = "($self, millis)")]
-    pub fn set_rate_limit_delay_max_milliseconds(&mut self, millis: c_uint) {
-        self.inner_opt.set_rate_limit_delay_max_milliseconds(millis)
     }
 
     /// Sets the size of one block in arena memory allocation.
@@ -1757,69 +1814,6 @@ impl WriteOptionsPy {
             memtable_insert_hint_per_batch: false,
         }
     }
-
-    /// Sets the sync mode. If true, the write will be flushed
-    /// from the operating system buffer cache before the write is considered complete.
-    /// If this flag is true, writes will be slower.
-    ///
-    /// Default: false
-    #[pyo3(text_signature = "($self, sync)")]
-    pub fn set_sync(&mut self, sync: bool) {
-        self.sync = sync
-    }
-
-    /// Sets whether WAL should be active or not.
-    /// If true, writes will not first go to the write ahead log,
-    /// and the write may got lost after a crash.
-    ///
-    /// Default: false
-    #[pyo3(text_signature = "($self, disable)")]
-    pub fn disable_wal(&mut self, disable: bool) {
-        self.disable_wal = disable
-    }
-
-    /// If true and if user is trying to write to column families that don't exist (they were dropped),
-    /// ignore the write (don't return an error). If there are multiple writes in a WriteBatch,
-    /// other writes will succeed.
-    ///
-    /// Default: false
-    #[pyo3(text_signature = "($self, ignore)")]
-    pub fn set_ignore_missing_column_families(&mut self, ignore: bool) {
-        self.ignore_missing_column_families = ignore
-    }
-
-    /// If true and we need to wait or sleep for the write request, fails
-    /// immediately with Status::Incomplete().
-    ///
-    /// Default: false
-    #[pyo3(text_signature = "($self, no_slowdown)")]
-    pub fn set_no_slowdown(&mut self, no_slowdown: bool) {
-        self.no_slowdown = no_slowdown
-    }
-
-    /// If true, this write request is of lower priority if compaction is
-    /// behind. In this case, no_slowdown = true, the request will be cancelled
-    /// immediately with Status::Incomplete() returned. Otherwise, it will be
-    /// slowed down. The slowdown value is determined by RocksDB to guarantee
-    /// it introduces minimum impacts to high priority writes.
-    ///
-    /// Default: false
-    #[pyo3(text_signature = "($self, v)")]
-    pub fn set_low_pri(&mut self, v: bool) {
-        self.low_pri = v
-    }
-
-    /// If true, writebatch will maintain the last insert positions of each
-    /// memtable as hints in concurrent write. It can improve write performance
-    /// in concurrent writes if keys in one writebatch are sequential. In
-    /// non-concurrent writes (when concurrent_memtable_writes is false) this
-    /// option will be ignored.
-    ///
-    /// Default: false
-    #[pyo3(text_signature = "($self, v)")]
-    pub fn set_memtable_insert_hint_per_batch(&mut self, v: bool) {
-        self.memtable_insert_hint_per_batch = v
-    }
 }
 
 impl From<&WriteOptionsPy> for WriteOptions {
@@ -1854,22 +1848,6 @@ impl FlushOptionsPy {
     #[new]
     pub fn new() -> Self {
         FlushOptionsPy { wait: true }
-    }
-
-    /// Waits until the flush is done.
-    ///
-    /// Default: true
-    ///
-    /// Example:
-    ///     ::
-    ///
-    ///         from rocksdb import FlushOptions
-    ///
-    ///         let options = FlushOptions()
-    ///         options.set_wait(False)
-    #[pyo3(text_signature = "($self, wait)")]
-    pub fn set_wait(&mut self, wait: bool) {
-        self.wait = wait
     }
 }
 
@@ -1921,15 +1899,15 @@ impl ReadOptionsPy {
     /// The upper bound itself is not included on the iteration result.
     #[pyo3(text_signature = "($self, key)")]
     pub fn set_iterate_upper_bound(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
-        Ok(self.iterate_upper_bound =
-            Some(encode_value(key, &self.pickle_dumps, self.raw_mode, py)?))
+        self.iterate_upper_bound = Some(encode_value(key, &self.pickle_dumps, self.raw_mode, py)?);
+        Ok(())
     }
 
     /// Sets the lower bound for an iterator.
     #[pyo3(text_signature = "($self, key)")]
     pub fn set_iterate_lower_bound(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
-        Ok(self.iterate_lower_bound =
-            Some(encode_value(key, &self.pickle_dumps, self.raw_mode, py)?))
+        self.iterate_lower_bound = Some(encode_value(key, &self.pickle_dumps, self.raw_mode, py)?);
+        Ok(())
     }
 
     /// Enforce that the iterator only iterates over the same
@@ -2215,7 +2193,7 @@ impl BlockBasedOptionsPy {
 
     /// Sets the filter policy to reduce disk read
     #[pyo3(text_signature = "($self, bits_per_key)")]
-    pub fn set_bloom_filter(&mut self, bits_per_key: c_int, block_based: bool) {
+    pub fn set_bloom_filter(&mut self, bits_per_key: c_double, block_based: bool) {
         self.0.set_bloom_filter(bits_per_key, block_based)
     }
 
@@ -2527,7 +2505,7 @@ impl SliceTransformPy {
     #[staticmethod]
     #[pyo3(text_signature = "()")]
     pub fn create_noop() -> Self {
-        SliceTransformPy(SliceTransformType::NOOP)
+        SliceTransformPy(SliceTransformType::Noop)
     }
 }
 
@@ -2731,81 +2709,6 @@ impl UniversalCompactOptionsPy {
             stop_style: UniversalCompactionStopStylePy(UniversalCompactionStopStyle::Total),
         }
     }
-
-    /// Sets the percentage flexibility while comparing file size.
-    /// If the candidate file(s) size is 1% smaller than the next file's size,
-    /// then include next file into this candidate set.
-    ///
-    /// Default: 1
-    #[pyo3(text_signature = "($self, ratio)")]
-    pub fn set_size_ratio(&mut self, ratio: c_int) {
-        self.size_ratio = ratio
-    }
-
-    /// Sets the minimum number of files in a single compaction run.
-    ///
-    /// Default: 2
-    #[pyo3(text_signature = "($self, num)")]
-    pub fn set_min_merge_width(&mut self, num: c_int) {
-        self.min_merge_width = num
-    }
-
-    /// Sets the maximum number of files in a single compaction run.
-    ///
-    /// Default: UINT_MAX
-    #[pyo3(text_signature = "($self, num)")]
-    pub fn set_max_merge_width(&mut self, num: c_int) {
-        self.max_merge_width = num
-    }
-
-    /// sets the size amplification.
-    ///
-    /// It is defined as the amount (in percentage) of
-    /// additional storage needed to store a single byte of data in the database.
-    /// For example, a size amplification of 2% means that a database that
-    /// contains 100 bytes of user-data may occupy upto 102 bytes of
-    /// physical storage. By this definition, a fully compacted database has
-    /// a size amplification of 0%. Rocksdb uses the following heuristic
-    /// to calculate size amplification: it assumes that all files excluding
-    /// the earliest file contribute to the size amplification.
-    ///
-    /// Default: 200, which means that a 100 byte database could require upto 300 bytes of storage.
-    #[pyo3(text_signature = "($self, v)")]
-    pub fn set_max_size_amplification_percent(&mut self, v: c_int) {
-        self.max_size_amplification_percent = v
-    }
-
-    /// Sets the percentage of compression size.
-    ///
-    /// If this option is set to be -1, all the output files
-    /// will follow compression type specified.
-    ///
-    /// If this option is not negative, we will try to make sure compressed
-    /// size is just above this value. In normal cases, at least this percentage
-    /// of data will be compressed.
-    /// When we are compacting to a new file, here is the criteria whether
-    /// it needs to be compressed: assuming here are the list of files sorted
-    /// by generation time:
-    ///    A1...An B1...Bm C1...Ct
-    /// where A1 is the newest and Ct is the oldest, and we are going to compact
-    /// B1...Bm, we calculate the total size of all the files as total_size, as
-    /// well as  the total size of C1...Ct as total_C, the compaction output file
-    /// will be compressed iff
-    ///   total_C / total_size < this percentage
-    ///
-    /// Default: -1
-    #[pyo3(text_signature = "($self, v)")]
-    pub fn set_compression_size_percent(&mut self, v: c_int) {
-        self.compression_size_percent = v
-    }
-
-    /// Sets the algorithm used to stop picking files into a single compaction run.
-    ///
-    /// Default: ::Total
-    #[pyo3(text_signature = "($self, style)")]
-    pub fn set_stop_style(&mut self, style: PyRef<UniversalCompactionStopStylePy>) {
-        self.stop_style = *style.deref()
-    }
 }
 
 impl From<&UniversalCompactOptionsPy> for UniversalCompactOptions {
@@ -2843,17 +2746,6 @@ impl FifoCompactOptionsPy {
         FifoCompactOptionsPy {
             max_table_files_size: 0x280000000,
         }
-    }
-
-    /// Sets the max table file size.
-    ///
-    /// Once the total sum of table files reaches this, we will delete the oldest
-    /// table file
-    ///
-    /// Default: 1GB
-    #[pyo3(text_signature = "($self, nbytes)")]
-    pub fn set_max_table_files_size(&mut self, nbytes: u64) {
-        self.max_table_files_size = nbytes
     }
 }
 

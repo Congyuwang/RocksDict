@@ -6,26 +6,34 @@ on:
 
 jobs:
   macos:
-    runs-on: macos-latest
+    runs-on: macos-12
     strategy:
       matrix:
-        py_version: [3.6, 3.7, 3.8, 3.9, "3.10"]
+        py_version: [3.7, 3.8, 3.9, "3.10", "3.11"]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: 14.1
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.py_version }}
           architecture: x64
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v1
+        with:
+          version: 11.0
+          directory: ${{ runner.temp }}/llvm-11.0
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
-          profile: minimal
+          toolchain: stable
           default: true
       - name: Build wheels - universal2
-        uses: messense/maturin-action@v1
-        with:
-          args: --release --universal2 --out dist --no-sdist
+        run: |
+          rustup target add aarch64-apple-darwin
+          pip install maturin
+          maturin build --release --universal2 --out dist
       - name: Install built wheel - universal2
         run: |
           pip install rocksdict --no-index --find-links dist --force-reinstall
@@ -43,15 +51,12 @@ jobs:
     strategy:
       matrix:
         target: [x64, x86]
+        py_version: [ 3.7, 3.8, 3.9, "3.10", "3.11" ]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
-          architecture: ${{ matrix.target }}
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
+          python-version: ${{ matrix.py_version }}
           architecture: ${{ matrix.target }}
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v1
@@ -61,21 +66,18 @@ jobs:
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
-          profile: minimal
+          toolchain: stable
           default: true
       - name: Build wheels
         uses: messense/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --no-sdist
+          args: --release --out dist
         env:
           LIBCLANG_PATH: ${{ runner.temp }}/llvm-11.0/lib
-      - name: Install built wheel
+      - name: Install built wheel and test
         run: |
           pip install rocksdict --no-index --find-links dist --force-reinstall
-      - name: Python UnitTest
-        run: |
           python -m unittest discover -v test
       - name: Upload wheels
         uses: actions/upload-artifact@v2
@@ -86,30 +88,71 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        target: [ x86_64 ]
+        target: [x86_64]
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.9
-        architecture: x64
-    - name: Build Wheels
-      uses: messense/maturin-action@v1
-      with:
-        rust-toolchain: nightly
-        target: ${{ matrix.target }}
-        manylinux: 2014
-        args: --release --out dist --no-sdist
-        container: messense/manylinux2014-cross:${{ matrix.target }}
-    - name: Install built wheel
-      run: |
-        pip install rocksdict --no-index --find-links dist --force-reinstall
-    - name: Python UnitTest
-      run: |
-        python -m unittest discover -v test
-    - name: Upload wheels
-      uses: actions/upload-artifact@v2
-      with:
-        name: wheels
-        path: dist
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+          architecture: x64
+      - name: Build Wheels
+        uses: messense/maturin-action@v1
+        with:
+          rust-toolchain: stable
+          rustup-components: rustfmt
+          target: ${{ matrix.target }}
+          manylinux: 2_28
+          args: --release --out dist --interpreter '3.7 3.8 3.9 3.10 3.11'
+          container: messense/manylinux_2_28-cross:${{ matrix.target }}
+      - name: Install built wheel and test
+        if: matrix.target == 'x86_64'
+        run: |
+          pip install rocksdict --no-index --find-links dist --force-reinstall
+          python -m unittest discover -v test
+      - name: Upload wheels
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: dist
+
+  linux-cross:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [aarch64]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Build Wheels
+        uses: messense/maturin-action@v1
+        with:
+          rust-toolchain: stable
+          rustup-components: rustfmt
+          target: ${{ matrix.target }}
+          manylinux: 2_28
+          args: --release --out dist --interpreter '3.7 3.8 3.9 3.10 3.11'
+          container: congyuwang/manylinux_2_28-cross:${{ matrix.target }}
+      - uses: uraimo/run-on-arch-action@v2
+        if: matrix.target != 'ppc64'
+        name: Install built wheel and test
+        with:
+          arch: ${{ matrix.target }}
+          distro: ubuntu22.04
+          githubToken: ${{ github.token }}
+          install: |
+            apt-get update
+            apt-get install -y --no-install-recommends python3 python3-pip
+            pip3 install -U pip
+          run: |
+            pip3 install rocksdict --no-index --find-links dist --force-reinstall
+            python3 -m unittest discover -v test
+      - name: Upload wheels
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: dist
