@@ -30,9 +30,10 @@ jobs:
           toolchain: stable
           default: true
       - name: Build wheels - universal2
-        uses: messense/maturin-action@v1
-        with:
-          args: --release --universal2 --out dist
+        run: |
+          rustup target add aarch64-apple-darwin
+          pip install maturin
+          maturin build --release --universal2 --out dist
       - name: Install built wheel - universal2
         run: |
           pip install rocksdict --no-index --find-links dist --force-reinstall
