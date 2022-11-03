@@ -149,8 +149,8 @@ jobs:
             apt-get install -y --no-install-recommends python3 python3-pip
             pip3 install -U pip
           run: |
-            pip install rocksdict --no-index --find-links dist --force-reinstall
-            python -m unittest discover -v test
+            pip3 install rocksdict --no-index --find-links dist --force-reinstall
+            python3 -m unittest discover -v test
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
