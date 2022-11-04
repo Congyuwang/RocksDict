@@ -105,7 +105,7 @@ jobs:
           target: ${{ matrix.target }}
           manylinux: 2014
           args: --release --out dist --interpreter '3.7 3.8 3.9 3.10 3.11'
-          container: congyuwang/manylinux2014:${{ matrix.target }}
+          container: scrin/manylinux2014-llvm:latest
       - name: Install built wheel and test
         if: matrix.target == 'x86_64'
         run: |
