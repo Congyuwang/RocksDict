@@ -204,6 +204,15 @@
                                 <a class="function" href="#WriteOptions.__init__">WriteOptions</a>
                         </li>
                         <li>
+                                <a class="variable" href="#WriteOptions.sync">sync</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#WriteOptions.disable_wal">disable_wal</a>
+                        </li>
+                        <li>
                                 <a class="variable" href="#WriteOptions.no_slowdown">no_slowdown</a>
                         </li>
                         <li>
@@ -211,15 +220,6 @@
                         </li>
                         <li>
                                 <a class="variable" href="#WriteOptions.memtable_insert_hint_per_batch">memtable_insert_hint_per_batch</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#WriteOptions.sync">sync</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#WriteOptions.disable_wal">disable_wal</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
                         </li>
                 </ul>
 
@@ -289,6 +289,9 @@
                             <ul class="memberlist">
                         <li>
                                 <a class="function" href="#Options.__init__">Options</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Options.load_latest">load_latest</a>
                         </li>
                         <li>
                                 <a class="function" href="#Options.increase_parallelism">increase_parallelism</a>
@@ -792,22 +795,22 @@
                                 <a class="function" href="#UniversalCompactOptions.__init__">UniversalCompactOptions</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.compression_size_percent">compression_size_percent</a>
-                        </li>
-                        <li>
                                 <a class="variable" href="#UniversalCompactOptions.max_merge_width">max_merge_width</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
+                                <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.min_merge_width">min_merge_width</a>
                         </li>
                         <li>
+                                <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
+                        </li>
+                        <li>
                                 <a class="variable" href="#UniversalCompactOptions.max_size_amplification_percent">max_size_amplification_percent</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
+                                <a class="variable" href="#UniversalCompactOptions.compression_size_percent">compression_size_percent</a>
                         </li>
                 </ul>
 
@@ -2554,6 +2557,57 @@ del db
     
 
                             </div>
+                            <div id="WriteOptions.sync" class="classattr">
+                                <div class="attr variable">
+            <span class="name">sync</span>
+
+        
+    </div>
+    <a class="headerlink" href="#WriteOptions.sync"></a>
+    
+            <div class="docstring"><p>Sets the sync mode. If true, the write will be flushed
+from the operating system buffer cache before the write is considered complete.
+If this flag is true, writes will be slower.</p>
+
+<p>Default: false</p>
+</div>
+
+
+                            </div>
+                            <div id="WriteOptions.ignore_missing_column_families" class="classattr">
+                                <div class="attr variable">
+            <span class="name">ignore_missing_column_families</span>
+
+        
+    </div>
+    <a class="headerlink" href="#WriteOptions.ignore_missing_column_families"></a>
+    
+            <div class="docstring"><p>If true and if user is trying to write to column families that don't exist (they were dropped),
+ignore the write (don't return an error). If there are multiple writes in a WriteBatch,
+other writes will succeed.</p>
+
+<p>Default: false</p>
+</div>
+
+
+                            </div>
+                            <div id="WriteOptions.disable_wal" class="classattr">
+                                <div class="attr variable">
+            <span class="name">disable_wal</span>
+
+        
+    </div>
+    <a class="headerlink" href="#WriteOptions.disable_wal"></a>
+    
+            <div class="docstring"><p>Sets whether WAL should be active or not.
+If true, writes will not first go to the write ahead log,
+and the write may got lost after a crash.</p>
+
+<p>Default: false</p>
+</div>
+
+
+                            </div>
                             <div id="WriteOptions.no_slowdown" class="classattr">
                                 <div class="attr variable">
             <span class="name">no_slowdown</span>
@@ -2602,57 +2656,6 @@ memtable as hints in concurrent write. It can improve write performance
 in concurrent writes if keys in one writebatch are sequential. In
 non-concurrent writes (when concurrent_memtable_writes is false) this
 option will be ignored.</p>
-
-<p>Default: false</p>
-</div>
-
-
-                            </div>
-                            <div id="WriteOptions.sync" class="classattr">
-                                <div class="attr variable">
-            <span class="name">sync</span>
-
-        
-    </div>
-    <a class="headerlink" href="#WriteOptions.sync"></a>
-    
-            <div class="docstring"><p>Sets the sync mode. If true, the write will be flushed
-from the operating system buffer cache before the write is considered complete.
-If this flag is true, writes will be slower.</p>
-
-<p>Default: false</p>
-</div>
-
-
-                            </div>
-                            <div id="WriteOptions.disable_wal" class="classattr">
-                                <div class="attr variable">
-            <span class="name">disable_wal</span>
-
-        
-    </div>
-    <a class="headerlink" href="#WriteOptions.disable_wal"></a>
-    
-            <div class="docstring"><p>Sets whether WAL should be active or not.
-If true, writes will not first go to the write ahead log,
-and the write may got lost after a crash.</p>
-
-<p>Default: false</p>
-</div>
-
-
-                            </div>
-                            <div id="WriteOptions.ignore_missing_column_families" class="classattr">
-                                <div class="attr variable">
-            <span class="name">ignore_missing_column_families</span>
-
-        
-    </div>
-    <a class="headerlink" href="#WriteOptions.ignore_missing_column_families"></a>
-    
-            <div class="docstring"><p>If true and if user is trying to write to column families that don't exist (they were dropped),
-ignore the write (don't return an error). If there are multiple writes in a WriteBatch,
-other writes will succeed.</p>
 
 <p>Default: false</p>
 </div>
@@ -3167,6 +3170,24 @@ with other RockDB database).</li>
     <a class="headerlink" href="#Options.__init__"></a>
     
     
+
+                            </div>
+                            <div id="Options.load_latest" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">load_latest</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">path</span>, </span><span class="param"><span class="n">env</span>, </span><span class="param"><span class="n">ignore_unknown_options</span></span><span class="return-annotation">):</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#Options.load_latest"></a>
+    
+            <div class="docstring"><p>Load latest options from the rocksdb path</p>
+
+<p>Returns a tuple, where the first item is <code><a href="#Options">Options</a></code>
+and the second item is a <code>Dict</code> of column families.</p>
+</div>
+
 
                             </div>
                             <div id="Options.increase_parallelism" class="classattr">
@@ -6365,37 +6386,6 @@ Default: true</p>
     
 
                             </div>
-                            <div id="UniversalCompactOptions.compression_size_percent" class="classattr">
-                                <div class="attr variable">
-            <span class="name">compression_size_percent</span>
-
-        
-    </div>
-    <a class="headerlink" href="#UniversalCompactOptions.compression_size_percent"></a>
-    
-            <div class="docstring"><p>Sets the percentage of compression size.</p>
-
-<p>If this option is set to be -1, all the output files
-will follow compression type specified.</p>
-
-<p>If this option is not negative, we will try to make sure compressed
-size is just above this value. In normal cases, at least this percentage
-of data will be compressed.
-When we are compacting to a new file, here is the criteria whether
-it needs to be compressed: assuming here are the list of files sorted
-by generation time:
-   A1...An B1...Bm C1...Ct
-where A1 is the newest and Ct is the oldest, and we are going to compact
-B1...Bm, we calculate the total size of all the files as total_size, as
-well as  the total size of C1...Ct as total_C, the compaction output file
-will be compressed iff
-  total_C / total_size &lt; this percentage</p>
-
-<p>Default: -1</p>
-</div>
-
-
-                            </div>
                             <div id="UniversalCompactOptions.max_merge_width" class="classattr">
                                 <div class="attr variable">
             <span class="name">max_merge_width</span>
@@ -6407,6 +6397,36 @@ will be compressed iff
             <div class="docstring"><p>Sets the maximum number of files in a single compaction run.</p>
 
 <p>Default: UINT_MAX</p>
+</div>
+
+
+                            </div>
+                            <div id="UniversalCompactOptions.stop_style" class="classattr">
+                                <div class="attr variable">
+            <span class="name">stop_style</span>
+
+        
+    </div>
+    <a class="headerlink" href="#UniversalCompactOptions.stop_style"></a>
+    
+            <div class="docstring"><p>Sets the algorithm used to stop picking files into a single compaction run.</p>
+
+<p>Default: ::Total</p>
+</div>
+
+
+                            </div>
+                            <div id="UniversalCompactOptions.min_merge_width" class="classattr">
+                                <div class="attr variable">
+            <span class="name">min_merge_width</span>
+
+        
+    </div>
+    <a class="headerlink" href="#UniversalCompactOptions.min_merge_width"></a>
+    
+            <div class="docstring"><p>Sets the minimum number of files in a single compaction run.</p>
+
+<p>Default: 2</p>
 </div>
 
 
@@ -6424,21 +6444,6 @@ If the candidate file(s) size is 1% smaller than the next file's size,
 then include next file into this candidate set.</p>
 
 <p>Default: 1</p>
-</div>
-
-
-                            </div>
-                            <div id="UniversalCompactOptions.min_merge_width" class="classattr">
-                                <div class="attr variable">
-            <span class="name">min_merge_width</span>
-
-        
-    </div>
-    <a class="headerlink" href="#UniversalCompactOptions.min_merge_width"></a>
-    
-            <div class="docstring"><p>Sets the minimum number of files in a single compaction run.</p>
-
-<p>Default: 2</p>
 </div>
 
 
@@ -6467,17 +6472,33 @@ the earliest file contribute to the size amplification.</p>
 
 
                             </div>
-                            <div id="UniversalCompactOptions.stop_style" class="classattr">
+                            <div id="UniversalCompactOptions.compression_size_percent" class="classattr">
                                 <div class="attr variable">
-            <span class="name">stop_style</span>
+            <span class="name">compression_size_percent</span>
 
         
     </div>
-    <a class="headerlink" href="#UniversalCompactOptions.stop_style"></a>
+    <a class="headerlink" href="#UniversalCompactOptions.compression_size_percent"></a>
     
-            <div class="docstring"><p>Sets the algorithm used to stop picking files into a single compaction run.</p>
+            <div class="docstring"><p>Sets the percentage of compression size.</p>
 
-<p>Default: ::Total</p>
+<p>If this option is set to be -1, all the output files
+will follow compression type specified.</p>
+
+<p>If this option is not negative, we will try to make sure compressed
+size is just above this value. In normal cases, at least this percentage
+of data will be compressed.
+When we are compacting to a new file, here is the criteria whether
+it needs to be compressed: assuming here are the list of files sorted
+by generation time:
+   A1...An B1...Bm C1...Ct
+where A1 is the newest and Ct is the oldest, and we are going to compact
+B1...Bm, we calculate the total size of all the files as total_size, as
+well as  the total size of C1...Ct as total_C, the compaction output file
+will be compressed iff
+  total_C / total_size &lt; this percentage</p>
+
+<p>Default: -1</p>
 </div>
 
 
