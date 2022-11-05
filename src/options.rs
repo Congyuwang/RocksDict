@@ -1,10 +1,13 @@
 use crate::encoder::encode_value;
+use crate::rdict::{RocksDictConfig, ROCKSDICT_CONFIG_FILE};
 use libc::{c_char, c_uchar, size_t};
 use num_bigint::BigInt;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use pyo3::types::PyList;
+use pyo3::types::{PyDict, PyList, PyTuple};
 use rocksdb::*;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::ffi::c_double;
 use std::os::raw::{c_int, c_uint};
 use std::path::{Path, PathBuf};
@@ -52,6 +55,7 @@ use std::path::{Path, PathBuf};
 pub(crate) struct OptionsPy {
     pub(crate) inner_opt: Options,
     pub(crate) raw_mode: bool,
+    pub(crate) prefix_extractor: Option<SliceTransformType>,
 }
 
 /// Optionally disable WAL or sync for this write.
@@ -252,7 +256,8 @@ pub(crate) struct DataBlockIndexTypePy(DataBlockIndexType);
 #[pyclass(name = "SliceTransform")]
 pub(crate) struct SliceTransformPy(SliceTransformType);
 
-pub(crate) enum SliceTransformType {
+#[derive(Deserialize, Serialize, Clone)]
+pub enum SliceTransformType {
     Fixed(size_t),
     MaxLen(usize),
     Noop,
@@ -329,6 +334,7 @@ pub(crate) struct DBRecoveryModePy(DBRecoveryMode);
 
 #[pyclass(name = "Env")]
 #[pyo3(text_signature = "()")]
+#[derive(Clone)]
 pub(crate) struct EnvPy(Env);
 
 #[pyclass(name = "UniversalCompactOptions")]
@@ -427,6 +433,98 @@ pub(crate) struct BottommostLevelCompactionPy(BottommostLevelCompaction);
 #[pyo3(text_signature = "()")]
 pub(crate) struct CompactOptionsPy(pub(crate) CompactOptions);
 
+impl OptionsPy {
+    /// function that sets prefix extractor according to slice transform type
+    fn set_prefix_extractor_inner(options: &mut Options, slice_transform_type: &SliceTransformType) -> PyResult<()> {
+        let transform = match slice_transform_type {
+            SliceTransformType::Fixed(len) => SliceTransform::create_fixed_prefix(*len),
+            SliceTransformType::MaxLen(len) => match create_max_len_transform(*len) {
+                Ok(f) => f,
+                Err(_) => {
+                    return Err(PyException::new_err(
+                        "max len prefix only supports len from 1 to 128",
+                    ))
+                }
+            },
+            SliceTransformType::Noop => SliceTransform::create_noop(),
+        };
+        options.set_prefix_extractor(transform);
+        Ok(())
+    }
+
+    /// load latest options from OPTIONS files and config files
+    pub fn load_latest_inner(
+        path: &str,
+        env: EnvPy,
+        ignore_unknown_options: bool,
+    ) -> PyResult<(OptionsPy, HashMap<String, OptionsPy>)> {
+        let mut config_path = PathBuf::from(path);
+        config_path.push(ROCKSDICT_CONFIG_FILE);
+        let rocksdict_config = RocksDictConfig::load(config_path)?;
+        let raw_mode = rocksdict_config.raw_mode;
+        let slice_transforms = rocksdict_config.prefix_extractors;
+        let load_result = Options::load_latest(path, env.0, ignore_unknown_options);
+        let (options, column_families) = match load_result {
+            Ok(d) => d,
+            Err(e) => return Err(PyException::new_err(e.to_string())),
+        };
+        let options = OptionsPy::compose_options_py(
+            options,
+            raw_mode,
+            slice_transforms.get(DEFAULT_COLUMN_FAMILY_NAME).cloned(),
+        )?;
+        let column_families: PyResult<HashMap<_, _>> = column_families
+            .into_iter()
+            .map(|c| {
+                let opt = OptionsPy::compose_options_py(
+                    c.options,
+                    raw_mode,
+                    slice_transforms.get(&c.name).cloned(),
+                );
+                match opt {
+                    Ok(opt) => Ok((
+                        c.name,
+                        opt,
+                    )),
+                    Err(e) => Err(e),
+                }
+            })
+            .collect();
+        Ok((options, column_families?))
+    }
+
+    /// convert `Options` into `OptionsPy` based on `raw_mode` and `prefix_extractor`
+    fn compose_options_py(
+        opt: Options,
+        raw_mode: bool,
+        prefix_extractor: Option<SliceTransformType>,
+    ) -> PyResult<OptionsPy> {
+        let mut opt = opt;
+        if !raw_mode {
+            OptionsPy::set_rocksdict_comparator(&mut opt);
+        }
+        if let Some(slice_transform) = &prefix_extractor {
+            OptionsPy::set_prefix_extractor_inner(&mut opt, slice_transform)?
+        }
+        let options = OptionsPy {
+            inner_opt: opt,
+            raw_mode,
+            prefix_extractor,
+        };
+        Ok(options)
+    }
+
+    fn set_rocksdict_comparator(opt: &mut Options) {
+        opt.set_comparator("rocksdict", |v1, v2| {
+            if let (Some(3), Some(3)) = (v1.first(), v2.first()) {
+                BigInt::from_signed_bytes_be(&v1[1..]).cmp(&BigInt::from_signed_bytes_be(&v2[1..]))
+            } else {
+                v1.cmp(v2)
+            }
+        });
+    }
+}
+
 #[pymethods]
 impl OptionsPy {
     #[new]
@@ -436,19 +534,37 @@ impl OptionsPy {
         opt.create_if_missing(true);
         // if not raw_mode change default comparator
         if !raw_mode {
-            opt.set_comparator("rocksdict", |v1, v2| {
-                if let (Some(3), Some(3)) = (v1.first(), v2.first()) {
-                    BigInt::from_signed_bytes_be(&v1[1..])
-                        .cmp(&BigInt::from_signed_bytes_be(&v2[1..]))
-                } else {
-                    v1.cmp(v2)
-                }
-            });
+            OptionsPy::set_rocksdict_comparator(&mut opt);
         }
         OptionsPy {
             inner_opt: opt,
             raw_mode,
+            prefix_extractor: None,
         }
+    }
+
+    /// Load latest options from the rocksdb path
+    ///
+    /// Returns a tuple, where the first item is `Options`
+    /// and the second item is a `Dict` of column families.
+    #[staticmethod]
+    #[args(env = "EnvPy::default().unwrap()", ignore_unknown_options = "false")]
+    #[pyo3(text_signature = "(path, env, ignore_unknown_options)")]
+    pub fn load_latest(
+        path: &str,
+        env: EnvPy,
+        ignore_unknown_options: bool,
+        py: Python,
+    ) -> PyResult<PyObject> {
+        let (options, column_families) =
+            OptionsPy::load_latest_inner(path, env, ignore_unknown_options)?;
+        let options = Py::new(py, options)?;
+        let columns = PyDict::new(py);
+        for (name, opt) in column_families {
+            columns.set_item(name, Py::new(py, opt)?)?
+        }
+        let returned_tuple = PyTuple::new(py, [options.to_object(py), columns.to_object(py)]);
+        Ok(returned_tuple.to_object(py))
     }
 
     /// By default, RocksDB uses only one background thread for flush and
@@ -748,9 +864,9 @@ impl OptionsPy {
         &mut self,
         prefix_extractor: PyRef<SliceTransformPy>,
     ) -> PyResult<()> {
-        let transform = match prefix_extractor.0 {
-            SliceTransformType::Fixed(len) => SliceTransform::create_fixed_prefix(len),
-            SliceTransformType::MaxLen(len) => match create_max_len_transform(len) {
+        let transform = match &prefix_extractor.0 {
+            SliceTransformType::Fixed(len) => SliceTransform::create_fixed_prefix(*len),
+            SliceTransformType::MaxLen(len) => match create_max_len_transform(*len) {
                 Ok(f) => f,
                 Err(_) => {
                     return Err(PyException::new_err(
@@ -760,6 +876,7 @@ impl OptionsPy {
             },
             SliceTransformType::Noop => SliceTransform::create_noop(),
         };
+        self.prefix_extractor = Some(prefix_extractor.0.clone());
         self.inner_opt.set_prefix_extractor(transform);
         Ok(())
     }
