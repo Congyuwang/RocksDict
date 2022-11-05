@@ -4,6 +4,7 @@ from rocksdict import Rdict, Options, PlainTableFactoryOptions, SliceTransform, 
 from random import randint, random, getrandbits
 import os
 import sys
+import shutil
 
 
 TEST_INT_RANGE_UPPER = 999999
@@ -25,12 +26,13 @@ class TestIterBytes(unittest.TestCase):
     test_dict = None
     ref_dict = None
     opt = None
+    path = "./temp_iter_bytes"
 
     @classmethod
     def setUpClass(cls) -> None:
         cls.opt = Options()
         cls.opt.increase_parallelism(os.cpu_count())
-        cls.test_dict = Rdict("./temp_iter_bytes", cls.opt)
+        cls.test_dict = Rdict(cls.path, cls.opt)
         cls.ref_dict = dict()
         for i in range(100000):
             key = randbytes(10)
@@ -69,17 +71,19 @@ class TestIterBytes(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.test_dict.close()
-        Rdict.destroy("./temp_iter_bytes", Options())
+        Rdict.destroy(cls.path, Options())
+        shutil.rmtree(cls.path)
 
 
 class TestIterInt(unittest.TestCase):
     test_dict = None
     ref_dict = None
     opt = None
+    path = "./temp_iter_int"
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.test_dict = Rdict("./temp_iter_int")
+        cls.test_dict = Rdict(cls.path)
         cls.ref_dict = dict()
         for i in range(10000):
             key = randint(0, TEST_INT_RANGE_UPPER - 1)
@@ -115,13 +119,15 @@ class TestIterInt(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.test_dict.close()
-        Rdict.destroy("./temp_iter_int", Options())
+        Rdict.destroy(cls.path, Options())
+        shutil.rmtree(cls.path)
 
 
 class TestInt(unittest.TestCase):
     test_dict = None
     ref_dict = None
     opt = None
+    path = "./temp_int"
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -129,7 +135,7 @@ class TestInt(unittest.TestCase):
         cls.opt.create_if_missing(True)
         cls.opt.set_plain_table_factory(PlainTableFactoryOptions())
         cls.opt.set_prefix_extractor(SliceTransform.create_max_len_prefix(8))
-        cls.test_dict = Rdict("./temp_int", cls.opt)
+        cls.test_dict = Rdict(cls.path, cls.opt)
         cls.ref_dict = dict()
 
     def test_add_integer(self):
@@ -152,7 +158,7 @@ class TestInt(unittest.TestCase):
 
     def test_reopen(self):
         self.test_dict.close()
-        test_dict = Rdict("./temp_int", self.opt)
+        test_dict = Rdict(self.path, self.opt)
         compare_dicts(self, self.ref_dict, test_dict)
 
     def test_get_batch(self):
@@ -161,12 +167,14 @@ class TestInt(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        Rdict.destroy("./temp_int", cls.opt)
+        Rdict.destroy(cls.path, cls.opt)
+        shutil.rmtree(cls.path)
 
 
 class TestBigInt(unittest.TestCase):
     test_dict = None
     opt = None
+    path = "./temp_big_int"
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -174,7 +182,7 @@ class TestBigInt(unittest.TestCase):
         cls.opt.create_if_missing(True)
         cls.opt.set_plain_table_factory(PlainTableFactoryOptions())
         cls.opt.set_prefix_extractor(SliceTransform.create_max_len_prefix(8))
-        cls.test_dict = Rdict("./temp_big_int", cls.opt)
+        cls.test_dict = Rdict(cls.path, cls.opt)
 
     def test_big_int(self):
         key = 13456436145354564353464754615223435465543
@@ -192,19 +200,21 @@ class TestBigInt(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.test_dict.close()
-        Rdict.destroy("./temp_big_int", cls.opt)
+        Rdict.destroy(cls.path, cls.opt)
+        shutil.rmtree(cls.path)
 
 
 class TestFloat(unittest.TestCase):
     test_dict = None
     ref_dict = None
     opt = None
+    path = "./temp_float"
 
     @classmethod
     def setUpClass(cls) -> None:
         cls.opt = Options()
         cls.opt.create_if_missing(True)
-        cls.test_dict = Rdict("./temp_float", cls.opt)
+        cls.test_dict = Rdict(cls.path, cls.opt)
         cls.ref_dict = dict()
 
     def test_add_float(self):
@@ -227,7 +237,7 @@ class TestFloat(unittest.TestCase):
 
     def test_reopen(self):
         self.test_dict.close()
-        test_dict = Rdict("./temp_float", self.opt)
+        test_dict = Rdict(self.path, self.opt)
         compare_dicts(self, self.ref_dict, test_dict)
 
     def test_get_batch(self):
@@ -236,13 +246,15 @@ class TestFloat(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        Rdict.destroy("./temp_float", cls.opt)
+        Rdict.destroy(cls.path, cls.opt)
+        shutil.rmtree(cls.path)
 
 
 class TestBytes(unittest.TestCase):
     test_dict = None
     ref_dict = None
     opt = None
+    path = "./temp_bytes"
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -253,7 +265,7 @@ class TestBytes(unittest.TestCase):
             cls.opt.set_cuckoo_table_factory(CuckooTableOptions())
             cls.opt.set_allow_mmap_reads(True)
             cls.opt.set_allow_mmap_writes(True)
-        cls.test_dict = Rdict("./temp_bytes", cls.opt)
+        cls.test_dict = Rdict(cls.path, cls.opt)
         cls.ref_dict = dict()
 
     def test_add_bytes(self):
@@ -287,7 +299,7 @@ class TestBytes(unittest.TestCase):
 
     def test_reopen(self):
         self.test_dict.close()
-        test_dict = Rdict("./temp_bytes", self.opt)
+        test_dict = Rdict(self.path, self.opt)
         compare_dicts(self, self.ref_dict, test_dict)
 
     def test_get_batch(self):
@@ -296,18 +308,20 @@ class TestBytes(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        Rdict.destroy("./temp_bytes", cls.opt)
+        Rdict.destroy(cls.path, cls.opt)
+        shutil.rmtree(cls.path)
 
 
 class TestString(unittest.TestCase):
     test_dict = None
     opt = None
+    path = "./temp_string"
 
     @classmethod
     def setUpClass(cls) -> None:
         cls.opt = Options()
         cls.opt.create_if_missing(True)
-        cls.test_dict = Rdict("./temp_string", cls.opt)
+        cls.test_dict = Rdict(cls.path, cls.opt)
 
     def test_string(self):
         self.test_dict["Guangdong"] = "Shenzhen"
@@ -325,15 +339,17 @@ class TestString(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         del cls.test_dict
-        Rdict.destroy("./temp_string", cls.opt)
+        Rdict.destroy(cls.path, cls.opt)
+        shutil.rmtree(cls.path)
 
 
 class TestColumnFamiliesDefaultOpts(unittest.TestCase):
     test_dict = None
+    path = "./column_families"
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.test_dict = Rdict("./column_families")
+        cls.test_dict = Rdict(cls.path)
 
     def test_column_families(self):
         ds = self.test_dict.create_column_family(name="string")
@@ -350,8 +366,7 @@ class TestColumnFamiliesDefaultOpts(unittest.TestCase):
         self.test_dict.close()
 
         # reopen
-        cfs = {"string": Options(), "integer": Options()}
-        self.test_dict = Rdict("./column_families", column_families=cfs)
+        self.test_dict = Rdict(self.path)
         ds = self.test_dict.get_column_family("string")
         di = self.test_dict.get_column_family("integer")
         assert self.test_dict["ok"]
@@ -363,19 +378,21 @@ class TestColumnFamiliesDefaultOpts(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         del cls.test_dict
-        Rdict.destroy("./column_families")
+        Rdict.destroy(cls.path)
+        shutil.rmtree(cls.path)
 
 
 class TestColumnFamiliesDefaultOptsCreate(unittest.TestCase):
     cfs = None
     test_dict = None
+    path = "./column_families_create"
 
     @classmethod
     def setUpClass(cls) -> None:
         cls.cfs = {"string": Options(), "integer": Options()}
         opt = Options()
         opt.create_missing_column_families(True)
-        cls.test_dict = Rdict("./column_families_create", options=opt, column_families=cls.cfs)
+        cls.test_dict = Rdict(cls.path, options=opt, column_families=cls.cfs)
 
     def test_column_families_create(self):
         ds = self.test_dict.get_column_family(name="string")
@@ -392,8 +409,7 @@ class TestColumnFamiliesDefaultOptsCreate(unittest.TestCase):
         self.test_dict.close()
 
         # reopen
-        cfs = {"string": Options(), "integer": Options()}
-        self.test_dict = Rdict("./column_families_create", column_families=cfs)
+        self.test_dict = Rdict(self.path)
         ds = self.test_dict.get_column_family("string")
         di = self.test_dict.get_column_family("integer")
         assert self.test_dict["ok"]
@@ -405,12 +421,14 @@ class TestColumnFamiliesDefaultOptsCreate(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         del cls.test_dict
-        Rdict.destroy("./column_families_create")
+        Rdict.destroy(cls.path)
+        shutil.rmtree(cls.path)
 
 
 class TestColumnFamiliesCustomOpts(unittest.TestCase):
     cfs = None
     test_dict = None
+    path = "./column_families_custom_options"
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -419,9 +437,9 @@ class TestColumnFamiliesCustomOpts(unittest.TestCase):
         plain_opts.set_prefix_extractor(SliceTransform.create_max_len_prefix(8))
         plain_opts.set_plain_table_factory(PlainTableFactoryOptions())
         cls.cfs = {"string": Options(), "integer": plain_opts}
-        cls.test_dict = Rdict("./column_families_custom_create", options=plain_opts, column_families=cls.cfs)
+        cls.test_dict = Rdict(cls.path, options=plain_opts, column_families=cls.cfs)
 
-    def test_column_families_custom_options(self):
+    def test_column_families_custom_options_auto_reopen(self):
         ds = self.test_dict.get_column_family(name="string")
         di = self.test_dict.get_column_family(name="integer")
 
@@ -436,11 +454,7 @@ class TestColumnFamiliesCustomOpts(unittest.TestCase):
         self.test_dict.close()
 
         # reopen
-        plain_opts = Options()
-        plain_opts.set_prefix_extractor(SliceTransform.create_max_len_prefix(8))
-        plain_opts.set_plain_table_factory(PlainTableFactoryOptions())
-        cfs = {"string": Options(), "integer": plain_opts}
-        self.test_dict = Rdict("./column_families_custom_create", options=plain_opts, column_families=cfs)
+        self.test_dict = Rdict(self.path)
         ds = self.test_dict.get_column_family("string")
         di = self.test_dict.get_column_family("integer")
         assert self.test_dict["ok"]
@@ -452,7 +466,121 @@ class TestColumnFamiliesCustomOpts(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         del cls.test_dict
-        Rdict.destroy("./column_families_custom_create")
+        Rdict.destroy(cls.path)
+        shutil.rmtree(cls.path)
+
+
+class TestColumnFamiliesCustomOptionsCreate(unittest.TestCase):
+    cfs = None
+    test_dict = None
+    plain_opts = None
+    path = "./column_families_custom_options_create"
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.plain_opts = Options()
+        cls.plain_opts.create_missing_column_families(True)
+        cls.plain_opts.set_prefix_extractor(SliceTransform.create_max_len_prefix(8))
+        cls.plain_opts.set_plain_table_factory(PlainTableFactoryOptions())
+        cls.test_dict = Rdict(cls.path, options=cls.plain_opts, column_families=cls.cfs)
+
+    def test_column_families_custom_options_auto_reopen(self):
+        ds = self.test_dict.create_column_family(name="string")
+        di = self.test_dict.create_column_family(name="integer", options=self.plain_opts)
+
+        for i in range(1000):
+            di[i] = i * i
+            ds[str(i)] = str(i * i)
+
+        self.test_dict["ok"] = True
+
+        ds.close()
+        di.close()
+        self.test_dict.close()
+
+        # reopen
+        self.test_dict = Rdict(self.path)
+        ds = self.test_dict.get_column_family("string")
+        di = self.test_dict.get_column_family("integer")
+        assert self.test_dict["ok"]
+        compare_dicts(self, {i: i**2 for i in range(1000)}, di)
+        compare_dicts(self, {str(i): str(i**2) for i in range(1000)}, ds)
+        ds.close()
+        di.close()
+
+    @classmethod
+    def tearDownClass(cls):
+        del cls.test_dict
+        Rdict.destroy(cls.path)
+        shutil.rmtree(cls.path)
+
+
+class TestColumnFamiliesCustomOptionsCreateReopenOverride(unittest.TestCase):
+    cfs = None
+    test_dict = None
+    plain_opts = None
+    path = "./column_families_custom_options_create_reopen_override"
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.plain_opts = Options()
+        cls.plain_opts.create_missing_column_families(True)
+        cls.plain_opts.set_prefix_extractor(SliceTransform.create_max_len_prefix(8))
+        cls.plain_opts.set_plain_table_factory(PlainTableFactoryOptions())
+        cls.test_dict = Rdict(cls.path, options=cls.plain_opts)
+
+    def test_column_families_custom_options_auto_reopen_override(self):
+        ds = self.test_dict.create_column_family(name="string")
+        di = self.test_dict.create_column_family(name="integer", options=self.plain_opts)
+
+        for i in range(1000):
+            di[i] = i * i
+            ds[str(i)] = str(i * i)
+
+        self.test_dict["ok"] = True
+
+        ds.close()
+        di.close()
+        self.test_dict.close()
+
+        # reopen
+        old_opts, old_cols = Options.load_latest(self.path)
+        old_opts.create_missing_column_families(True)
+        old_cols["bytes"] = self.plain_opts
+        self.test_dict = Rdict(self.path, options=old_opts, column_families=old_cols)
+        ds = self.test_dict.get_column_family("string")
+        di = self.test_dict.get_column_family("integer")
+        db = self.test_dict.get_column_family("bytes")
+        db[b'great'] = b'hello world'
+        assert self.test_dict["ok"]
+        assert db[b'great'] == b'hello world'
+        compare_dicts(self, {i: i**2 for i in range(1000)}, di)
+        compare_dicts(self, {str(i): str(i**2) for i in range(1000)}, ds)
+        ds.close()
+        di.close()
+        db.close()
+        self.test_dict.close()
+
+        # reopen again auto read config
+        self.test_dict = Rdict(self.path)
+        ds = self.test_dict.get_column_family("string")
+        di = self.test_dict.get_column_family("integer")
+        db = self.test_dict.get_column_family("bytes")
+        db[b'great'] = b'hello world'
+        assert self.test_dict["ok"]
+        assert db[b'great'] == b'hello world'
+        compare_dicts(self, {i: i**2 for i in range(1000)}, di)
+        compare_dicts(self, {str(i): str(i**2) for i in range(1000)}, ds)
+        ds.close()
+        di.close()
+        db.close()
+        self.test_dict.close()
+
+    @classmethod
+    def tearDownClass(cls):
+        del cls.test_dict
+        Rdict.destroy(cls.path)
+        shutil.rmtree(cls.path)
 
 
 if __name__ == '__main__':

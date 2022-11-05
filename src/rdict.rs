@@ -1,5 +1,6 @@
 use crate::encoder::{decode_value, encode_key, encode_raw, encode_value};
 use crate::iter::{RdictItems, RdictKeys, RdictValues};
+use crate::options::{CachePy, EnvPy, SliceTransformType};
 use crate::{
     CompactOptionsPy, FlushOptionsPy, IngestExternalFileOptionsPy, OptionsPy, RdictIter,
     ReadOptionsPy, Snapshot, WriteBatchPy, WriteOptionsPy,
@@ -11,13 +12,19 @@ use rocksdb::{
     ColumnFamily, ColumnFamilyDescriptor, Direction, FlushOptions, IteratorMode, LiveFile,
     ReadOptions, WriteOptions, DB, DEFAULT_COLUMN_FAMILY_NAME,
 };
+use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::fs;
 use std::fs::create_dir_all;
 use std::ops::Deref;
-use std::path::Path;
-use std::sync::Arc;
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, RwLock};
 use std::time::Duration;
+
+pub const ROCKSDICT_CONFIG_FILE: &str = "rocksdict-config.json";
+/// 8MB default LRU cache size
+pub const DEFAULT_LRU_CACHE_SIZE: usize = 8 * 1024 * 1024;
 
 ///
 /// A persistent on-disk dictionary. Supports string, int, float, bytes as key, values.
@@ -54,6 +61,7 @@ pub(crate) struct Rdict {
     pub(crate) read_opt_py: ReadOptionsPy,
     pub(crate) column_family: Option<Arc<ColumnFamily>>,
     pub(crate) opt_py: OptionsPy,
+    pub(crate) slice_transforms: Arc<RwLock<HashMap<String, SliceTransformType>>>,
     // drop DB last
     pub(crate) db: Option<Arc<RefCell<DB>>>,
 }
@@ -85,24 +93,104 @@ pub(crate) struct Rdict {
 #[pyclass(name = "AccessType")]
 pub(crate) struct AccessType(AccessTypeInner);
 
+#[derive(Serialize, Deserialize)]
+pub struct RocksDictConfig {
+    pub raw_mode: bool,
+    // mapping from column families to SliceTransformType
+    pub prefix_extractors: HashMap<String, SliceTransformType>,
+}
+
+impl RocksDictConfig {
+    pub fn load<P: AsRef<Path>>(path: P) -> PyResult<Self> {
+        let config_file = fs::File::options().read(true).open(path)?;
+        match serde_json::from_reader(config_file) {
+            Ok(c) => Ok(c),
+            Err(e) => Err(PyException::new_err(e.to_string())),
+        }
+    }
+
+    pub fn save<P: AsRef<Path>>(&self, path: P) -> PyResult<()> {
+        let config_file = fs::File::options().create(true).write(true).open(path)?;
+        match serde_json::to_writer(config_file, self) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(PyException::new_err(e.to_string())),
+        }
+    }
+}
+
+impl Rdict {
+    fn dump_config(&self) -> PyResult<()> {
+        let mut config_path = PathBuf::from(self.path()?);
+        config_path.push(ROCKSDICT_CONFIG_FILE);
+        RocksDictConfig {
+            raw_mode: self.opt_py.raw_mode,
+            prefix_extractors: self.slice_transforms.read().unwrap().clone(),
+        }
+        .save(config_path)
+    }
+}
+
 #[pymethods]
 impl Rdict {
     /// Create a new database or open an existing one.
+    ///
+    /// If Options are not provided:
+    /// - first, attempt to read from the path
+    /// - if failed to read from the path, use default
     #[new]
     #[args(
-        options = "OptionsPy::new(false)",
+        options = "None",
         column_families = "None",
         access_type = "AccessType::read_write()"
     )]
     fn new(
         path: &str,
-        options: OptionsPy,
+        options: Option<OptionsPy>,
         column_families: Option<HashMap<String, OptionsPy>>,
         access_type: AccessType,
         py: Python,
     ) -> PyResult<Self> {
-        let path = Path::new(path);
         let pickle = PyModule::import(py, "pickle")?.to_object(py);
+        let options_loaded = OptionsPy::load_latest_inner(
+            path,
+            EnvPy::default()?,
+            false,
+            CachePy::new_lru_cache(DEFAULT_LRU_CACHE_SIZE)?,
+        );
+        let (options, column_families) = match (options_loaded, options, column_families) {
+            (Ok((opt_loaded, cols_loaded)), opt, cols) => match (opt, cols) {
+                (Some(opt), Some(cols)) => (opt, Some(cols)),
+                (Some(opt), None) => (opt, Some(cols_loaded)),
+                (None, Some(cols)) => (opt_loaded, Some(cols)),
+                (None, None) => (opt_loaded, Some(cols_loaded)),
+            },
+            (Err(_), Some(opt), cols) => (opt, cols),
+            (Err(_), None, cols) => {
+                log::info!("using default configuration");
+                (OptionsPy::new(false), cols)
+            }
+        };
+        // save slice transforms types in rocksdict config
+        let mut config_path = PathBuf::from(path);
+        config_path.push(ROCKSDICT_CONFIG_FILE);
+        let mut prefix_extractors = HashMap::new();
+        if let Some(slice_transform) = &options.prefix_extractor {
+            prefix_extractors.insert(
+                DEFAULT_COLUMN_FAMILY_NAME.to_string(),
+                slice_transform.clone(),
+            );
+        }
+        if let Some(cf) = &column_families {
+            for (name, opt) in cf.iter() {
+                if let Some(slice_transform) = &opt.prefix_extractor {
+                    prefix_extractors.insert(name.clone(), slice_transform.clone());
+                }
+            }
+        }
+        let rocksdict_config = RocksDictConfig {
+            raw_mode: options.raw_mode,
+            prefix_extractors: prefix_extractors.clone(),
+        };
         let opt_inner = &options.inner_opt;
         match create_dir_all(path) {
             Ok(_) => match {
@@ -145,7 +233,7 @@ impl Rdict {
                             DB::open_cf_descriptors_as_secondary(
                                 opt_inner,
                                 path,
-                                Path::new(&secondary_path),
+                                &secondary_path,
                                 cfs,
                             )
                         }
@@ -160,7 +248,7 @@ impl Rdict {
                             error_if_log_file_exist,
                         } => DB::open_for_read_only(opt_inner, path, error_if_log_file_exist),
                         AccessTypeInner::Secondary { secondary_path } => {
-                            DB::open_as_secondary(opt_inner, path, Path::new(&secondary_path))
+                            DB::open_as_secondary(opt_inner, path, &secondary_path)
                         }
                         AccessTypeInner::WithTTL { ttl } => DB::open_with_ttl(opt_inner, path, ttl),
                     }
@@ -169,6 +257,8 @@ impl Rdict {
                 Ok(db) => {
                     let r_opt = ReadOptionsPy::default(options.raw_mode, py)?;
                     let w_opt = WriteOptionsPy::new();
+                    // save rocksdict config
+                    rocksdict_config.save(config_path)?;
                     Ok(Rdict {
                         db: Some(Arc::new(RefCell::new(db))),
                         write_opt: (&w_opt).into(),
@@ -180,6 +270,7 @@ impl Rdict {
                         read_opt_py: r_opt,
                         column_family: None,
                         opt_py: options.clone(),
+                        slice_transforms: Arc::new(RwLock::new(prefix_extractors)),
                     })
                 }
                 Err(e) => Err(PyException::new_err(e.to_string())),
@@ -590,6 +681,14 @@ impl Rdict {
                 self.opt_py.raw_mode
             )));
         }
+        // write slice_transform info into config file
+        if let Some(slice_transform) = options.prefix_extractor {
+            self.slice_transforms
+                .write()
+                .unwrap()
+                .insert(name.to_string(), slice_transform);
+        }
+        self.dump_config()?;
         if let Some(db) = &self.db {
             let create_result = db.borrow_mut().create_cf(name, &options.inner_opt);
             match create_result {
@@ -641,6 +740,7 @@ impl Rdict {
                     write_opt_py: self.write_opt_py.clone(),
                     read_opt_py: self.read_opt_py.clone(),
                     opt_py: self.opt_py.clone(),
+                    slice_transforms: self.slice_transforms.clone(),
                 }),
             }
         } else {

@@ -1,3 +1,5 @@
+import shutil
+
 import rocksdict as rd
 from tqdm import tqdm
 import os
@@ -39,3 +41,5 @@ for k, v in db.items():
 
 # auto flush
 del db
+rd.Rdict.destroy("test")
+shutil.rmtree("test")
