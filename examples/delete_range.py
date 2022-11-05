@@ -1,3 +1,5 @@
+import shutil
+
 from rocksdict import Rdict, Options
 
 path = str("tmp")
@@ -22,3 +24,4 @@ assert list(c1.keys()) == list(range(0, 50))
 c1.close()
 db.close()
 Rdict.destroy(path)
+shutil.rmtree(path)

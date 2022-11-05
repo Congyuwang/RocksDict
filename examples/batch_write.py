@@ -1,3 +1,5 @@
+import shutil
+
 from rocksdict import Rdict, WriteBatch, Options
 
 # create db with two new column families
@@ -26,7 +28,9 @@ db.write(wb)
 
 # reopen DB
 db.close()
-db = Rdict(path, column_families=cf)
+
+# automatic reloading column families
+db = Rdict(path)
 
 # read db, check elements in two column families
 count = 0
@@ -46,3 +50,4 @@ assert count == 200
 
 db.close()
 Rdict.destroy(path, opt)
+shutil.rmtree(path)

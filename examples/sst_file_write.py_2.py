@@ -1,3 +1,5 @@
+import shutil
+
 from rocksdict import Rdict, Options, SstFileWriter
 import random
 
@@ -37,3 +39,4 @@ d.close()
 
 # delete tmp
 Rdict.destroy("tmp")
+shutil.rmtree("tmp")

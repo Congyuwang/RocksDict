@@ -1,6 +1,7 @@
+import shutil
+
 from rocksdict import Rdict, Options, SliceTransform, PlainTableFactoryOptions
 import os
-
 
 def db_options():
     opt = Options()
@@ -25,6 +26,13 @@ def db_options():
 
 
 db = Rdict("./some_path", db_options())
+db[0] = 1
+db.close()
 
+
+# automatic reloading all options on reopening
+db = Rdict("./some_path")
+assert db[0] == 1
 db.close()
 Rdict.destroy("./some_path", db_options())
+shutil.rmtree("./some_path")

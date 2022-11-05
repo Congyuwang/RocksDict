@@ -1,3 +1,5 @@
+import shutil
+
 from rocksdict import Rdict, Options, SliceTransform, PlainTableFactoryOptions
 import random
 
@@ -46,8 +48,8 @@ assert cf1_name in Rdict.list_cf(path)
 assert cf2_name in Rdict.list_cf(path)
 
 # reopen db
-db = Rdict(path, column_families={cf1_name: Options(),
-                                  cf2_name: cf2_opt})
+# automatic reloading column families and options
+db = Rdict(path)
 db_cf1 = db.get_column_family(cf1_name)
 db_cf2 = db.get_column_family(cf2_name)
 
@@ -68,3 +70,4 @@ db.close()
 db_cf1.close()
 db_cf2.close()
 Rdict.destroy(path)
+shutil.rmtree(path)
