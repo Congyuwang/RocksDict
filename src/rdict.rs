@@ -9,7 +9,7 @@ use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 use rocksdb::{
     ColumnFamily, ColumnFamilyDescriptor, Direction, FlushOptions, IteratorMode, LiveFile,
-    ReadOptions, WriteOptions, DB,
+    ReadOptions, WriteOptions, DB, DEFAULT_COLUMN_FAMILY_NAME,
 };
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -107,18 +107,30 @@ impl Rdict {
         match create_dir_all(path) {
             Ok(_) => match {
                 if let Some(cf) = column_families {
+                    let mut has_default_cf = false;
                     // check options_raw_mode for column families
-                    for (_, cf_opt) in cf.iter() {
+                    for (cf_name, cf_opt) in cf.iter() {
                         if cf_opt.raw_mode != options.raw_mode {
                             return Err(PyException::new_err(format!(
                                 "Options should have raw_mode={}",
                                 options.raw_mode
                             )));
                         }
+                        if cf_name.as_str() == DEFAULT_COLUMN_FAMILY_NAME {
+                            has_default_cf = true;
+                        }
                     }
-                    let cfs = cf
+                    let mut cfs = cf
                         .into_iter()
-                        .map(|(name, opt)| ColumnFamilyDescriptor::new(name, opt.inner_opt));
+                        .map(|(name, opt)| ColumnFamilyDescriptor::new(name, opt.inner_opt))
+                        .collect::<Vec<_>>();
+                    // automatically add default column families
+                    if !has_default_cf {
+                        cfs.push(ColumnFamilyDescriptor::new(
+                            DEFAULT_COLUMN_FAMILY_NAME,
+                            opt_inner.clone(),
+                        ));
+                    }
                     match access_type.0 {
                         AccessTypeInner::ReadWrite => DB::open_cf_descriptors(opt_inner, path, cfs),
                         AccessTypeInner::ReadOnly {

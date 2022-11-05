@@ -328,5 +328,132 @@ class TestString(unittest.TestCase):
         Rdict.destroy("./temp_string", cls.opt)
 
 
+class TestColumnFamiliesDefaultOpts(unittest.TestCase):
+    test_dict = None
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.test_dict = Rdict("./column_families")
+
+    def test_column_families(self):
+        ds = self.test_dict.create_column_family(name="string")
+        di = self.test_dict.create_column_family(name="integer")
+
+        for i in range(1000):
+            di[i] = i * i
+            ds[str(i)] = str(i * i)
+
+        self.test_dict["ok"] = True
+
+        ds.close()
+        di.close()
+        self.test_dict.close()
+
+        # reopen
+        cfs = {"string": Options(), "integer": Options()}
+        self.test_dict = Rdict("./column_families", column_families=cfs)
+        ds = self.test_dict.get_column_family("string")
+        di = self.test_dict.get_column_family("integer")
+        assert self.test_dict["ok"]
+        compare_dicts(self, {i: i**2 for i in range(1000)}, di)
+        compare_dicts(self, {str(i): str(i**2) for i in range(1000)}, ds)
+        ds.close()
+        di.close()
+
+    @classmethod
+    def tearDownClass(cls):
+        del cls.test_dict
+        Rdict.destroy("./column_families")
+
+
+class TestColumnFamiliesDefaultOptsCreate(unittest.TestCase):
+    cfs = None
+    test_dict = None
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.cfs = {"string": Options(), "integer": Options()}
+        opt = Options()
+        opt.create_missing_column_families(True)
+        cls.test_dict = Rdict("./column_families_create", options=opt, column_families=cls.cfs)
+
+    def test_column_families_create(self):
+        ds = self.test_dict.get_column_family(name="string")
+        di = self.test_dict.get_column_family(name="integer")
+
+        for i in range(1000):
+            di[i] = i * i
+            ds[str(i)] = str(i * i)
+
+        self.test_dict["ok"] = True
+
+        ds.close()
+        di.close()
+        self.test_dict.close()
+
+        # reopen
+        cfs = {"string": Options(), "integer": Options()}
+        self.test_dict = Rdict("./column_families_create", column_families=cfs)
+        ds = self.test_dict.get_column_family("string")
+        di = self.test_dict.get_column_family("integer")
+        assert self.test_dict["ok"]
+        compare_dicts(self, {i: i**2 for i in range(1000)}, di)
+        compare_dicts(self, {str(i): str(i**2) for i in range(1000)}, ds)
+        ds.close()
+        di.close()
+
+    @classmethod
+    def tearDownClass(cls):
+        del cls.test_dict
+        Rdict.destroy("./column_families_create")
+
+
+class TestColumnFamiliesCustomOpts(unittest.TestCase):
+    cfs = None
+    test_dict = None
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        plain_opts = Options()
+        plain_opts.create_missing_column_families(True)
+        plain_opts.set_prefix_extractor(SliceTransform.create_max_len_prefix(8))
+        plain_opts.set_plain_table_factory(PlainTableFactoryOptions())
+        cls.cfs = {"string": Options(), "integer": plain_opts}
+        cls.test_dict = Rdict("./column_families_custom_create", options=plain_opts, column_families=cls.cfs)
+
+    def test_column_families_custom_options(self):
+        ds = self.test_dict.get_column_family(name="string")
+        di = self.test_dict.get_column_family(name="integer")
+
+        for i in range(1000):
+            di[i] = i * i
+            ds[str(i)] = str(i * i)
+
+        self.test_dict["ok"] = True
+
+        ds.close()
+        di.close()
+        self.test_dict.close()
+
+        # reopen
+        plain_opts = Options()
+        plain_opts.set_prefix_extractor(SliceTransform.create_max_len_prefix(8))
+        plain_opts.set_plain_table_factory(PlainTableFactoryOptions())
+        cfs = {"string": Options(), "integer": plain_opts}
+        self.test_dict = Rdict("./column_families_custom_create", options=plain_opts, column_families=cfs)
+        ds = self.test_dict.get_column_family("string")
+        di = self.test_dict.get_column_family("integer")
+        assert self.test_dict["ok"]
+        compare_dicts(self, {i: i**2 for i in range(1000)}, di)
+        compare_dicts(self, {str(i): str(i**2) for i in range(1000)}, ds)
+        ds.close()
+        di.close()
+
+    @classmethod
+    def tearDownClass(cls):
+        del cls.test_dict
+        Rdict.destroy("./column_families_custom_create")
+
+
 if __name__ == '__main__':
     unittest.main()
