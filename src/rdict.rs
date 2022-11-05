@@ -1,6 +1,6 @@
 use crate::encoder::{decode_value, encode_key, encode_raw, encode_value};
 use crate::iter::{RdictItems, RdictKeys, RdictValues};
-use crate::options::{EnvPy, SliceTransformType};
+use crate::options::{CachePy, EnvPy, SliceTransformType};
 use crate::{
     CompactOptionsPy, FlushOptionsPy, IngestExternalFileOptionsPy, OptionsPy, RdictIter,
     ReadOptionsPy, Snapshot, WriteBatchPy, WriteOptionsPy,
@@ -23,6 +23,8 @@ use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
 pub const ROCKSDICT_CONFIG_FILE: &str = "rocksdict-config.json";
+/// 8MB default LRU cache size
+pub const DEFAULT_LRU_CACHE_SIZE: usize = 8 * 1024 * 1024;
 
 ///
 /// A persistent on-disk dictionary. Supports string, int, float, bytes as key, values.
@@ -122,8 +124,9 @@ impl Rdict {
         config_path.push(ROCKSDICT_CONFIG_FILE);
         RocksDictConfig {
             raw_mode: self.opt_py.raw_mode,
-            prefix_extractors: self.slice_transforms.read().unwrap().clone()
-        }.save(config_path)
+            prefix_extractors: self.slice_transforms.read().unwrap().clone(),
+        }
+        .save(config_path)
     }
 }
 
@@ -148,7 +151,12 @@ impl Rdict {
         py: Python,
     ) -> PyResult<Self> {
         let pickle = PyModule::import(py, "pickle")?.to_object(py);
-        let options_loaded = OptionsPy::load_latest_inner(path, EnvPy::default()?, false);
+        let options_loaded = OptionsPy::load_latest_inner(
+            path,
+            EnvPy::default()?,
+            false,
+            CachePy::new_lru_cache(DEFAULT_LRU_CACHE_SIZE)?,
+        );
         let (options, column_families) = match (options_loaded, options, column_families) {
             (Ok((opt_loaded, cols_loaded)), opt, cols) => match (opt, cols) {
                 (Some(opt), Some(cols)) => (opt, Some(cols)),
@@ -167,7 +175,10 @@ impl Rdict {
         config_path.push(ROCKSDICT_CONFIG_FILE);
         let mut prefix_extractors = HashMap::new();
         if let Some(slice_transform) = &options.prefix_extractor {
-            prefix_extractors.insert(DEFAULT_COLUMN_FAMILY_NAME.to_string(), slice_transform.clone());
+            prefix_extractors.insert(
+                DEFAULT_COLUMN_FAMILY_NAME.to_string(),
+                slice_transform.clone(),
+            );
         }
         if let Some(cf) = &column_families {
             for (name, opt) in cf.iter() {
@@ -259,7 +270,7 @@ impl Rdict {
                         read_opt_py: r_opt,
                         column_family: None,
                         opt_py: options.clone(),
-                        slice_transforms: Arc::new(RwLock::new(prefix_extractors))
+                        slice_transforms: Arc::new(RwLock::new(prefix_extractors)),
                     })
                 }
                 Err(e) => Err(PyException::new_err(e.to_string())),
@@ -672,7 +683,10 @@ impl Rdict {
         }
         // write slice_transform info into config file
         if let Some(slice_transform) = options.prefix_extractor {
-            self.slice_transforms.write().unwrap().insert(name.to_string(), slice_transform);
+            self.slice_transforms
+                .write()
+                .unwrap()
+                .insert(name.to_string(), slice_transform);
         }
         self.dump_config()?;
         if let Some(db) = &self.db {

@@ -245,6 +245,7 @@ pub(crate) struct PlainTableFactoryOptionsPy {
 
 #[pyclass(name = "Cache")]
 #[pyo3(text_signature = "(capacity)")]
+#[derive(Clone)]
 pub(crate) struct CachePy(Cache);
 
 #[pyclass(name = "BlockBasedIndexType")]
@@ -435,7 +436,10 @@ pub(crate) struct CompactOptionsPy(pub(crate) CompactOptions);
 
 impl OptionsPy {
     /// function that sets prefix extractor according to slice transform type
-    fn set_prefix_extractor_inner(options: &mut Options, slice_transform_type: &SliceTransformType) -> PyResult<()> {
+    fn set_prefix_extractor_inner(
+        options: &mut Options,
+        slice_transform_type: &SliceTransformType,
+    ) -> PyResult<()> {
         let transform = match slice_transform_type {
             SliceTransformType::Fixed(len) => SliceTransform::create_fixed_prefix(*len),
             SliceTransformType::MaxLen(len) => match create_max_len_transform(*len) {
@@ -457,13 +461,14 @@ impl OptionsPy {
         path: &str,
         env: EnvPy,
         ignore_unknown_options: bool,
+        cache: CachePy,
     ) -> PyResult<(OptionsPy, HashMap<String, OptionsPy>)> {
         let mut config_path = PathBuf::from(path);
         config_path.push(ROCKSDICT_CONFIG_FILE);
         let rocksdict_config = RocksDictConfig::load(config_path)?;
         let raw_mode = rocksdict_config.raw_mode;
         let slice_transforms = rocksdict_config.prefix_extractors;
-        let load_result = Options::load_latest(path, env.0, ignore_unknown_options);
+        let load_result = Options::load_latest(path, env.0, ignore_unknown_options, cache.0);
         let (options, column_families) = match load_result {
             Ok(d) => d,
             Err(e) => return Err(PyException::new_err(e.to_string())),
@@ -482,10 +487,7 @@ impl OptionsPy {
                     slice_transforms.get(&c.name).cloned(),
                 );
                 match opt {
-                    Ok(opt) => Ok((
-                        c.name,
-                        opt,
-                    )),
+                    Ok(opt) => Ok((c.name, opt)),
                     Err(e) => Err(e),
                 }
             })
@@ -548,16 +550,21 @@ impl OptionsPy {
     /// Returns a tuple, where the first item is `Options`
     /// and the second item is a `Dict` of column families.
     #[staticmethod]
-    #[args(env = "EnvPy::default().unwrap()", ignore_unknown_options = "false")]
+    #[args(
+        env = "EnvPy::default().unwrap()",
+        cache = "CachePy::new_lru_cache(8 * 1024 * 1204).unwrap()",
+        ignore_unknown_options = "false"
+    )]
     #[pyo3(text_signature = "(path, env, ignore_unknown_options)")]
     pub fn load_latest(
         path: &str,
         env: EnvPy,
+        cache: CachePy,
         ignore_unknown_options: bool,
         py: Python,
     ) -> PyResult<PyObject> {
         let (options, column_families) =
-            OptionsPy::load_latest_inner(path, env, ignore_unknown_options)?;
+            OptionsPy::load_latest_inner(path, env, ignore_unknown_options, cache)?;
         let options = Py::new(py, options)?;
         let columns = PyDict::new(py);
         for (name, opt) in column_families {
