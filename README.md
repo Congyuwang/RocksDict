@@ -98,7 +98,22 @@ db.close()
 Rdict.destroy(PATH_TO_ROCKSDB)
 ```
 
-## Reopening RocksDB Now Reads DB Config Automatically
+## New Feature Since v0.3.3
+
+Loading Options from RocksDict Path.
+
+### Load Options and add A New ColumnFamily
+```python
+from rocksdict import Options, Rdict
+path = str("./rocksdict_path")
+
+opts, cols = Options.load_latest(path)
+opts.create_missing_column_families(True)
+cols["bytes"] = Options()
+self.test_dict = Rdict(path, options=opts, column_families=cols)
+```
+
+### Reopening RocksDB Reads DB Options Automatically
 
 ```python
 import shutil
