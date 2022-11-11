@@ -25,4 +25,3 @@ for i in range(100):
 del snapshot, db
 
 Rdict.destroy("tmp")
-shutil.rmtree("tmp")
