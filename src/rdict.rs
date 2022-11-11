@@ -16,7 +16,6 @@ use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs;
-use std::fs::create_dir_all;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
@@ -25,6 +24,12 @@ use std::time::Duration;
 pub const ROCKSDICT_CONFIG_FILE: &str = "rocksdict-config.json";
 /// 8MB default LRU cache size
 pub const DEFAULT_LRU_CACHE_SIZE: usize = 8 * 1024 * 1024;
+
+pub fn config_file(path: &str) -> PathBuf {
+    let mut config_path = PathBuf::from(path);
+    config_path.push(ROCKSDICT_CONFIG_FILE);
+    config_path
+}
 
 ///
 /// A persistent on-disk dictionary. Supports string, int, float, bytes as key, values.
@@ -120,8 +125,7 @@ impl RocksDictConfig {
 
 impl Rdict {
     fn dump_config(&self) -> PyResult<()> {
-        let mut config_path = PathBuf::from(self.path()?);
-        config_path.push(ROCKSDICT_CONFIG_FILE);
+        let config_path = config_file(&self.path()?);
         RocksDictConfig {
             raw_mode: self.opt_py.raw_mode,
             prefix_extractors: self.slice_transforms.read().unwrap().clone(),
@@ -171,8 +175,7 @@ impl Rdict {
             }
         };
         // save slice transforms types in rocksdict config
-        let mut config_path = PathBuf::from(path);
-        config_path.push(ROCKSDICT_CONFIG_FILE);
+        let config_path = config_file(path);
         let mut prefix_extractors = HashMap::new();
         if let Some(slice_transform) = &options.prefix_extractor {
             prefix_extractors.insert(
@@ -192,7 +195,7 @@ impl Rdict {
             prefix_extractors: prefix_extractors.clone(),
         };
         let opt_inner = &options.inner_opt;
-        match create_dir_all(path) {
+        match fs::create_dir_all(path) {
             Ok(_) => match {
                 if let Some(cf) = column_families {
                     let mut has_default_cf = false;
@@ -1133,6 +1136,7 @@ impl Rdict {
     #[pyo3(text_signature = "(path, options)")]
     #[args(options = "OptionsPy::new(false)")]
     fn destroy(path: &str, options: OptionsPy) -> PyResult<()> {
+        fs::remove_file(config_file(path)).ok();
         match DB::destroy(&options.inner_opt, path) {
             Ok(_) => Ok(()),
             Err(e) => Err(PyException::new_err(e.to_string())),

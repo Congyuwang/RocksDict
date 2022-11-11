@@ -50,4 +50,3 @@ assert count == 200
 
 db.close()
 Rdict.destroy(path, opt)
-shutil.rmtree(path)

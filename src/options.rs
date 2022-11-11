@@ -552,15 +552,15 @@ impl OptionsPy {
     #[staticmethod]
     #[args(
         env = "EnvPy::default().unwrap()",
-        cache = "CachePy::new_lru_cache(8 * 1024 * 1204).unwrap()",
-        ignore_unknown_options = "false"
+        ignore_unknown_options = "false",
+        cache = "CachePy::new_lru_cache(8 * 1024 * 1204).unwrap()"
     )]
-    #[pyo3(text_signature = "(path, env, ignore_unknown_options)")]
+    #[pyo3(text_signature = "(path, env, ignore_unknown_options, cache)")]
     pub fn load_latest(
         path: &str,
         env: EnvPy,
-        cache: CachePy,
         ignore_unknown_options: bool,
+        cache: CachePy,
         py: Python,
     ) -> PyResult<PyObject> {
         let (options, column_families) =

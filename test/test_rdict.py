@@ -4,7 +4,6 @@ from rocksdict import Rdict, Options, PlainTableFactoryOptions, SliceTransform, 
 from random import randint, random, getrandbits
 import os
 import sys
-import shutil
 
 
 TEST_INT_RANGE_UPPER = 999999
@@ -72,7 +71,6 @@ class TestIterBytes(unittest.TestCase):
     def tearDownClass(cls):
         cls.test_dict.close()
         Rdict.destroy(cls.path, Options())
-        shutil.rmtree(cls.path)
 
 
 class TestIterInt(unittest.TestCase):
@@ -120,7 +118,6 @@ class TestIterInt(unittest.TestCase):
     def tearDownClass(cls):
         cls.test_dict.close()
         Rdict.destroy(cls.path, Options())
-        shutil.rmtree(cls.path)
 
 
 class TestInt(unittest.TestCase):
@@ -168,7 +165,6 @@ class TestInt(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         Rdict.destroy(cls.path, cls.opt)
-        shutil.rmtree(cls.path)
 
 
 class TestBigInt(unittest.TestCase):
@@ -201,7 +197,6 @@ class TestBigInt(unittest.TestCase):
     def tearDownClass(cls):
         cls.test_dict.close()
         Rdict.destroy(cls.path, cls.opt)
-        shutil.rmtree(cls.path)
 
 
 class TestFloat(unittest.TestCase):
@@ -247,7 +242,6 @@ class TestFloat(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         Rdict.destroy(cls.path, cls.opt)
-        shutil.rmtree(cls.path)
 
 
 class TestBytes(unittest.TestCase):
@@ -309,7 +303,6 @@ class TestBytes(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         Rdict.destroy(cls.path, cls.opt)
-        shutil.rmtree(cls.path)
 
 
 class TestString(unittest.TestCase):
@@ -340,7 +333,6 @@ class TestString(unittest.TestCase):
     def tearDownClass(cls):
         del cls.test_dict
         Rdict.destroy(cls.path, cls.opt)
-        shutil.rmtree(cls.path)
 
 
 class TestColumnFamiliesDefaultOpts(unittest.TestCase):
@@ -379,7 +371,6 @@ class TestColumnFamiliesDefaultOpts(unittest.TestCase):
     def tearDownClass(cls):
         del cls.test_dict
         Rdict.destroy(cls.path)
-        shutil.rmtree(cls.path)
 
 
 class TestColumnFamiliesDefaultOptsCreate(unittest.TestCase):
@@ -422,7 +413,6 @@ class TestColumnFamiliesDefaultOptsCreate(unittest.TestCase):
     def tearDownClass(cls):
         del cls.test_dict
         Rdict.destroy(cls.path)
-        shutil.rmtree(cls.path)
 
 
 class TestColumnFamiliesCustomOpts(unittest.TestCase):
@@ -467,7 +457,6 @@ class TestColumnFamiliesCustomOpts(unittest.TestCase):
     def tearDownClass(cls):
         del cls.test_dict
         Rdict.destroy(cls.path)
-        shutil.rmtree(cls.path)
 
 
 class TestColumnFamiliesCustomOptionsCreate(unittest.TestCase):
@@ -512,7 +501,6 @@ class TestColumnFamiliesCustomOptionsCreate(unittest.TestCase):
     def tearDownClass(cls):
         del cls.test_dict
         Rdict.destroy(cls.path)
-        shutil.rmtree(cls.path)
 
 
 class TestColumnFamiliesCustomOptionsCreateReopenOverride(unittest.TestCase):
@@ -580,7 +568,6 @@ class TestColumnFamiliesCustomOptionsCreateReopenOverride(unittest.TestCase):
     def tearDownClass(cls):
         del cls.test_dict
         Rdict.destroy(cls.path)
-        shutil.rmtree(cls.path)
 
 
 if __name__ == '__main__':

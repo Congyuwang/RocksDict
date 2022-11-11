@@ -39,4 +39,3 @@ d.close()
 
 # delete tmp
 Rdict.destroy("tmp")
-shutil.rmtree("tmp")
