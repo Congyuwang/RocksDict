@@ -35,4 +35,3 @@ db = Rdict("./some_path")
 assert db[0] == 1
 db.close()
 Rdict.destroy("./some_path", db_options())
-shutil.rmtree("./some_path")

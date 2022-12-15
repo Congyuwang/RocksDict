@@ -154,7 +154,7 @@ assert db[0] == 1
 
 # destroy
 db.close()
-shutil.rmtree("./some_path")
+Rdict.destroy("./some_path")
 ```
 
 ## More Examples on BatchWrite, SstFileWrite, Snapshot, RocksDB Options, and etc.
