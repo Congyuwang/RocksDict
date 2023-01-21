@@ -31,3 +31,6 @@ __all__ = ["Rdict",
            "FifoCompactOptions",
            "CompactOptions",
            "BottommostLevelCompaction"]
+
+Rdict.__enter__ = lambda self: self
+Rdict.__exit__ = lambda self, exc_type, exc_val, exc_tb: self.close()
