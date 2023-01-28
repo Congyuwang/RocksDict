@@ -23,6 +23,3 @@ libc = "0.2.112"
 [dependencies.pyo3]
 version = "0.18.0"
 features = ["extension-module", "num-bigint"]
-
-[package.metadata.maturin]
-python-source = "python"
