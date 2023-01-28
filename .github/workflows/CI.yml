@@ -8,6 +8,7 @@ jobs:
   macos:
     runs-on: macos-11
     strategy:
+      fail-fast: false
       matrix:
         py_version: [3.7, 3.8, 3.9, "3.10", "3.11"]
     steps:
@@ -42,6 +43,7 @@ jobs:
   windows:
     runs-on: windows-latest
     strategy:
+      fail-fast: false
       matrix:
         target: [x64, x86]
         py_version: [ 3.7, 3.8, 3.9, "3.10", "3.11" ]
