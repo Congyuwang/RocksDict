@@ -24,7 +24,7 @@ jobs:
           default: true
       - name: Build wheels - universal2
         run: |
-          export MACOSX_DEPLOYMENT_TARGET=11.0
+          export MACOSX_DEPLOYMENT_TARGET=10.14
           rustup target add aarch64-apple-darwin
           pip install maturin
           maturin build --release --universal2 --out dist
@@ -45,7 +45,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [x64, x86]
+        target: [x64]
         py_version: [ 3.7, 3.8, 3.9, "3.10", "3.11" ]
     steps:
       - uses: actions/checkout@v2
