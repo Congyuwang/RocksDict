@@ -92,7 +92,6 @@ impl RdictIter {
     /// To check whether the iterator encountered an error after `valid` has
     /// returned `false`, use the [`status`](DBRawIteratorWithThreadMode::status) method. `status` will never
     /// return an error when `valid` is `true`.
-    #[pyo3(text_signature = "($self)")]
     pub fn valid(&self) -> bool {
         unsafe { librocksdb_sys::rocksdb_iter_valid(self.inner) != 0 }
     }
@@ -102,7 +101,6 @@ impl RdictIter {
     /// invalidated and [`valid`](DBRawIteratorWithThreadMode::valid) will return `false` when called.
     ///
     /// Performing a seek will discard the current status.
-    #[pyo3(text_signature = "($self)")]
     pub fn status(&self) -> PyResult<()> {
         let mut err: *mut c_char = null_mut();
         unsafe {
@@ -139,7 +137,6 @@ impl RdictIter {
     ///
     ///         del iter, db
     ///         Rdict.destroy(path, Options())
-    #[pyo3(text_signature = "($self)")]
     pub fn seek_to_first(&mut self) {
         unsafe {
             librocksdb_sys::rocksdb_iter_seek_to_first(self.inner);
@@ -170,7 +167,6 @@ impl RdictIter {
     ///
     ///         del iter, db
     ///         Rdict.destroy(path, Options())
-    #[pyo3(text_signature = "($self)")]
     pub fn seek_to_last(&mut self) {
         unsafe {
             librocksdb_sys::rocksdb_iter_seek_to_last(self.inner);
@@ -197,7 +193,6 @@ impl RdictIter {
     ///
     ///         del iter, db
     ///         Rdict.destroy(path, Options())
-    #[pyo3(text_signature = "($self, key)")]
     pub fn seek(&mut self, key: &PyAny) -> PyResult<()> {
         if self.raw_mode {
             let key = encode_raw(key)?;
@@ -242,7 +237,6 @@ impl RdictIter {
     ///
     ///         del iter, db
     ///         Rdict.destroy(path, Options())
-    #[pyo3(text_signature = "($self, key)")]
     pub fn seek_for_prev(&mut self, key: &PyAny) -> PyResult<()> {
         if self.raw_mode {
             let key = encode_raw(key)?;
@@ -267,7 +261,6 @@ impl RdictIter {
     }
 
     /// Seeks to the next key.
-    #[pyo3(text_signature = "($self)")]
     pub fn next(&mut self) {
         unsafe {
             librocksdb_sys::rocksdb_iter_next(self.inner);
@@ -275,7 +268,6 @@ impl RdictIter {
     }
 
     /// Seeks to the previous key.
-    #[pyo3(text_signature = "($self)")]
     pub fn prev(&mut self) {
         unsafe {
             librocksdb_sys::rocksdb_iter_prev(self.inner);
@@ -283,7 +275,6 @@ impl RdictIter {
     }
 
     /// Returns the current key.
-    #[pyo3(text_signature = "($self)")]
     pub fn key(&self, py: Python) -> PyResult<PyObject> {
         if self.valid() {
             // Safety Note: This is safe as all methods that may invalidate the buffer returned
@@ -302,7 +293,6 @@ impl RdictIter {
     }
 
     /// Returns the current value.
-    #[pyo3(text_signature = "($self)")]
     pub fn value(&self, py: Python) -> PyResult<PyObject> {
         if self.valid() {
             // Safety Note: This is safe as all methods that may invalidate the buffer returned

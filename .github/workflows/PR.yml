@@ -8,6 +8,7 @@ jobs:
   macos:
     runs-on: macos-11
     strategy:
+      fail-fast: false
       matrix:
         py_version: [3.7, 3.8, 3.9, "3.10", "3.11"]
     steps:
@@ -16,11 +17,6 @@ jobs:
         with:
           python-version: ${{ matrix.py_version }}
           architecture: x64
-      - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v1
-        with:
-          version: 11.0
-          directory: ${{ runner.temp }}/llvm-11.0
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -28,6 +24,7 @@ jobs:
           default: true
       - name: Build wheels - universal2
         run: |
+          export MACOSX_DEPLOYMENT_TARGET=10.14
           rustup target add aarch64-apple-darwin
           pip install maturin
           maturin build --release --universal2 --out dist
@@ -46,8 +43,9 @@ jobs:
   windows:
     runs-on: windows-latest
     strategy:
+      fail-fast: false
       matrix:
-        target: [x64, x86]
+        target: [x64]
         py_version: [ 3.7, 3.8, 3.9, "3.10", "3.11" ]
     steps:
       - uses: actions/checkout@v2

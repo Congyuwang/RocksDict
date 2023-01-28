@@ -54,8 +54,7 @@ impl Snapshot {
     ///
     /// Args:
     ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
-    #[pyo3(text_signature = "($self, read_opt)")]
-    #[args(read_opt = "None")]
+    #[pyo3(signature = (read_opt = None))]
     fn iter(&self, read_opt: Option<&ReadOptionsPy>, py: Python) -> PyResult<RdictIter> {
         let read_opt: ReadOptionsPy = match read_opt {
             None => ReadOptionsPy::default(self.raw_mode, py)?,
@@ -82,8 +81,7 @@ impl Snapshot {
     ///         or the nearest next key for iteration
     ///         (depending on iteration direction).
     ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
-    #[pyo3(text_signature = "($self, backwards, from_key, read_opt)")]
-    #[args(backwards = "false", from_key = "None", read_opt = "None")]
+    #[pyo3(signature = (backwards = false, from_key = None, read_opt = None))]
     fn items(
         &self,
         backwards: bool,
@@ -102,8 +100,7 @@ impl Snapshot {
     ///         or the nearest next key for iteration
     ///         (depending on iteration direction).
     ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
-    #[pyo3(text_signature = "($self, backwards, from_key, read_opt)")]
-    #[args(backwards = "false", from_key = "None", read_opt = "None")]
+    #[pyo3(signature = (backwards = false, from_key = None, read_opt = None))]
     fn keys(
         &self,
         backwards: bool,
@@ -122,8 +119,7 @@ impl Snapshot {
     ///         or the nearest next key for iteration
     ///         (depending on iteration direction).
     ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
-    #[pyo3(text_signature = "($self, backwards, from_key, read_opt)")]
-    #[args(backwards = "false", from_key = "None", read_opt = "None")]
+    #[pyo3(signature = (backwards = false, from_key = None, read_opt = None))]
     fn values(
         &self,
         backwards: bool,

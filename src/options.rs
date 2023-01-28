@@ -50,7 +50,6 @@ use std::path::{Path, PathBuf};
 ///         with other RockDB database).
 ///
 #[pyclass(name = "Options")]
-#[pyo3(text_signature = "(raw_mode)")]
 #[derive(Clone)]
 pub(crate) struct OptionsPy {
     pub(crate) inner_opt: Options,
@@ -83,7 +82,6 @@ pub(crate) struct OptionsPy {
 ///         del db
 ///         Rdict.destroy(path, Options())
 #[pyclass(name = "WriteOptions")]
-#[pyo3(text_signature = "()")]
 #[derive(Clone)]
 pub(crate) struct WriteOptionsPy {
     /// Sets the sync mode. If true, the write will be flushed
@@ -156,7 +154,6 @@ pub(crate) struct WriteOptionsPy {
 ///         Rdict.destroy(path, Options())
 #[pyclass(name = "FlushOptions")]
 #[derive(Copy, Clone)]
-#[pyo3(text_signature = "()")]
 pub(crate) struct FlushOptionsPy {
     /// Waits until the flush is done.
     ///
@@ -179,7 +176,6 @@ pub(crate) struct FlushOptionsPy {
 ///     raw_mode (bool): this must be the same as `Options` raw_mode
 ///         argument.
 #[pyclass(name = "ReadOptions")]
-#[pyo3(text_signature = "(raw_mode)")]
 #[derive(Clone)]
 pub(crate) struct ReadOptionsPy {
     fill_cache: bool,
@@ -203,17 +199,14 @@ pub(crate) struct ReadOpt(pub(crate) *mut librocksdb_sys::rocksdb_readoptions_t)
 /// Defines the underlying memtable implementation.
 /// See official [wiki](https://github.com/facebook/rocksdb/wiki/MemTable) for more information.
 #[pyclass(name = "MemtableFactory")]
-#[pyo3(text_signature = "()")]
 pub(crate) struct MemtableFactoryPy(MemtableFactory);
 
 /// For configuring block-based file storage.
 #[pyclass(name = "BlockBasedOptions")]
-#[pyo3(text_signature = "()")]
 pub(crate) struct BlockBasedOptionsPy(BlockBasedOptions);
 
 /// Configuration of cuckoo-based storage.
 #[pyclass(name = "CuckooTableOptions")]
-#[pyo3(text_signature = "()")]
 pub(crate) struct CuckooTableOptionsPy(CuckooTableOptions);
 
 ///
@@ -228,7 +221,6 @@ pub(crate) struct CuckooTableOptionsPy(CuckooTableOptions);
 ///  index_sparseness: 16
 ///
 #[pyclass(name = "PlainTableFactoryOptions")]
-#[pyo3(text_signature = "()")]
 pub(crate) struct PlainTableFactoryOptionsPy {
     #[pyo3(get, set)]
     user_key_length: u32,
@@ -244,7 +236,6 @@ pub(crate) struct PlainTableFactoryOptionsPy {
 }
 
 #[pyclass(name = "Cache")]
-#[pyo3(text_signature = "(capacity)")]
 #[derive(Clone)]
 pub(crate) struct CachePy(Cache);
 
@@ -265,7 +256,6 @@ pub enum SliceTransformType {
 }
 
 #[pyclass(name = "DBPath")]
-#[pyo3(text_signature = "(path, target_size)")]
 pub(crate) struct DBPathPy {
     path: PathBuf,
     target_size: u64,
@@ -334,12 +324,10 @@ pub(crate) struct DBCompactionStylePy(DBCompactionStyle);
 pub(crate) struct DBRecoveryModePy(DBRecoveryMode);
 
 #[pyclass(name = "Env")]
-#[pyo3(text_signature = "()")]
 #[derive(Clone)]
 pub(crate) struct EnvPy(Env);
 
 #[pyclass(name = "UniversalCompactOptions")]
-#[pyo3(text_signature = "()")]
 pub(crate) struct UniversalCompactOptionsPy {
     /// Sets the percentage flexibility while comparing file size.
     /// If the candidate file(s) size is 1% smaller than the next file's size,
@@ -410,7 +398,6 @@ pub(crate) struct UniversalCompactOptionsPy {
 pub(crate) struct UniversalCompactionStopStylePy(UniversalCompactionStopStyle);
 
 #[pyclass(name = "FifoCompactOptions")]
-#[pyo3(text_signature = "()")]
 pub(crate) struct FifoCompactOptionsPy {
     /// Sets the max table file size.
     ///
@@ -423,7 +410,6 @@ pub(crate) struct FifoCompactOptionsPy {
 }
 
 #[pyclass(name = "IngestExternalFileOptions")]
-#[pyo3(text_signature = "()")]
 pub(crate) struct IngestExternalFileOptionsPy(pub(crate) IngestExternalFileOptions);
 
 #[pyclass(name = "BottommostLevelCompaction")]
@@ -431,7 +417,6 @@ pub(crate) struct IngestExternalFileOptionsPy(pub(crate) IngestExternalFileOptio
 pub(crate) struct BottommostLevelCompactionPy(BottommostLevelCompaction);
 
 #[pyclass(name = "CompactOptions")]
-#[pyo3(text_signature = "()")]
 pub(crate) struct CompactOptionsPy(pub(crate) CompactOptions);
 
 impl OptionsPy {
@@ -530,7 +515,7 @@ impl OptionsPy {
 #[pymethods]
 impl OptionsPy {
     #[new]
-    #[args(raw_mode = "false")]
+    #[pyo3(signature = (raw_mode = false))]
     pub fn new(raw_mode: bool) -> Self {
         let mut opt = Options::default();
         opt.create_if_missing(true);
@@ -550,12 +535,12 @@ impl OptionsPy {
     /// Returns a tuple, where the first item is `Options`
     /// and the second item is a `Dict` of column families.
     #[staticmethod]
-    #[args(
-        env = "EnvPy::default().unwrap()",
-        ignore_unknown_options = "false",
-        cache = "CachePy::new_lru_cache(8 * 1024 * 1204).unwrap()"
-    )]
-    #[pyo3(text_signature = "(path, env, ignore_unknown_options, cache)")]
+    #[pyo3(signature = (
+        path,
+        env = EnvPy::default().unwrap(),
+        ignore_unknown_options = false,
+        cache = CachePy::new_lru_cache(8 * 1024 * 1204).unwrap()
+    ))]
     pub fn load_latest(
         path: &str,
         env: EnvPy,
@@ -579,7 +564,6 @@ impl OptionsPy {
     /// `total_threads` is used. Good value for `total_threads` is the number of
     /// cores. You almost definitely want to call this function if your system is
     /// bottlenecked by RocksDB.
-    #[pyo3(text_signature = "($self, parallelism)")]
     pub fn increase_parallelism(&mut self, parallelism: i32) {
         self.inner_opt.increase_parallelism(parallelism)
     }
@@ -600,7 +584,6 @@ impl OptionsPy {
     ///
     /// It sets buffer sizes so that memory consumption would be constrained by
     /// `memtable_memory_budget`.
-    #[pyo3(text_signature = "($self, memtable_memory_budget)")]
     pub fn optimize_level_style_compaction(&mut self, memtable_memory_budget: usize) {
         self.inner_opt
             .optimize_level_style_compaction(memtable_memory_budget)
@@ -622,7 +605,6 @@ impl OptionsPy {
     ///
     /// It sets buffer sizes so that memory consumption would be constrained by
     /// `memtable_memory_budget`.
-    #[pyo3(text_signature = "($self, memtable_memory_budget)")]
     pub fn optimize_universal_style_compaction(&mut self, memtable_memory_budget: usize) {
         self.inner_opt
             .optimize_universal_style_compaction(memtable_memory_budget)
@@ -632,7 +614,6 @@ impl OptionsPy {
     /// will be created.
     ///
     /// Default: `true`
-    #[pyo3(text_signature = "($self, create_if_missing)")]
     pub fn create_if_missing(&mut self, create_if_missing: bool) {
         self.inner_opt.create_if_missing(create_if_missing)
     }
@@ -641,7 +622,6 @@ impl OptionsPy {
     /// will be created.
     ///
     /// Default: `false`
-    #[pyo3(text_signature = "($self, create_missing_cfs)")]
     pub fn create_missing_column_families(&mut self, create_missing_cfs: bool) {
         self.inner_opt
             .create_missing_column_families(create_missing_cfs)
@@ -650,7 +630,6 @@ impl OptionsPy {
     /// Specifies whether an error should be raised if the database already exists.
     ///
     /// Default: false
-    #[pyo3(text_signature = "($self, enabled)")]
     pub fn set_error_if_exists(&mut self, enabled: bool) {
         self.inner_opt.set_error_if_exists(enabled)
     }
@@ -667,7 +646,6 @@ impl OptionsPy {
     /// Write operations.
     ///
     /// Default: false
-    #[pyo3(text_signature = "($self, enabled)")]
     pub fn set_paranoid_checks(&mut self, enabled: bool) {
         self.inner_opt.set_paranoid_checks(enabled)
     }
@@ -704,7 +682,6 @@ impl OptionsPy {
     ///     flash_path = DBPath("/flash_path", 10 * 1024 * 1024 * 1024) # 10 GB
     ///     hard_drive = DBPath("/hard_drive", 2 * 1024 * 1024 * 1024 * 1024) # 2 TB
     ///     opt.set_db_paths([flash_path, hard_drive])
-    #[pyo3(text_signature = "($self, paths)")]
     pub fn set_db_paths(&mut self, paths: &PyList) -> PyResult<()> {
         let mut db_paths = Vec::with_capacity(paths.len());
         for p in paths.iter() {
@@ -724,7 +701,6 @@ impl OptionsPy {
     /// e.g. to read/write files, schedule background work, etc. In the near
     /// future, support for doing storage operations such as read/write files
     /// through env will be deprecated in favor of file_system.
-    #[pyo3(text_signature = "($self, env)")]
     pub fn set_env(&mut self, env: PyRef<EnvPy>) {
         self.inner_opt.set_env(&env.0)
     }
@@ -741,7 +717,6 @@ impl OptionsPy {
     ///
     ///         opts = Options()
     ///         opts.set_compression_type(DBCompressionType.snappy())
-    #[pyo3(text_signature = "($self, t)")]
     pub fn set_compression_type(&mut self, t: PyRef<DBCompressionTypePy>) {
         self.inner_opt.set_compression_type(t.0)
     }
@@ -767,7 +742,6 @@ impl OptionsPy {
     ///             DBCompressionType.snappy(),
     ///             DBCompressionType.snappy()
     ///         ])
-    #[pyo3(text_signature = "($self, level_types)")]
     pub fn set_compression_per_level(&mut self, level_types: &PyList) -> PyResult<()> {
         let mut result = Vec::with_capacity(level_types.len());
         for py_any in level_types.iter() {
@@ -794,7 +768,6 @@ impl OptionsPy {
     /// So users of this feature may see increased memory usage.
     ///
     /// Default: `0`
-    #[pyo3(text_signature = "($self, w_bits)")]
     pub fn set_compression_options(
         &mut self,
         w_bits: c_int,
@@ -813,7 +786,6 @@ impl OptionsPy {
     /// The training data will be used to generate a dictionary of max_dict_bytes.
     ///
     /// Default: 0.
-    #[pyo3(text_signature = "($self, value)")]
     pub fn set_zstd_max_train_bytes(&mut self, value: c_int) {
         self.inner_opt.set_zstd_max_train_bytes(value)
     }
@@ -826,7 +798,6 @@ impl OptionsPy {
     /// true.
     ///
     /// Default: `0`
-    #[pyo3(text_signature = "($self, compaction_readahead_size)")]
     pub fn set_compaction_readahead_size(&mut self, compaction_readahead_size: usize) {
         self.inner_opt
             .set_compaction_readahead_size(compaction_readahead_size)
@@ -837,7 +808,6 @@ impl OptionsPy {
     /// The goal of this feature is to have lower bound on size amplification.
     ///
     /// Default: false.
-    #[pyo3(text_signature = "($self, v)")]
     pub fn set_level_compaction_dynamic_level_bytes(&mut self, v: bool) {
         self.inner_opt.set_level_compaction_dynamic_level_bytes(v)
     }
@@ -866,7 +836,6 @@ impl OptionsPy {
     //     self.inner_opt.set_comparator(name, compare_fn)
     // }
 
-    #[pyo3(text_signature = "($self, prefix_extractor)")]
     pub fn set_prefix_extractor(
         &mut self,
         prefix_extractor: PyRef<SliceTransformPy>,
@@ -892,7 +861,6 @@ impl OptionsPy {
     //     self.0.add_comparator(name, compare_fn)
     // }
 
-    #[pyo3(text_signature = "($self, cache_size)")]
     pub fn optimize_for_point_lookup(&mut self, cache_size: u64) {
         self.inner_opt.optimize_for_point_lookup(cache_size)
     }
@@ -900,7 +868,6 @@ impl OptionsPy {
     /// Sets the optimize_filters_for_hits flag
     ///
     /// Default: `false`
-    #[pyo3(text_signature = "($self, optimize_for_hits)")]
     pub fn set_optimize_filters_for_hits(&mut self, optimize_for_hits: bool) {
         self.inner_opt
             .set_optimize_filters_for_hits(optimize_for_hits)
@@ -913,7 +880,6 @@ impl OptionsPy {
     /// regardless of this setting.
     ///
     /// Default: 6 hours
-    #[pyo3(text_signature = "($self, micros)")]
     pub fn set_delete_obsolete_files_period_micros(&mut self, micros: u64) {
         self.inner_opt
             .set_delete_obsolete_files_period_micros(micros)
@@ -924,7 +890,6 @@ impl OptionsPy {
     /// All data will be in level 0 without any automatic compaction.
     /// It's recommended to manually call CompactRange(NULL, NULL) before reading
     /// from the database, because otherwise the read can be very slow.
-    #[pyo3(text_signature = "($self)")]
     pub fn prepare_for_bulk_load(&mut self) {
         self.inner_opt.prepare_for_bulk_load()
     }
@@ -936,7 +901,6 @@ impl OptionsPy {
     /// compaction. For universal-style compaction, you can usually set it to `-1`.
     ///
     /// Default: `-1`
-    #[pyo3(text_signature = "($self, nfiles)")]
     pub fn set_max_open_files(&mut self, nfiles: c_int) {
         self.inner_opt.set_max_open_files(nfiles)
     }
@@ -944,7 +908,6 @@ impl OptionsPy {
     /// If max_open_files is -1, DB will open all files on DB::Open(). You can
     /// use this option to increase the number of threads used to open the files.
     /// Default: 16
-    #[pyo3(text_signature = "($self, nthreads)")]
     pub fn set_max_file_opening_threads(&mut self, nthreads: c_int) {
         self.inner_opt.set_max_file_opening_threads(nthreads)
     }
@@ -955,7 +918,6 @@ impl OptionsPy {
     /// filesystem like ext3 that can lose files after a reboot.
     ///
     /// Default: `false`
-    #[pyo3(text_signature = "($self, useit)")]
     pub fn set_use_fsync(&mut self, useit: bool) {
         self.inner_opt.set_use_fsync(useit)
     }
@@ -968,7 +930,6 @@ impl OptionsPy {
     /// name's prefix.
     ///
     /// Default: empty
-    #[pyo3(text_signature = "($self, path)")]
     pub fn set_db_log_dir(&mut self, path: &str) {
         self.inner_opt.set_db_log_dir(Path::new(path))
     }
@@ -986,7 +947,6 @@ impl OptionsPy {
     /// to 1MB.
     ///
     /// This option applies to table files
-    #[pyo3(text_signature = "($self, nbytes)")]
     pub fn set_bytes_per_sync(&mut self, nbytes: u64) {
         self.inner_opt.set_bytes_per_sync(nbytes)
     }
@@ -996,7 +956,6 @@ impl OptionsPy {
     /// Default: 0, turned off
     ///
     /// Dynamically changeable through SetDBOptions() API.
-    #[pyo3(text_signature = "($self, nbytes)")]
     pub fn set_wal_bytes_per_sync(&mut self, nbytes: u64) {
         self.inner_opt.set_wal_bytes_per_sync(nbytes)
     }
@@ -1011,7 +970,6 @@ impl OptionsPy {
     /// Default: 1024 * 1024 (1 MB)
     ///
     /// Dynamically changeable through SetDBOptions() API.
-    #[pyo3(text_signature = "($self, nbytes)")]
     pub fn set_writable_file_max_buffer_size(&mut self, nbytes: u64) {
         self.inner_opt.set_writable_file_max_buffer_size(nbytes)
     }
@@ -1024,7 +982,6 @@ impl OptionsPy {
     /// if you are going to use this feature.
     ///
     /// Default: true
-    #[pyo3(text_signature = "($self, allow)")]
     pub fn set_allow_concurrent_memtable_write(&mut self, allow: bool) {
         self.inner_opt.set_allow_concurrent_memtable_write(allow)
     }
@@ -1035,7 +992,6 @@ impl OptionsPy {
     /// is enabled.
     ///
     /// Default: true
-    #[pyo3(text_signature = "($self, enabled)")]
     pub fn set_enable_write_thread_adaptive_yield(&mut self, enabled: bool) {
         self.inner_opt
             .set_enable_write_thread_adaptive_yield(enabled)
@@ -1047,7 +1003,6 @@ impl OptionsPy {
     /// that will be sequentially skipped before a reseek is issued.
     ///
     /// Default: 8
-    #[pyo3(text_signature = "($self, num)")]
     pub fn set_max_sequential_skip_in_iterations(&mut self, num: u64) {
         self.inner_opt.set_max_sequential_skip_in_iterations(num)
     }
@@ -1061,7 +1016,6 @@ impl OptionsPy {
     /// be used. Memory mapped files are not impacted by these parameters.
     ///
     /// Default: false
-    #[pyo3(text_signature = "($self, enabled)")]
     pub fn set_use_direct_reads(&mut self, enabled: bool) {
         self.inner_opt.set_use_direct_reads(enabled)
     }
@@ -1075,7 +1029,6 @@ impl OptionsPy {
     /// they may or may not improve performance depending on the use case
     ///
     /// Default: false
-    #[pyo3(text_signature = "($self, enabled)")]
     pub fn set_use_direct_io_for_flush_and_compaction(&mut self, enabled: bool) {
         self.inner_opt
             .set_use_direct_io_for_flush_and_compaction(enabled)
@@ -1084,7 +1037,6 @@ impl OptionsPy {
     /// Enable/dsiable child process inherit open files.
     ///
     /// Default: true
-    #[pyo3(text_signature = "($self, enabled)")]
     pub fn set_is_fd_close_on_exec(&mut self, enabled: bool) {
         self.inner_opt.set_is_fd_close_on_exec(enabled)
     }
@@ -1092,7 +1044,6 @@ impl OptionsPy {
     /// Sets the number of shards used for table cache.
     ///
     /// Default: `6`
-    #[pyo3(text_signature = "($self, nbits)")]
     pub fn set_table_cache_num_shard_bits(&mut self, nbits: c_int) {
         self.inner_opt.set_table_cache_num_shard_bits(nbits)
     }
@@ -1101,7 +1052,6 @@ impl OptionsPy {
     /// by default files in different levels will have similar size.
     ///
     /// Dynamically changeable through SetOptions() API
-    #[pyo3(text_signature = "($self, multiplier)")]
     pub fn set_target_file_size_multiplier(&mut self, multiplier: i32) {
         self.inner_opt.set_target_file_size_multiplier(multiplier)
     }
@@ -1115,7 +1065,6 @@ impl OptionsPy {
     /// individual write buffers.
     ///
     /// Default: `1`
-    #[pyo3(text_signature = "($self, nbuf)")]
     pub fn set_min_write_buffer_number(&mut self, nbuf: c_int) {
         self.inner_opt.set_min_write_buffer_number(nbuf)
     }
@@ -1129,7 +1078,6 @@ impl OptionsPy {
     /// allowed.
     ///
     /// Default: `2`
-    #[pyo3(text_signature = "($self, nbuf)")]
     pub fn set_max_write_buffer_number(&mut self, nbuf: c_int) {
         self.inner_opt.set_max_write_buffer_number(nbuf)
     }
@@ -1150,7 +1098,6 @@ impl OptionsPy {
     /// Default: `0x4000000` (64MiB)
     ///
     /// Dynamically changeable through SetOptions() API
-    #[pyo3(text_signature = "($self, size)")]
     pub fn set_write_buffer_size(&mut self, size: usize) {
         self.inner_opt.set_write_buffer_size(size)
     }
@@ -1165,7 +1112,6 @@ impl OptionsPy {
     /// to enable it.
     ///
     /// Default: 0 (disabled)
-    #[pyo3(text_signature = "($self, size)")]
     pub fn set_db_write_buffer_size(&mut self, size: usize) {
         self.inner_opt.set_db_write_buffer_size(size)
     }
@@ -1182,13 +1128,11 @@ impl OptionsPy {
     /// Default: `0x10000000` (256MiB).
     ///
     /// Dynamically changeable through SetOptions() API
-    #[pyo3(text_signature = "($self, size)")]
     pub fn set_max_bytes_for_level_base(&mut self, size: u64) {
         self.inner_opt.set_max_bytes_for_level_base(size)
     }
 
     /// Default: `10`
-    #[pyo3(text_signature = "($self, mul)")]
     pub fn set_max_bytes_for_level_multiplier(&mut self, mul: f64) {
         self.inner_opt.set_max_bytes_for_level_multiplier(mul)
     }
@@ -1196,7 +1140,6 @@ impl OptionsPy {
     /// The manifest file is rolled over on reaching this limit.
     /// The older manifest file be deleted.
     /// The default value is MAX_INT so that roll-over does not take place.
-    #[pyo3(text_signature = "($self, size)")]
     pub fn set_max_manifest_file_size(&mut self, size: usize) {
         self.inner_opt.set_max_manifest_file_size(size)
     }
@@ -1213,7 +1156,6 @@ impl OptionsPy {
     /// Default: `0x4000000` (64MiB)
     ///
     /// Dynamically changeable through SetOptions() API
-    #[pyo3(text_signature = "($self, size)")]
     pub fn set_target_file_size_base(&mut self, size: u64) {
         self.inner_opt.set_target_file_size_base(size)
     }
@@ -1227,7 +1169,6 @@ impl OptionsPy {
     /// individual write buffers.
     ///
     /// Default: `1`
-    #[pyo3(text_signature = "($self, to_merge)")]
     pub fn set_min_write_buffer_number_to_merge(&mut self, to_merge: c_int) {
         self.inner_opt
             .set_min_write_buffer_number_to_merge(to_merge)
@@ -1239,7 +1180,6 @@ impl OptionsPy {
     /// Default: `4`
     ///
     /// Dynamically changeable through SetOptions() API
-    #[pyo3(text_signature = "($self, n)")]
     pub fn set_level_zero_file_num_compaction_trigger(&mut self, n: c_int) {
         self.inner_opt.set_level_zero_file_num_compaction_trigger(n)
     }
@@ -1251,7 +1191,6 @@ impl OptionsPy {
     /// Default: `20`
     ///
     /// Dynamically changeable through SetOptions() API
-    #[pyo3(text_signature = "($self, n)")]
     pub fn set_level_zero_slowdown_writes_trigger(&mut self, n: c_int) {
         self.inner_opt.set_level_zero_slowdown_writes_trigger(n)
     }
@@ -1261,7 +1200,6 @@ impl OptionsPy {
     /// Default: `24`
     ///
     /// Dynamically changeable through SetOptions() API
-    #[pyo3(text_signature = "($self, n)")]
     pub fn set_level_zero_stop_writes_trigger(&mut self, n: c_int) {
         self.inner_opt.set_level_zero_stop_writes_trigger(n)
     }
@@ -1269,19 +1207,16 @@ impl OptionsPy {
     /// Sets the compaction style.
     ///
     /// Default: DBCompactionStyle.level()
-    #[pyo3(text_signature = "($self, style)")]
     pub fn set_compaction_style(&mut self, style: PyRef<DBCompactionStylePy>) {
         self.inner_opt.set_compaction_style(style.0)
     }
 
     /// Sets the options needed to support Universal Style compactions.
-    #[pyo3(text_signature = "($self, uco)")]
     pub fn set_universal_compaction_options(&mut self, uco: &UniversalCompactOptionsPy) {
         self.inner_opt.set_universal_compaction_options(&uco.into())
     }
 
     /// Sets the options for FIFO compaction style.
-    #[pyo3(text_signature = "($self, fco)")]
     pub fn set_fifo_compaction_options(&mut self, fco: &FifoCompactOptionsPy) {
         self.inner_opt.set_fifo_compaction_options(&fco.into())
     }
@@ -1310,7 +1245,6 @@ impl OptionsPy {
     /// landed to the memtable.
     ///
     /// Default: false
-    #[pyo3(text_signature = "($self, unordered)")]
     pub fn set_unordered_write(&mut self, unordered: bool) {
         self.inner_opt.set_unordered_write(unordered)
     }
@@ -1320,7 +1254,6 @@ impl OptionsPy {
     /// smaller ones that are run simultaneously.
     ///
     /// Default: 1 (i.e. no subcompactions)
-    #[pyo3(text_signature = "($self, num)")]
     pub fn set_max_subcompactions(&mut self, num: u32) {
         self.inner_opt.set_max_subcompactions(num)
     }
@@ -1331,7 +1264,6 @@ impl OptionsPy {
     /// Default: 2
     ///
     /// Dynamically changeable through SetDBOptions() API.
-    #[pyo3(text_signature = "($self, jobs)")]
     pub fn set_max_background_jobs(&mut self, jobs: c_int) {
         self.inner_opt.set_max_background_jobs(jobs)
     }
@@ -1342,7 +1274,6 @@ impl OptionsPy {
     /// Default: `false`
     ///
     /// Dynamically changeable through SetOptions() API
-    #[pyo3(text_signature = "($self, disable)")]
     pub fn set_disable_auto_compactions(&mut self, disable: bool) {
         self.inner_opt.set_disable_auto_compactions(disable)
     }
@@ -1358,7 +1289,6 @@ impl OptionsPy {
     /// malloc.
     ///
     /// Dynamically changeable through SetOptions() API
-    #[pyo3(text_signature = "($self, size)")]
     pub fn set_memtable_huge_page_size(&mut self, size: size_t) {
         self.inner_opt.set_memtable_huge_page_size(size)
     }
@@ -1372,7 +1302,6 @@ impl OptionsPy {
     /// operations in the memtable.
     ///
     /// Default: 0 (disabled)
-    #[pyo3(text_signature = "($self, num)")]
     pub fn set_max_successive_merges(&mut self, num: usize) {
         self.inner_opt.set_max_successive_merges(num)
     }
@@ -1388,7 +1317,6 @@ impl OptionsPy {
     /// higher false positive rate.
     ///
     /// Default: 0
-    #[pyo3(text_signature = "($self, v)")]
     pub fn set_bloom_locality(&mut self, v: u32) {
         self.inner_opt.set_bloom_locality(v)
     }
@@ -1401,7 +1329,6 @@ impl OptionsPy {
     /// * old_value for that key is a put i.e. kTypeValue
     ///
     /// Default: false.
-    #[pyo3(text_signature = "($self, enabled)")]
     pub fn set_inplace_update_support(&mut self, enabled: bool) {
         self.inner_opt.set_inplace_update_support(enabled)
     }
@@ -1409,7 +1336,6 @@ impl OptionsPy {
     /// Sets the number of locks used for inplace update.
     ///
     /// Default: 10000 when inplace_update_support = true, otherwise 0.
-    #[pyo3(text_signature = "($self, num)")]
     pub fn set_inplace_update_locks(&mut self, num: usize) {
         self.inner_opt.set_inplace_update_locks(num)
     }
@@ -1421,7 +1347,6 @@ impl OptionsPy {
     /// Default: 1
     ///
     /// Dynamically changeable through SetOptions() API
-    #[pyo3(text_signature = "($self, level_values)")]
     pub fn set_max_bytes_for_level_multiplier_additional(&mut self, level_values: Vec<i32>) {
         self.inner_opt
             .set_max_bytes_for_level_multiplier_additional(&level_values)
@@ -1435,7 +1360,6 @@ impl OptionsPy {
     /// not checked at all.
     ///
     /// Default: false
-    #[pyo3(text_signature = "($self, value)")]
     pub fn set_skip_checking_sst_file_sizes_on_db_open(&mut self, value: bool) {
         self.inner_opt
             .set_skip_checking_sst_file_sizes_on_db_open(value)
@@ -1471,7 +1395,6 @@ impl OptionsPy {
     /// If using a TransactionDB/OptimisticTransactionDB, the default value will
     /// be set to the value of 'max_write_buffer_number * write_buffer_size'
     /// if it is not explicitly set by the user.  Otherwise, the default is 0.
-    #[pyo3(text_signature = "($self, size)")]
     pub fn set_max_write_buffer_size_to_maintain(&mut self, size: i64) {
         self.inner_opt.set_max_write_buffer_size_to_maintain(size)
     }
@@ -1489,7 +1412,6 @@ impl OptionsPy {
     /// commit.
     ///
     /// Default: false
-    #[pyo3(text_signature = "($self, value)")]
     pub fn set_enable_pipelined_write(&mut self, value: bool) {
         self.inner_opt.set_enable_pipelined_write(value)
     }
@@ -1509,7 +1431,6 @@ impl OptionsPy {
     ///
     ///         opts.set_allow_concurrent_memtable_write(false)
     ///         opts.set_memtable_factory(factory)
-    #[pyo3(text_signature = "($self, factory)")]
     pub fn set_memtable_factory(&mut self, factory: PyRef<MemtableFactoryPy>) {
         self.inner_opt.set_memtable_factory(match factory.0 {
             MemtableFactory::Vector => MemtableFactory::Vector,
@@ -1528,7 +1449,6 @@ impl OptionsPy {
         })
     }
 
-    #[pyo3(text_signature = "($self, factory)")]
     pub fn set_block_based_table_factory(&mut self, factory: PyRef<BlockBasedOptionsPy>) {
         self.inner_opt.set_block_based_table_factory(&factory.0)
     }
@@ -1552,7 +1472,6 @@ impl OptionsPy {
     ///         factory_opts.set_use_module_hash(false)
     ///
     ///         opts.set_cuckoo_table_factory(factory_opts)
-    #[pyo3(text_signature = "($self, factory)")]
     pub fn set_cuckoo_table_factory(&mut self, factory: PyRef<CuckooTableOptionsPy>) {
         self.inner_opt.set_cuckoo_table_factory(&factory.0)
     }
@@ -1578,14 +1497,12 @@ impl OptionsPy {
     ///         factory_opts.index_sparseness = 16
     ///
     ///         opts.set_plain_table_factory(factory_opts)
-    #[pyo3(text_signature = "($self, options)")]
     pub fn set_plain_table_factory(&mut self, options: &PlainTableFactoryOptionsPy) {
         self.inner_opt
             .set_plain_table_factory(&options.to_opt(self.raw_mode))
     }
 
     /// Sets the start level to use compression.
-    #[pyo3(text_signature = "($self, lvl)")]
     pub fn set_min_level_to_compress(&mut self, lvl: c_int) {
         self.inner_opt.set_min_level_to_compress(lvl)
     }
@@ -1593,7 +1510,6 @@ impl OptionsPy {
     /// Measure IO stats in compactions and flushes, if `true`.
     ///
     /// Default: `false`
-    #[pyo3(text_signature = "($self, enable)")]
     pub fn set_report_bg_io_stats(&mut self, enable: bool) {
         self.inner_opt.set_report_bg_io_stats(enable)
     }
@@ -1603,7 +1519,6 @@ impl OptionsPy {
     /// (i.e. the ones that are causing all the space amplification).
     ///
     /// Default: `0`
-    #[pyo3(text_signature = "($self, size)")]
     pub fn set_max_total_wal_size(&mut self, size: u64) {
         self.inner_opt.set_max_total_wal_size(size)
     }
@@ -1611,17 +1526,14 @@ impl OptionsPy {
     /// Recovery mode to control the consistency while replaying WAL.
     ///
     /// Default: DBRecoveryMode::PointInTime
-    #[pyo3(text_signature = "($self, mode)")]
     pub fn set_wal_recovery_mode(&mut self, mode: PyRef<DBRecoveryModePy>) {
         self.inner_opt.set_wal_recovery_mode(mode.0)
     }
 
-    #[pyo3(text_signature = "($self)")]
     pub fn enable_statistics(&mut self) {
         self.inner_opt.enable_statistics()
     }
 
-    #[pyo3(text_signature = "($self)")]
     pub fn get_statistics(&self) -> Option<String> {
         self.inner_opt.get_statistics()
     }
@@ -1629,7 +1541,6 @@ impl OptionsPy {
     /// If not zero, dump `rocksdb.stats` to LOG every `stats_dump_period_sec`.
     ///
     /// Default: `600` (10 mins)
-    #[pyo3(text_signature = "($self, period)")]
     pub fn set_stats_dump_period_sec(&mut self, period: c_uint) {
         self.inner_opt.set_stats_dump_period_sec(period)
     }
@@ -1637,7 +1548,6 @@ impl OptionsPy {
     /// If not zero, dump rocksdb.stats to RocksDB to LOG every `stats_persist_period_sec`.
     ///
     /// Default: `600` (10 mins)
-    #[pyo3(text_signature = "($self, period)")]
     pub fn set_stats_persist_period_sec(&mut self, period: c_uint) {
         self.inner_opt.set_stats_persist_period_sec(period)
     }
@@ -1647,7 +1557,6 @@ impl OptionsPy {
     /// performance.
     ///
     /// Default: `true`
-    #[pyo3(text_signature = "($self, advise)")]
     pub fn set_advise_random_on_open(&mut self, advise: bool) {
         self.inner_opt.set_advise_random_on_open(advise)
     }
@@ -1663,13 +1572,11 @@ impl OptionsPy {
     /// wasting spin time.
     ///
     /// Default: false
-    #[pyo3(text_signature = "($self, enabled)")]
     pub fn set_use_adaptive_mutex(&mut self, enabled: bool) {
         self.inner_opt.set_use_adaptive_mutex(enabled)
     }
 
     /// Sets the number of levels for this database.
-    #[pyo3(text_signature = "($self, n)")]
     pub fn set_num_levels(&mut self, n: c_int) {
         self.inner_opt.set_num_levels(n)
     }
@@ -1679,7 +1586,6 @@ impl OptionsPy {
     /// `write_buffer_size * memtable_prefix_bloom_ratio` (capped at 0.25).
     ///
     /// Default: `0`
-    #[pyo3(text_signature = "($self, ratio)")]
     pub fn set_memtable_prefix_bloom_ratio(&mut self, ratio: f64) {
         self.inner_opt.set_memtable_prefix_bloom_ratio(ratio)
     }
@@ -1691,7 +1597,6 @@ impl OptionsPy {
     /// Value 0 will be sanitized.
     ///
     /// Default: target_file_size_base * 25
-    #[pyo3(text_signature = "($self, nbytes)")]
     pub fn set_max_compaction_bytes(&mut self, nbytes: u64) {
         self.inner_opt.set_max_compaction_bytes(nbytes)
     }
@@ -1700,7 +1605,6 @@ impl OptionsPy {
     /// write-ahead log (WAL) should be written to.
     ///
     /// Default: same directory as the database
-    #[pyo3(text_signature = "($self, path)")]
     pub fn set_wal_dir(&mut self, path: &str) {
         self.inner_opt.set_wal_dir(Path::new(path))
     }
@@ -1721,7 +1625,6 @@ impl OptionsPy {
     ///    checks will be performed with ttl being first.
     ///
     /// Default: 0
-    #[pyo3(text_signature = "($self, secs)")]
     pub fn set_wal_ttl_seconds(&mut self, secs: u64) {
         self.inner_opt.set_wal_ttl_seconds(secs)
     }
@@ -1732,7 +1635,6 @@ impl OptionsPy {
     /// they will be deleted starting with the earliest until size_limit is met.
     ///
     /// Default: 0
-    #[pyo3(text_signature = "($self, size)")]
     pub fn set_wal_size_limit_mb(&mut self, size: u64) {
         self.inner_opt.set_wal_size_limit_mb(size)
     }
@@ -1742,7 +1644,6 @@ impl OptionsPy {
     /// Default is 4MB, which is reasonable to reduce random IO
     /// as well as prevent overallocation for mounts that preallocate
     /// large amounts of data (such as xfs's allocsize option).
-    #[pyo3(text_signature = "($self, size)")]
     pub fn set_manifest_preallocation_size(&mut self, size: usize) {
         self.inner_opt.set_manifest_preallocation_size(size)
     }
@@ -1752,7 +1653,6 @@ impl OptionsPy {
     /// Turning off this feature will improve DBOpen time especially in disk environment.
     ///
     /// Default: false
-    #[pyo3(text_signature = "($self, skip)")]
     pub fn set_skip_stats_update_on_db_open(&mut self, skip: bool) {
         self.inner_opt.set_skip_stats_update_on_db_open(skip)
     }
@@ -1760,7 +1660,6 @@ impl OptionsPy {
     /// Specify the maximal number of info log files to be kept.
     ///
     /// Default: 1000
-    #[pyo3(text_signature = "($self, nfiles)")]
     pub fn set_keep_log_file_num(&mut self, nfiles: usize) {
         self.inner_opt.set_keep_log_file_num(nfiles)
     }
@@ -1768,7 +1667,6 @@ impl OptionsPy {
     /// Allow the OS to mmap file for writing.
     ///
     /// Default: false
-    #[pyo3(text_signature = "($self, is_enabled)")]
     pub fn set_allow_mmap_writes(&mut self, is_enabled: bool) {
         self.inner_opt.set_allow_mmap_writes(is_enabled)
     }
@@ -1776,7 +1674,6 @@ impl OptionsPy {
     /// Allow the OS to mmap file for reading sst tables.
     ///
     /// Default: false
-    #[pyo3(text_signature = "($self, is_enabled)")]
     pub fn set_allow_mmap_reads(&mut self, is_enabled: bool) {
         self.inner_opt.set_allow_mmap_reads(is_enabled)
     }
@@ -1789,7 +1686,6 @@ impl OptionsPy {
     /// WAL, writes are always consistent across column families.
     ///
     /// Default: false
-    #[pyo3(text_signature = "($self, atomic_flush)")]
     pub fn set_atomic_flush(&mut self, atomic_flush: bool) {
         self.inner_opt.set_atomic_flush(atomic_flush)
     }
@@ -1798,7 +1694,6 @@ impl OptionsPy {
     ///
     /// Default: null (disabled)
     /// Not supported in ROCKSDB_LITE mode!
-    #[pyo3(text_signature = "($self, cache)")]
     pub fn set_row_cache(&mut self, cache: PyRef<CachePy>) {
         self.inner_opt.set_row_cache(&cache.0)
     }
@@ -1809,7 +1704,6 @@ impl OptionsPy {
     ///
     /// Default: disable
     ///
-    #[pyo3(text_signature = "($self, rate_bytes_per_sec, refill_period_us, fairness)")]
     pub fn set_ratelimiter(
         &mut self,
         rate_bytes_per_sec: i64,
@@ -1835,7 +1729,6 @@ impl OptionsPy {
     ///
     ///         options = Options()
     ///         options.set_max_log_file_size(0)
-    #[pyo3(text_signature = "($self, size)")]
     pub fn set_max_log_file_size(&mut self, size: usize) {
         self.inner_opt.set_max_log_file_size(size)
     }
@@ -1845,7 +1738,6 @@ impl OptionsPy {
     /// If specified with non-zero value, log file will be rolled
     /// if it has been active longer than `log_file_time_to_roll`.
     /// Default: 0 (disabled)
-    #[pyo3(text_signature = "($self, secs)")]
     pub fn set_log_file_time_to_roll(&mut self, secs: usize) {
         self.inner_opt.set_log_file_time_to_roll(secs)
     }
@@ -1867,7 +1759,6 @@ impl OptionsPy {
     ///
     ///         options = Options()
     ///         options.set_recycle_log_file_num(5)
-    #[pyo3(text_signature = "($self, num)")]
     pub fn set_recycle_log_file_num(&mut self, num: usize) {
         self.inner_opt.set_recycle_log_file_num(num)
     }
@@ -1876,7 +1767,6 @@ impl OptionsPy {
     /// bytes needed to be compaction exceed this threshold.
     ///
     /// Default: 64GB
-    #[pyo3(text_signature = "($self, limit)")]
     pub fn set_soft_pending_compaction_bytes_limit(&mut self, limit: usize) {
         self.inner_opt
             .set_soft_pending_compaction_bytes_limit(limit)
@@ -1886,7 +1776,6 @@ impl OptionsPy {
     /// this threshold.
     ///
     /// Default: 256GB
-    #[pyo3(text_signature = "($self, limit)")]
     pub fn set_hard_pending_compaction_bytes_limit(&mut self, limit: usize) {
         self.inner_opt
             .set_hard_pending_compaction_bytes_limit(limit)
@@ -1898,7 +1787,6 @@ impl OptionsPy {
     /// writer_buffer_size).
     ///
     /// Default: 0
-    #[pyo3(text_signature = "($self, size)")]
     pub fn set_arena_block_size(&mut self, size: usize) {
         self.inner_opt.set_arena_block_size(size)
     }
@@ -1906,7 +1794,6 @@ impl OptionsPy {
     /// If true, then print malloc stats together with rocksdb.stats when printing to LOG.
     ///
     /// Default: false
-    #[pyo3(text_signature = "($self, enabled)")]
     pub fn set_dump_malloc_stats(&mut self, enabled: bool) {
         self.inner_opt.set_dump_malloc_stats(enabled)
     }
@@ -1918,7 +1805,6 @@ impl OptionsPy {
     /// Default: false (disable)
     ///
     /// Dynamically changeable through SetOptions() API
-    #[pyo3(text_signature = "($self, whole_key_filter)")]
     pub fn set_memtable_whole_key_filtering(&mut self, whole_key_filter: bool) {
         self.inner_opt
             .set_memtable_whole_key_filtering(whole_key_filter)
@@ -1986,7 +1872,7 @@ impl From<&FlushOptionsPy> for FlushOptions {
 #[pymethods]
 impl ReadOptionsPy {
     #[new]
-    #[args(raw_mode = "false")]
+    #[pyo3(signature = (raw_mode = false))]
     pub fn default(raw_mode: bool, py: Python) -> PyResult<Self> {
         let pickle_dumps = PyModule::import(py, "pickle")?
             .to_object(py)
@@ -2014,21 +1900,18 @@ impl ReadOptionsPy {
     /// Callers may wish to set this field to false for bulk scans.
     ///
     /// Default: true
-    #[pyo3(text_signature = "($self, v)")]
     pub fn fill_cache(&mut self, v: bool) {
         self.fill_cache = v
     }
 
     /// Sets the upper bound for an iterator.
     /// The upper bound itself is not included on the iteration result.
-    #[pyo3(text_signature = "($self, key)")]
     pub fn set_iterate_upper_bound(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
         self.iterate_upper_bound = Some(encode_value(key, &self.pickle_dumps, self.raw_mode, py)?);
         Ok(())
     }
 
     /// Sets the lower bound for an iterator.
-    #[pyo3(text_signature = "($self, key)")]
     pub fn set_iterate_lower_bound(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
         self.iterate_lower_bound = Some(encode_value(key, &self.pickle_dumps, self.raw_mode, py)?);
         Ok(())
@@ -2042,7 +1925,6 @@ impl ReadOptionsPy {
     /// but in both directions.
     ///
     /// Default: false
-    #[pyo3(text_signature = "($self, v)")]
     pub fn set_prefix_same_as_start(&mut self, v: bool) {
         self.prefix_same_as_start = v
     }
@@ -2054,7 +1936,6 @@ impl ReadOptionsPy {
     /// If true when calling Get(), we also skip prefix bloom when reading from
     /// block based table. It provides a way to read existing data after
     /// changing implementation of prefix extractor.
-    #[pyo3(text_signature = "($self, v)")]
     pub fn set_total_order_seek(&mut self, v: bool) {
         self.total_order_seek = v
     }
@@ -2064,7 +1945,6 @@ impl ReadOptionsPy {
     /// never fail a request as incomplete, even on skipping too many keys.
     ///
     /// Default: 0
-    #[pyo3(text_signature = "($self, num)")]
     pub fn set_max_skippable_internal_keys(&mut self, num: u64) {
         self.max_skippable_internal_keys = num
     }
@@ -2073,7 +1953,6 @@ impl ReadOptionsPy {
     /// in the flush job queue and delete obsolete files in background.
     ///
     /// Default: false
-    #[pyo3(text_signature = "($self, v)")]
     pub fn set_background_purge_on_iterator_cleanup(&mut self, v: bool) {
         self.background_purge_on_iterator_cleanup = v
     }
@@ -2083,7 +1962,6 @@ impl ReadOptionsPy {
     /// read performance in DBs with many range deletions.
     ///
     /// Default: false
-    #[pyo3(text_signature = "($self, v)")]
     pub fn set_ignore_range_deletions(&mut self, v: bool) {
         self.ignore_range_deletions = v
     }
@@ -2092,7 +1970,6 @@ impl ReadOptionsPy {
     /// verified against corresponding checksums.
     ///
     /// Default: true
-    #[pyo3(text_signature = "($self, v)")]
     pub fn set_verify_checksums(&mut self, v: bool) {
         self.verify_checksums = v
     }
@@ -2106,7 +1983,6 @@ impl ReadOptionsPy {
     ///
     /// opts = ReadOptions()
     /// opts.set_readahead_size(4_194_304) # 4mb
-    #[pyo3(text_signature = "($self, v)")]
     pub fn set_readahead_size(&mut self, v: usize) {
         self.readahead_size = v
     }
@@ -2114,7 +1990,6 @@ impl ReadOptionsPy {
     /// If true, create a tailing iterator. Note that tailing iterators
     /// only support moving in the forward direction. Iterating in reverse
     /// or seek_to_last are not supported.
-    #[pyo3(text_signature = "($self, v)")]
     pub fn set_tailing(&mut self, v: bool) {
         self.tailing = v
     }
@@ -2127,7 +2002,6 @@ impl ReadOptionsPy {
     /// return 1.
     ///
     /// Default: false
-    #[pyo3(text_signature = "($self, v)")]
     pub fn set_pin_data(&mut self, v: bool) {
         self.pin_data = v
     }
@@ -2236,7 +2110,6 @@ impl MemtableFactoryPy {
     }
 
     #[staticmethod]
-    #[pyo3(text_signature = "(bucket_count)")]
     pub fn hash_skip_list(bucket_count: usize, height: i32, branching_factor: i32) -> Self {
         MemtableFactoryPy(MemtableFactory::HashSkipList {
             bucket_count,
@@ -2246,7 +2119,6 @@ impl MemtableFactoryPy {
     }
 
     #[staticmethod]
-    #[pyo3(text_signature = "(bucket_count)")]
     pub fn hash_link_list(bucket_count: usize) -> Self {
         MemtableFactoryPy(MemtableFactory::HashLinkList { bucket_count })
     }
@@ -2263,7 +2135,6 @@ impl BlockBasedOptionsPy {
     /// block size specified here corresponds to uncompressed data. The
     /// actual size of the unit read from disk may be smaller if
     /// compression is enabled. This parameter can be changed dynamically.
-    #[pyo3(text_signature = "($self, size)")]
     pub fn set_block_size(&mut self, size: usize) {
         self.0.set_block_size(size)
     }
@@ -2276,7 +2147,6 @@ impl BlockBasedOptionsPy {
     ///
     /// Note: this limit is currently applied to only index blocks; a filter
     /// partition is cut right after an index block is cut.
-    #[pyo3(text_signature = "($self, size)")]
     pub fn set_metadata_block_size(&mut self, size: usize) {
         self.0.set_metadata_block_size(size)
     }
@@ -2286,7 +2156,6 @@ impl BlockBasedOptionsPy {
     ///
     /// Use partitioned full filters for each SST file. This option is
     /// incompatible with block-based filters.
-    #[pyo3(text_signature = "($self, size)")]
     pub fn set_partition_filters(&mut self, size: bool) {
         self.0.set_partition_filters(size)
     }
@@ -2296,7 +2165,6 @@ impl BlockBasedOptionsPy {
     ///
     /// If set, use the specified cache for blocks.
     /// By default, rocksdb will automatically create and use an 8MB internal cache.
-    #[pyo3(text_signature = "($self, cache)")]
     pub fn set_block_cache(&mut self, cache: PyRef<CachePy>) {
         self.0.set_block_cache(&cache.0)
     }
@@ -2304,24 +2172,20 @@ impl BlockBasedOptionsPy {
     /// Sets global cache for compressed blocks. Cache must outlive DB instance which uses it.
     ///
     /// By default, rocksdb will not use a compressed block cache.
-    #[pyo3(text_signature = "($self, cache)")]
     pub fn set_block_cache_compressed(&mut self, cache: PyRef<CachePy>) {
         self.0.set_block_cache_compressed(&cache.0)
     }
 
     /// Disable block cache
-    #[pyo3(text_signature = "($self)")]
     pub fn disable_cache(&mut self) {
         self.0.disable_cache()
     }
 
     /// Sets the filter policy to reduce disk read
-    #[pyo3(text_signature = "($self, bits_per_key)")]
     pub fn set_bloom_filter(&mut self, bits_per_key: c_double, block_based: bool) {
         self.0.set_bloom_filter(bits_per_key, block_based)
     }
 
-    #[pyo3(text_signature = "($self, v)")]
     pub fn set_cache_index_and_filter_blocks(&mut self, v: bool) {
         self.0.set_cache_index_and_filter_blocks(v)
     }
@@ -2337,7 +2201,6 @@ impl BlockBasedOptionsPy {
     ///         block_opts = BlockBasedOptions()
     ///         block_opts.set_index_type(BlockBasedIndexType.hash_search())
     ///         opts.set_block_based_table_factory(block_opts)
-    #[pyo3(text_signature = "($self, index_type)")]
     pub fn set_index_type(&mut self, index_type: PyRef<BlockBasedIndexTypePy>) {
         self.0.set_index_type(match index_type.0 {
             BlockBasedIndexType::BinarySearch => BlockBasedIndexType::BinarySearch,
@@ -2352,7 +2215,6 @@ impl BlockBasedOptionsPy {
     /// evicted from cache when the table reader is freed.
     ///
     /// Default: false.
-    #[pyo3(text_signature = "($self, v)")]
     pub fn set_pin_l0_filter_and_index_blocks_in_cache(&mut self, v: bool) {
         self.0.set_pin_l0_filter_and_index_blocks_in_cache(v)
     }
@@ -2364,7 +2226,6 @@ impl BlockBasedOptionsPy {
     /// freed. This is not limited to l0 in LSM tree.
     ///
     /// Default: false.
-    #[pyo3(text_signature = "($self, v)")]
     pub fn set_pin_top_level_index_and_filter(&mut self, v: bool) {
         self.0.set_pin_top_level_index_and_filter(v)
     }
@@ -2375,7 +2236,6 @@ impl BlockBasedOptionsPy {
     /// of the supported versions.
     ///
     /// Default: 2.
-    #[pyo3(text_signature = "($self, version)")]
     pub fn set_format_version(&mut self, version: i32) {
         self.0.set_format_version(version)
     }
@@ -2386,7 +2246,6 @@ impl BlockBasedOptionsPy {
     /// value will be silently overwritten with 1.
     ///
     /// Default: 16.
-    #[pyo3(text_signature = "($self, interval)")]
     pub fn set_block_restart_interval(&mut self, interval: i32) {
         self.0.set_block_restart_interval(interval)
     }
@@ -2397,7 +2256,6 @@ impl BlockBasedOptionsPy {
     /// probably set the `format_version` to >= 4 as it would reduce the index size.
     ///
     /// Default: 1.
-    #[pyo3(text_signature = "($self, interval)")]
     pub fn set_index_block_restart_interval(&mut self, interval: i32) {
         self.0.set_index_block_restart_interval(interval)
     }
@@ -2421,7 +2279,6 @@ impl BlockBasedOptionsPy {
     ///         block_opts.set_data_block_index_type(DataBlockIndexType.binary_and_hash())
     ///         block_opts.set_data_block_hash_ratio(0.85)
     ///         opts.set_block_based_table_factory(block_opts)
-    #[pyo3(text_signature = "($self, index_type)")]
     pub fn set_data_block_index_type(&mut self, index_type: PyRef<DataBlockIndexTypePy>) {
         self.0.set_data_block_index_type(match index_type.0 {
             DataBlockIndexType::BinarySearch => DataBlockIndexType::BinarySearch,
@@ -2436,7 +2293,6 @@ impl BlockBasedOptionsPy {
     /// lookup at the price of more space overhead.
     ///
     /// Default: 0.75
-    #[pyo3(text_signature = "($self, ratio)")]
     pub fn set_data_block_hash_ratio(&mut self, ratio: f64) {
         self.0.set_data_block_hash_ratio(ratio)
     }
@@ -2452,7 +2308,6 @@ impl CuckooTableOptionsPy {
     /// Determines the utilization of hash tables. Smaller values
     /// result in larger hash tables with fewer collisions.
     /// Default: 0.9
-    #[pyo3(text_signature = "($self, ratio)")]
     pub fn set_hash_ratio(&mut self, ratio: f64) {
         self.0.set_hash_ratio(ratio)
     }
@@ -2463,7 +2318,6 @@ impl CuckooTableOptionsPy {
     /// values result in more efficient hash tables with fewer
     /// lookups but take more time to build.
     /// Default: 100
-    #[pyo3(text_signature = "($self, depth)")]
     pub fn set_max_search_depth(&mut self, depth: u32) {
         self.0.set_max_search_depth(depth)
     }
@@ -2474,7 +2328,6 @@ impl CuckooTableOptionsPy {
     /// function. This makes lookups more cache friendly in case
     /// of collisions.
     /// Default: 5
-    #[pyo3(text_signature = "($self, size)")]
     pub fn set_cuckoo_block_size(&mut self, size: u32) {
         self.0.set_cuckoo_block_size(size)
     }
@@ -2484,7 +2337,6 @@ impl CuckooTableOptionsPy {
     /// Reader ignore this option and behave according to what specified in
     /// table property.
     /// Default: false
-    #[pyo3(text_signature = "($self, flag)")]
     pub fn set_identity_as_first_hash(&mut self, flag: bool) {
         self.0.set_identity_as_first_hash(flag)
     }
@@ -2494,7 +2346,6 @@ impl CuckooTableOptionsPy {
     /// If this option is set to false, # of entries in table is constrained to
     /// be power of two, and bit and is used to calculate hash, which is faster in general.
     /// Default: true
-    #[pyo3(text_signature = "($self, flag)")]
     pub fn set_use_module_hash(&mut self, flag: bool) {
         self.0.set_use_module_hash(flag)
     }
@@ -2543,19 +2394,16 @@ impl CachePy {
     }
 
     /// Returns the Cache memory usage
-    #[pyo3(text_signature = "($self)")]
     pub fn get_usage(&self) -> usize {
         self.0.get_usage()
     }
 
     /// Returns pinned memory usage
-    #[pyo3(text_signature = "($self)")]
     pub fn get_pinned_usage(&self) -> usize {
         self.0.get_pinned_usage()
     }
 
     /// Sets cache capacity
-    #[pyo3(text_signature = "($self, capacity)")]
     pub fn set_capacity(&mut self, capacity: size_t) {
         self.0.set_capacity(capacity)
     }
@@ -2566,7 +2414,6 @@ impl BlockBasedIndexTypePy {
     /// A space efficient index block that is optimized for
     /// binary-search-based index.
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn binary_search() -> Self {
         BlockBasedIndexTypePy(BlockBasedIndexType::BinarySearch)
     }
@@ -2574,14 +2421,12 @@ impl BlockBasedIndexTypePy {
     /// The hash index, if enabled, will perform a hash lookup if
     /// a prefix extractor has been provided through Options::set_prefix_extractor.
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn hash_search() -> Self {
         BlockBasedIndexTypePy(BlockBasedIndexType::HashSearch)
     }
 
     /// A two-level index implementation. Both levels are binary search indexes.
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn two_level_index_search() -> Self {
         BlockBasedIndexTypePy(BlockBasedIndexType::TwoLevelIndexSearch)
     }
@@ -2592,7 +2437,6 @@ impl DataBlockIndexTypePy {
     /// Use binary search when performing point lookup for keys in data blocks.
     /// This is the default.
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn binary_search() -> Self {
         DataBlockIndexTypePy(DataBlockIndexType::BinarySearch)
     }
@@ -2601,7 +2445,6 @@ impl DataBlockIndexTypePy {
     /// compatible with databases created without this feature. Once turned on, existing data will
     /// be gradually converted to the hash index format.
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn binary_and_hash() -> Self {
         DataBlockIndexTypePy(DataBlockIndexType::BinaryAndHash)
     }
@@ -2610,7 +2453,6 @@ impl DataBlockIndexTypePy {
 #[pymethods]
 impl SliceTransformPy {
     #[staticmethod]
-    #[pyo3(text_signature = "(len)")]
     pub fn create_fixed_prefix(len: size_t) -> Self {
         SliceTransformPy(SliceTransformType::Fixed(len))
     }
@@ -2621,13 +2463,11 @@ impl SliceTransformPy {
     /// the prefix will have the same length as `len`.
     ///
     #[staticmethod]
-    #[pyo3(text_signature = "(len)")]
     pub fn create_max_len_prefix(len: usize) -> Self {
         SliceTransformPy(SliceTransformType::MaxLen(len))
     }
 
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn create_noop() -> Self {
         SliceTransformPy(SliceTransformType::Noop)
     }
@@ -2647,43 +2487,36 @@ impl DBPathPy {
 #[pymethods]
 impl DBCompressionTypePy {
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn none() -> Self {
         DBCompressionTypePy(DBCompressionType::None)
     }
 
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn snappy() -> Self {
         DBCompressionTypePy(DBCompressionType::Snappy)
     }
 
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn zlib() -> Self {
         DBCompressionTypePy(DBCompressionType::Zlib)
     }
 
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn bz2() -> Self {
         DBCompressionTypePy(DBCompressionType::Bz2)
     }
 
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn lz4() -> Self {
         DBCompressionTypePy(DBCompressionType::Lz4)
     }
 
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn lz4hc() -> Self {
         DBCompressionTypePy(DBCompressionType::Lz4hc)
     }
 
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn zstd() -> Self {
         DBCompressionTypePy(DBCompressionType::Zstd)
     }
@@ -2692,19 +2525,16 @@ impl DBCompressionTypePy {
 #[pymethods]
 impl DBCompactionStylePy {
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn level() -> Self {
         DBCompactionStylePy(DBCompactionStyle::Level)
     }
 
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn universal() -> Self {
         DBCompactionStylePy(DBCompactionStyle::Universal)
     }
 
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn fifo() -> Self {
         DBCompactionStylePy(DBCompactionStyle::Fifo)
     }
@@ -2713,25 +2543,21 @@ impl DBCompactionStylePy {
 #[pymethods]
 impl DBRecoveryModePy {
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn tolerate_corrupted_tail_records() -> Self {
         DBRecoveryModePy(DBRecoveryMode::TolerateCorruptedTailRecords)
     }
 
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn absolute_consistency() -> Self {
         DBRecoveryModePy(DBRecoveryMode::AbsoluteConsistency)
     }
 
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn point_in_time() -> Self {
         DBRecoveryModePy(DBRecoveryMode::PointInTime)
     }
 
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn skip_any_corrupted_record() -> Self {
         DBRecoveryModePy(DBRecoveryMode::SkipAnyCorruptedRecord)
     }
@@ -2751,7 +2577,6 @@ impl EnvPy {
     /// Returns a new environment that stores its data in memory and delegates
     /// all non-file-storage tasks to base_env.
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn mem_env() -> PyResult<Self> {
         match Env::mem_env() {
             Ok(env) => Ok(EnvPy(env)),
@@ -2763,58 +2588,49 @@ impl EnvPy {
     /// `LOW` is the default pool.
     ///
     /// Default: 1
-    #[pyo3(text_signature = "($self, num_threads)")]
     pub fn set_background_threads(&mut self, num_threads: c_int) {
         self.0.set_background_threads(num_threads)
     }
 
     /// Sets the size of the high priority thread pool that can be used to
     /// prevent compactions from stalling memtable flushes.
-    #[pyo3(text_signature = "($self, n)")]
     pub fn set_high_priority_background_threads(&mut self, n: c_int) {
         self.0.set_high_priority_background_threads(n)
     }
 
     /// Sets the size of the low priority thread pool that can be used to
     /// prevent compactions from stalling memtable flushes.
-    #[pyo3(text_signature = "($self, n)")]
     pub fn set_low_priority_background_threads(&mut self, n: c_int) {
         self.0.set_low_priority_background_threads(n)
     }
 
     /// Sets the size of the bottom priority thread pool that can be used to
     /// prevent compactions from stalling memtable flushes.
-    #[pyo3(text_signature = "($self, n)")]
     pub fn set_bottom_priority_background_threads(&mut self, n: c_int) {
         self.0.set_bottom_priority_background_threads(n)
     }
 
     /// Wait for all threads started by StartThread to terminate.
-    #[pyo3(text_signature = "($self)")]
     pub fn join_all_threads(&mut self) {
         self.0.join_all_threads()
     }
 
     /// Lowering IO priority for threads from the specified pool.
-    #[pyo3(text_signature = "($self)")]
     pub fn lower_thread_pool_io_priority(&mut self) {
         self.0.lower_thread_pool_io_priority()
     }
 
     /// Lowering IO priority for high priority thread pool.
-    #[pyo3(text_signature = "($self)")]
     pub fn lower_high_priority_thread_pool_io_priority(&mut self) {
         self.0.lower_high_priority_thread_pool_io_priority()
     }
 
     /// Lowering CPU priority for threads from the specified pool.
-    #[pyo3(text_signature = "($self)")]
     pub fn lower_thread_pool_cpu_priority(&mut self) {
         self.0.lower_thread_pool_cpu_priority()
     }
 
     /// Lowering CPU priority for high priority thread pool.
-    #[pyo3(text_signature = "($self)")]
     pub fn lower_high_priority_thread_pool_cpu_priority(&mut self) {
         self.0.lower_high_priority_thread_pool_cpu_priority()
     }
@@ -2851,13 +2667,11 @@ impl From<&UniversalCompactOptionsPy> for UniversalCompactOptions {
 #[pymethods]
 impl UniversalCompactionStopStylePy {
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn similar() -> Self {
         UniversalCompactionStopStylePy(UniversalCompactionStopStyle::Similar)
     }
 
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn total() -> Self {
         UniversalCompactionStopStylePy(UniversalCompactionStopStyle::Total)
     }
@@ -2889,28 +2703,24 @@ impl IngestExternalFileOptionsPy {
     }
 
     /// Can be set to true to move the files instead of copying them.
-    #[pyo3(text_signature = "($self, v)")]
     pub fn set_move_files(&mut self, v: bool) {
         self.0.set_move_files(v)
     }
 
     /// If set to false, an ingested file keys could appear in existing snapshots
     /// that where created before the file was ingested.
-    #[pyo3(text_signature = "($self, v)")]
     pub fn set_snapshot_consistency(&mut self, v: bool) {
         self.0.set_snapshot_consistency(v)
     }
 
     /// If set to false, IngestExternalFile() will fail if the file key range
     /// overlaps with existing keys or tombstones in the DB.
-    #[pyo3(text_signature = "($self, v)")]
     pub fn set_allow_global_seqno(&mut self, v: bool) {
         self.0.set_allow_global_seqno(v)
     }
 
     /// If set to false and the file key range overlaps with the memtable key range
     /// (memtable flush required), IngestExternalFile will fail.
-    #[pyo3(text_signature = "($self, v)")]
     pub fn set_allow_blocking_flush(&mut self, v: bool) {
         self.0.set_allow_blocking_flush(v)
     }
@@ -2922,7 +2732,6 @@ impl IngestExternalFileOptionsPy {
     /// This option could only be used if the DB has been running
     /// with allow_ingest_behind=true since the dawn of time.
     /// All files will be ingested at the bottommost level with seqno=0.
-    #[pyo3(text_signature = "($self, v)")]
     pub fn set_ingest_behind(&mut self, v: bool) {
         self.0.set_ingest_behind(v)
     }
@@ -2932,7 +2741,6 @@ impl IngestExternalFileOptionsPy {
 impl BottommostLevelCompactionPy {
     /// Skip bottommost level compaction
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn skip() -> Self {
         BottommostLevelCompactionPy(BottommostLevelCompaction::Skip)
     }
@@ -2940,14 +2748,12 @@ impl BottommostLevelCompactionPy {
     /// Only compact bottommost level if there is a compaction filter
     /// This is the default option
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn if_have_compaction_filter() -> Self {
         BottommostLevelCompactionPy(BottommostLevelCompaction::IfHaveCompactionFilter)
     }
 
     /// Always compact bottommost level
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn force() -> Self {
         BottommostLevelCompactionPy(BottommostLevelCompaction::Force)
     }
@@ -2955,7 +2761,6 @@ impl BottommostLevelCompactionPy {
     /// Always compact bottommost level but in bottommost level avoid
     /// double-compacting files created in the same compaction
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     pub fn force_optimized() -> Self {
         BottommostLevelCompactionPy(BottommostLevelCompaction::ForceOptimized)
     }
@@ -2973,27 +2778,23 @@ impl CompactOptionsPy {
     /// for the scheduled manual compaction to complete. If exclusive_manual_compaction
     /// is set to true, the call will disable scheduling of automatic compaction jobs
     /// and wait for existing automatic compaction jobs to finish.
-    #[pyo3(text_signature = "($self, v)")]
     pub fn set_exclusive_manual_compaction(&mut self, v: bool) {
         self.0.set_exclusive_manual_compaction(v)
     }
 
     /// Sets bottommost level compaction.
-    #[pyo3(text_signature = "($self, lvl)")]
     pub fn set_bottommost_level_compaction(&mut self, lvl: BottommostLevelCompactionPy) {
         self.0.set_bottommost_level_compaction(lvl.0)
     }
 
     /// If true, compacted files will be moved to the minimum level capable
     /// of holding the data or given level (specified non-negative target_level).
-    #[pyo3(text_signature = "($self, v)")]
     pub fn set_change_level(&mut self, v: bool) {
         self.0.set_change_level(v)
     }
 
     /// If change_level is true and target_level have non-negative value, compacted
     /// files will be moved to target_level.
-    #[pyo3(text_signature = "($self, lvl)")]
     pub fn set_target_level(&mut self, lvl: c_int) {
         self.0.set_target_level(lvl)
     }

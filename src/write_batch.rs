@@ -32,7 +32,7 @@ impl WriteBatchPy {
     /// Args:
     ///     raw_mode (bool): make sure that this is consistent with the Rdict.
     #[new]
-    #[args(raw_mode = "false")]
+    #[pyo3(signature = (raw_mode = false))]
     pub fn default(py: Python, raw_mode: bool) -> PyResult<Self> {
         let pickle = PyModule::import(py, "pickle")?.to_object(py);
         Ok(WriteBatchPy {
@@ -101,7 +101,6 @@ impl WriteBatchPy {
     ///
     /// Args:
     ///     - column_family (ColumnFamily | None): column family descriptor or None (for default family).
-    #[pyo3(text_signature = "($self, column_family)")]
     pub fn set_default_column_family(
         &mut self,
         column_family: Option<ColumnFamilyPy>,
@@ -117,7 +116,6 @@ impl WriteBatchPy {
     }
 
     /// length of the batch
-    #[pyo3(text_signature = "($self)")]
     pub fn len(&self) -> PyResult<usize> {
         if let Some(inner) = &self.inner {
             Ok(inner.len())
@@ -129,7 +127,6 @@ impl WriteBatchPy {
     }
 
     /// Return WriteBatch serialized size (in bytes).
-    #[pyo3(text_signature = "($self)")]
     pub fn size_in_bytes(&self) -> PyResult<usize> {
         if let Some(inner) = &self.inner {
             Ok(inner.size_in_bytes())
@@ -141,7 +138,6 @@ impl WriteBatchPy {
     }
 
     /// Check whether the batch is empty.
-    #[pyo3(text_signature = "($self)")]
     pub fn is_empty(&self) -> PyResult<bool> {
         if let Some(inner) = &self.inner {
             Ok(inner.is_empty())
@@ -156,8 +152,7 @@ impl WriteBatchPy {
     ///
     /// Args:
     ///     column_family: override the default column family set by set_default_column_family
-    #[pyo3(text_signature = "($self, key, value, column_family)")]
-    #[args(column_family = "None")]
+    #[pyo3(signature = (key, value, column_family = None))]
     pub fn put(
         &mut self,
         key: &PyAny,
@@ -193,8 +188,7 @@ impl WriteBatchPy {
     ///
     /// Args:
     ///     column_family: override the default column family set by set_default_column_family
-    #[pyo3(text_signature = "($self, key, column_family)")]
-    #[args(column_family = "None")]
+    #[pyo3(signature = (key, column_family = None))]
     pub fn delete(&mut self, key: &PyAny, column_family: Option<ColumnFamilyPy>) -> PyResult<()> {
         if let Some(inner) = &mut self.inner {
             if self.raw_mode {
@@ -229,8 +223,7 @@ impl WriteBatchPy {
     ///     begin: begin key
     ///     end: end key
     ///     column_family: override the default column family set by set_default_column_family
-    #[pyo3(text_signature = "($self, begin, end)")]
-    #[args(column_family = "None")]
+    #[pyo3(signature = (begin, end, column_family = None))]
     pub fn delete_range(
         &mut self,
         begin: &PyAny,
@@ -253,7 +246,6 @@ impl WriteBatchPy {
     }
 
     /// Clear all updates buffered in this batch.
-    #[pyo3(text_signature = "($self)")]
     pub fn clear(&mut self) -> PyResult<()> {
         if let Some(inner) = &mut self.inner {
             inner.clear();
