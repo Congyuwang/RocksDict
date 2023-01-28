@@ -72,7 +72,7 @@ impl SstFileWriterPy {
     /// Args:
     ///     options: this options must have the same `raw_mode` as the Rdict DB.
     #[new]
-    #[args(options = "OptionsPy::new(false)")]
+    #[pyo3(signature = (options = OptionsPy::new(false)))]
     fn create(options: OptionsPy, py: Python) -> PyResult<Self> {
         let env_options = EnvOptions::default();
         let raw_mode = options.raw_mode;
@@ -90,14 +90,12 @@ impl SstFileWriterPy {
     }
 
     /// Prepare SstFileWriter to write into file located at "file_path".
-    #[pyo3(text_signature = "($self, path)")]
     fn open(&self, path: &str) -> PyResult<()> {
         let cpath = to_cpath(path)?;
         self.open_raw(&cpath)
     }
 
     /// Finalize writing to sst file and close file.
-    #[pyo3(text_signature = "($self)")]
     fn finish(&mut self) -> PyResult<()> {
         unsafe {
             ffi_try!(librocksdb_sys::rocksdb_sstfilewriter_finish(self.inner,));
@@ -106,7 +104,6 @@ impl SstFileWriterPy {
     }
 
     /// returns the current file size
-    #[pyo3(text_signature = "($self)")]
     fn file_size(&self) -> u64 {
         let mut file_size: u64 = 0;
         unsafe { librocksdb_sys::rocksdb_sstfilewriter_file_size(self.inner, &mut file_size) };

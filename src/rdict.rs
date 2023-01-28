@@ -55,7 +55,6 @@ pub fn config_file(path: &str) -> PathBuf {
 ///         ReadWrite, ReadOnly, WithTTL, and Secondary, use
 ///         AccessType class to create.
 #[pyclass(name = "Rdict")]
-#[pyo3(text_signature = "(path, options, column_families, access_type)")]
 pub(crate) struct Rdict {
     pub(crate) write_opt: WriteOptions,
     pub(crate) flush_opt: FlushOptionsPy,
@@ -142,11 +141,12 @@ impl Rdict {
     /// - first, attempt to read from the path
     /// - if failed to read from the path, use default
     #[new]
-    #[args(
-        options = "None",
-        column_families = "None",
-        access_type = "AccessType::read_write()"
-    )]
+    #[pyo3(signature = (
+        path,
+        options = None,
+        column_families = None,
+        access_type = AccessType::read_write()
+    ))]
     fn new(
         path: &str,
         options: Option<OptionsPy>,
@@ -306,14 +306,12 @@ impl Rdict {
     ///         # remove db
     ///         del db
     ///         Rdict.destroy(path)
-    #[pyo3(text_signature = "($self, write_opt)")]
     fn set_write_options(&mut self, write_opt: &WriteOptionsPy) {
         self.write_opt = write_opt.into();
         self.write_opt_py = write_opt.clone();
     }
 
     /// Configure Read Options for all the get operations.
-    #[pyo3(text_signature = "($self, read_opt)")]
     fn set_read_options(&mut self, read_opt: &ReadOptionsPy) -> PyResult<()> {
         if self.opt_py.raw_mode != read_opt.raw_mode {
             return Err(PyException::new_err(format!(
@@ -523,8 +521,7 @@ impl Rdict {
     ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
     ///
     /// Returns: Reversible
-    #[pyo3(text_signature = "($self, read_opt)")]
-    #[args(read_opt = "None")]
+    #[pyo3(signature = (read_opt = None))]
     fn iter(&self, read_opt: Option<&ReadOptionsPy>, py: Python) -> PyResult<RdictIter> {
         let read_opt: ReadOptionsPy = match read_opt {
             None => ReadOptionsPy::default(self.opt_py.raw_mode, py)?,
@@ -557,8 +554,7 @@ impl Rdict {
     ///         or the nearest next key for iteration
     ///         (depending on iteration direction).
     ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
-    #[pyo3(text_signature = "($self, backwards, from_key, read_opt)")]
-    #[args(backwards = "false", from_key = "None", read_opt = "None")]
+    #[pyo3(signature = (backwards = false, from_key = None, read_opt = None))]
     fn items(
         &self,
         backwards: bool,
@@ -582,8 +578,7 @@ impl Rdict {
     ///         or the nearest next key for iteration
     ///         (depending on iteration direction).
     ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
-    #[pyo3(text_signature = "($self, backwards, from_key, read_opt)")]
-    #[args(backwards = "false", from_key = "None", read_opt = "None")]
+    #[pyo3(signature = (backwards = false, from_key = None, read_opt = None))]
     fn keys(
         &self,
         backwards: bool,
@@ -607,8 +602,7 @@ impl Rdict {
     ///         or the nearest next key for iteration
     ///         (depending on iteration direction).
     ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
-    #[pyo3(text_signature = "($self, backwards, from_key, read_opt)")]
-    #[args(backwards = "false", from_key = "None", read_opt = "None")]
+    #[pyo3(signature = (backwards = false, from_key = None, read_opt = None))]
     fn values(
         &self,
         backwards: bool,
@@ -629,8 +623,7 @@ impl Rdict {
     ///
     /// Args:
     ///     wait (bool): whether to wait for the flush to finish.
-    #[pyo3(text_signature = "($self, wait)")]
-    #[args(wait = "true")]
+    #[pyo3(signature = (wait = true))]
     fn flush(&self, wait: bool) -> PyResult<()> {
         if let Some(db) = &self.db {
             let mut f_opt = FlushOptions::new();
@@ -652,8 +645,7 @@ impl Rdict {
 
     /// Flushes the WAL buffer. If `sync` is set to `true`, also syncs
     /// the data to disk.
-    #[pyo3(text_signature = "($self, sync)")]
-    #[args(sync = "true")]
+    #[pyo3(signature = (sync = true))]
     fn flush_wal(&self, sync: bool) -> PyResult<()> {
         if let Some(db) = &self.db {
             let db = db.borrow();
@@ -675,8 +667,7 @@ impl Rdict {
     ///
     /// Return:
     ///     the newly created column family
-    #[pyo3(text_signature = "($self, name, options)")]
-    #[args(options = "OptionsPy::new(false)")]
+    #[pyo3(signature = (name, options = OptionsPy::new(false)))]
     fn create_column_family(&self, name: &str, options: OptionsPy) -> PyResult<Rdict> {
         if options.raw_mode != self.opt_py.raw_mode {
             return Err(PyException::new_err(format!(
@@ -704,7 +695,6 @@ impl Rdict {
     }
 
     /// Drops the column family with the given name
-    #[pyo3(text_signature = "($self, name)")]
     fn drop_column_family(&self, name: &str) -> PyResult<()> {
         if let Some(db) = &self.db {
             match db.borrow_mut().drop_cf(name) {
@@ -724,7 +714,6 @@ impl Rdict {
     ///
     /// Return:
     ///     the column family Rdict of this name
-    #[pyo3(text_signature = "($self, name)")]
     pub fn get_column_family(&self, name: &str) -> PyResult<Self> {
         if let Some(db) = &self.db {
             match db.borrow().cf_handle(name) {
@@ -766,7 +755,6 @@ impl Rdict {
     ///         for i in range(100, 200):
     ///             wb[i] = i**2
     ///         db.write(wb)
-    #[pyo3(text_signature = "($self, name)")]
     pub fn get_column_family_handle(&self, name: &str) -> PyResult<ColumnFamilyPy> {
         if let Some(db) = &self.db {
             match db.borrow().cf_handle(name) {
@@ -810,7 +798,6 @@ impl Rdict {
     ///         del snapshot, db
     ///
     ///         Rdict.destroy("tmp")
-    #[pyo3(text_signature = "($self)")]
     fn snapshot(&self) -> PyResult<Snapshot> {
         Snapshot::new(self)
     }
@@ -821,10 +808,10 @@ impl Rdict {
     /// Args:
     ///     paths: a list a paths
     ///     opts: IngestExternalFileOptionsPy instance
-    #[pyo3(text_signature = "($self, paths, opts)")]
-    #[args(
-        opts = "Python::with_gil(|py| Py::new(py, IngestExternalFileOptionsPy::new()).unwrap())"
-    )]
+    #[pyo3(signature = (
+        paths,
+        opts = Python::with_gil(|py| Py::new(py, IngestExternalFileOptionsPy::new()).unwrap())
+    ))]
     fn ingest_external_file(
         &self,
         paths: Vec<String>,
@@ -849,7 +836,6 @@ impl Rdict {
 
     /// Tries to catch up with the primary by reading as much as possible from the
     /// log files.
-    #[pyo3(text_signature = "($self)")]
     pub fn try_catch_up_with_primary(&self) -> PyResult<()> {
         if let Some(db) = &self.db {
             let db = db.borrow();
@@ -863,7 +849,6 @@ impl Rdict {
     }
 
     /// Request stopping background work, if wait is true wait until it's done.
-    #[pyo3(text_signature = "($self, wait)")]
     pub fn cancel_all_background(&self, wait: bool) -> PyResult<()> {
         if let Some(db) = &self.db {
             db.borrow().cancel_all_background_work(wait);
@@ -881,8 +866,7 @@ impl Rdict {
     /// Args:
     ///     write_batch: WriteBatch instance. This instance will be consumed.
     ///     write_opt: has default value.
-    #[pyo3(text_signature = "($self, write_batch, write_opt)")]
-    #[args(write_opt = "WriteOptionsPy::new()")]
+    #[pyo3(signature = (write_batch, write_opt = WriteOptionsPy::new()))]
     pub fn write(&self, write_batch: &mut WriteBatchPy, write_opt: WriteOptionsPy) -> PyResult<()> {
         if let Some(db) = &self.db {
             if self.opt_py.raw_mode != write_batch.raw_mode {
@@ -911,7 +895,6 @@ impl Rdict {
     /// Args:
     ///     begin: included
     ///     end: excluded
-    #[pyo3(text_signature = "($self, begin, end)")]
     pub fn delete_range(&self, begin: &PyAny, end: &PyAny) -> PyResult<()> {
         if let Some(db) = &self.db {
             let db = db.borrow();
@@ -961,7 +944,6 @@ impl Rdict {
     ///     alive. `del` all associated instances mentioned above
     ///     to actually shut down RocksDB.
     ///
-    #[pyo3(text_signature = "($self)")]
     fn close(&mut self) -> PyResult<()> {
         if let Some(db) = &self.db {
             let f_opt = &self.flush_opt;
@@ -984,7 +966,6 @@ impl Rdict {
     }
 
     /// Return current database path.
-    #[pyo3(text_signature = "($self)")]
     fn path(&self) -> PyResult<String> {
         if let Some(db) = &self.db {
             let db = db.borrow();
@@ -995,8 +976,7 @@ impl Rdict {
     }
 
     /// Runs a manual compaction on the Range of keys given for the current Column Family.
-    #[pyo3(text_signature = "($self, begin, end, compact_opt)")]
-    #[args(opts = "Python::with_gil(|py| Py::new(py, CompactOptionsPy::default()).unwrap())")]
+    #[pyo3(signature = (begin, end, compact_opt = Python::with_gil(|py| Py::new(py, CompactOptionsPy::default()).unwrap())))]
     fn compact_range(
         &self,
         begin: &PyAny,
@@ -1029,7 +1009,6 @@ impl Rdict {
     }
 
     /// Set options for the current column family.
-    #[pyo3(text_signature = "($self, options)")]
     fn set_options(&self, options: HashMap<String, String>) -> PyResult<()> {
         if let Some(db) = &self.db {
             let db = db.borrow();
@@ -1051,7 +1030,6 @@ impl Rdict {
     }
 
     /// Retrieves a RocksDB property by name, for the current column family.
-    #[pyo3(text_signature = "($self, name)")]
     fn property_value(&self, name: &str) -> PyResult<Option<String>> {
         if let Some(db) = &self.db {
             let db = db.borrow();
@@ -1073,7 +1051,6 @@ impl Rdict {
     ///
     /// Full list of properties that return int values could be find
     /// [here](https://github.com/facebook/rocksdb/blob/08809f5e6cd9cc4bc3958dd4d59457ae78c76660/include/rocksdb/db.h#L654-L689).
-    #[pyo3(text_signature = "($self, name)")]
     fn property_int_value(&self, name: &str) -> PyResult<Option<u64>> {
         if let Some(db) = &self.db {
             let db = db.borrow();
@@ -1091,7 +1068,6 @@ impl Rdict {
     }
 
     /// The sequence number of the most recent transaction.
-    #[pyo3(text_signature = "($self)")]
     fn latest_sequence_number(&self) -> PyResult<u64> {
         if let Some(db) = &self.db {
             let db = db.borrow();
@@ -1102,7 +1078,6 @@ impl Rdict {
     }
 
     /// Returns a list of all table files with their level, start key and end key
-    #[pyo3(text_signature = "($self)")]
     fn live_files(&self, py: Python) -> PyResult<PyObject> {
         if let Some(db) = &self.db {
             let db = db.borrow();
@@ -1133,8 +1108,7 @@ impl Rdict {
     ///     path (str): path to this database
     ///     options (rocksdict.Options): Rocksdb options object
     #[staticmethod]
-    #[pyo3(text_signature = "(path, options)")]
-    #[args(options = "OptionsPy::new(false)")]
+    #[pyo3(signature = (path, options = OptionsPy::new(false)))]
     fn destroy(path: &str, options: OptionsPy) -> PyResult<()> {
         fs::remove_file(config_file(path)).ok();
         match DB::destroy(&options.inner_opt, path) {
@@ -1149,8 +1123,7 @@ impl Rdict {
     ///     path (str): path to this database
     ///     options (rocksdict.Options): Rocksdb options object
     #[staticmethod]
-    #[pyo3(text_signature = "(path, options)")]
-    #[args(options = "OptionsPy::new(false)")]
+    #[pyo3(signature = (path, options = OptionsPy::new(false)))]
     fn repair(path: &str, options: OptionsPy) -> PyResult<()> {
         match DB::repair(&options.inner_opt, path) {
             Ok(_) => Ok(()),
@@ -1159,8 +1132,7 @@ impl Rdict {
     }
 
     #[staticmethod]
-    #[pyo3(text_signature = "(path, options)")]
-    #[args(options = "OptionsPy::new(false)")]
+    #[pyo3(signature = (path, options = OptionsPy::new(false)))]
     fn list_cf(path: &str, options: OptionsPy) -> PyResult<Vec<String>> {
         match DB::list_cf(&options.inner_opt, path) {
             Ok(vec) => Ok(vec),
@@ -1308,7 +1280,6 @@ impl AccessType {
     ///
     ///
     #[staticmethod]
-    #[pyo3(text_signature = "()")]
     fn read_write() -> Self {
         AccessType(AccessTypeInner::ReadWrite)
     }
@@ -1338,8 +1309,7 @@ impl AccessType {
     ///
     ///
     #[staticmethod]
-    #[pyo3(text_signature = "(error_if_log_file_exist)")]
-    #[args(error_if_log_file_exist = "true")]
+    #[pyo3(signature = (error_if_log_file_exist = true))]
     fn read_only(error_if_log_file_exist: bool) -> Self {
         AccessType(AccessTypeInner::ReadOnly {
             error_if_log_file_exist,
@@ -1371,7 +1341,6 @@ impl AccessType {
     ///
     ///
     #[staticmethod]
-    #[pyo3(text_signature = "(secondary_path)")]
     fn secondary(secondary_path: String) -> Self {
         AccessType(AccessTypeInner::Secondary { secondary_path })
     }
@@ -1401,7 +1370,6 @@ impl AccessType {
     ///
     ///
     #[staticmethod]
-    #[pyo3(text_signature = "(duration)")]
     fn with_ttl(duration: u64) -> Self {
         AccessType(AccessTypeInner::WithTTL {
             ttl: Duration::from_secs(duration),
