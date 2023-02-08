@@ -57,8 +57,7 @@ impl RdictIter {
     ) -> PyResult<Self> {
         if readopts.raw_mode != raw_mode {
             Err(PyException::new_err(format!(
-                "ReadOptions should have raw_mode={}",
-                raw_mode
+                "ReadOptions should have raw_mode={raw_mode}",
             )))
         } else {
             let readopts = ReadOpt::from(&readopts);
