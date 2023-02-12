@@ -11,8 +11,8 @@ name = "rocksdict"
 crate-type = ["cdylib"]
 
 [dependencies]
-rocksdb = { git = "https://github.com/Congyuwang/rust-rocksdb", tag = "v0.19.0+7.7.3" }
-librocksdb-sys = { git = "https://github.com/Congyuwang/rust-rocksdb", tag = "v0.19.0+7.7.3" }
+rocksdb = { git = "https://github.com/Congyuwang/rust-rocksdb", tag = "v0.20.1+7.9.2" }
+librocksdb-sys = { git = "https://github.com/Congyuwang/rust-rocksdb", tag = "v0.20.1+7.9.2" }
 pyo3-log = "0.8"
 log = "0.4"
 serde = { version = "1", features = ["derive"] }
