@@ -65,6 +65,7 @@ pub(crate) struct Rdict {
     pub(crate) read_opt_py: ReadOptionsPy,
     pub(crate) column_family: Option<Arc<ColumnFamily>>,
     pub(crate) opt_py: OptionsPy,
+    pub(crate) access_type: AccessType,
     pub(crate) slice_transforms: Arc<RwLock<HashMap<String, SliceTransformType>>>,
     // drop DB last
     pub(crate) db: Option<Arc<RefCell<DB>>>,
@@ -222,7 +223,7 @@ impl Rdict {
                             opt_inner.clone(),
                         ));
                     }
-                    match access_type.0 {
+                    match &access_type.0 {
                         AccessTypeInner::ReadWrite => DB::open_cf_descriptors(opt_inner, path, cfs),
                         AccessTypeInner::ReadOnly {
                             error_if_log_file_exist,
@@ -230,7 +231,7 @@ impl Rdict {
                             opt_inner,
                             path,
                             cfs,
-                            error_if_log_file_exist,
+                            *error_if_log_file_exist,
                         ),
                         AccessTypeInner::Secondary { secondary_path } => {
                             DB::open_cf_descriptors_as_secondary(
@@ -241,19 +242,19 @@ impl Rdict {
                             )
                         }
                         AccessTypeInner::WithTTL { ttl } => {
-                            DB::open_cf_descriptors_with_ttl(opt_inner, path, cfs, ttl)
+                            DB::open_cf_descriptors_with_ttl(opt_inner, path, cfs, *ttl)
                         }
                     }
                 } else {
-                    match access_type.0 {
+                    match &access_type.0 {
                         AccessTypeInner::ReadWrite => DB::open(opt_inner, path),
                         AccessTypeInner::ReadOnly {
                             error_if_log_file_exist,
-                        } => DB::open_for_read_only(opt_inner, path, error_if_log_file_exist),
+                        } => DB::open_for_read_only(opt_inner, path, *error_if_log_file_exist),
                         AccessTypeInner::Secondary { secondary_path } => {
                             DB::open_as_secondary(opt_inner, path, &secondary_path)
                         }
-                        AccessTypeInner::WithTTL { ttl } => DB::open_with_ttl(opt_inner, path, ttl),
+                        AccessTypeInner::WithTTL { ttl } => DB::open_with_ttl(opt_inner, path, *ttl),
                     }
                 }
             } {
@@ -273,6 +274,7 @@ impl Rdict {
                         read_opt_py: r_opt,
                         column_family: None,
                         opt_py: options.clone(),
+                        access_type: access_type,
                         slice_transforms: Arc::new(RwLock::new(prefix_extractors)),
                     })
                 }
@@ -732,6 +734,7 @@ impl Rdict {
                     write_opt_py: self.write_opt_py.clone(),
                     read_opt_py: self.read_opt_py.clone(),
                     opt_py: self.opt_py.clone(),
+                    access_type: self.access_type.clone(),
                     slice_transforms: self.slice_transforms.clone(),
                 }),
             }
@@ -948,17 +951,26 @@ impl Rdict {
         if let Some(db) = &self.db {
             let f_opt = &self.flush_opt;
             let db = db.borrow();
+            if let AccessTypeInner::ReadOnly { .. } = self.access_type.0 {
+                drop(db);
+                drop(self.column_family.take());
+                drop(self.db.take());
+                return Ok(());
+            };
             let flush_result = if let Some(cf) = &self.column_family {
                 db.flush_cf_opt(cf.deref(), &f_opt.into())
             } else {
                 db.flush_opt(&f_opt.into())
             };
+            let flush_wal_result = db.flush_wal(true);
             drop(db);
             drop(self.column_family.take());
             drop(self.db.take());
-            match flush_result {
-                Ok(_) => Ok(()),
-                Err(e) => Err(PyException::new_err(e.to_string())),
+            match (flush_result, flush_wal_result) {
+                (Ok(_), Ok(_)) => Ok(()),
+                (Err(e), Ok(_)) => Err(PyException::new_err(e.to_string())),
+                (Ok(_), Err(e)) => Err(PyException::new_err(e.to_string())),
+                (Err(e), Err(wal_e)) => Err(PyException::new_err(format!("{e}; {wal_e}"))),
             }
         } else {
             Err(PyException::new_err("DB already closed"))
@@ -1309,7 +1321,7 @@ impl AccessType {
     ///
     ///
     #[staticmethod]
-    #[pyo3(signature = (error_if_log_file_exist = true))]
+    #[pyo3(signature = (error_if_log_file_exist = false))]
     fn read_only(error_if_log_file_exist: bool) -> Self {
         AccessType(AccessTypeInner::ReadOnly {
             error_if_log_file_exist,
