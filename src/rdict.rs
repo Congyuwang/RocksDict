@@ -957,12 +957,12 @@ impl Rdict {
                 drop(self.db.take());
                 return Ok(());
             };
+            let flush_wal_result = db.flush_wal(true);
             let flush_result = if let Some(cf) = &self.column_family {
                 db.flush_cf_opt(cf.deref(), &f_opt.into())
             } else {
                 db.flush_opt(&f_opt.into())
             };
-            let flush_wal_result = db.flush_wal(true);
             drop(db);
             drop(self.column_family.take());
             drop(self.db.take());
