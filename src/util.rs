@@ -21,8 +21,7 @@ pub(crate) fn to_cpath<P: AsRef<Path>>(path: P) -> PyResult<CString> {
     match CString::new(path.as_ref().to_string_lossy().as_bytes()) {
         Ok(c) => Ok(c),
         Err(e) => Err(PyException::new_err(format!(
-            "Failed to convert path to CString: {}",
-            e,
+            "Failed to convert path to CString: {e}",
         ))),
     }
 }

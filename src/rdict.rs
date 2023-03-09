@@ -722,8 +722,7 @@ impl Rdict {
         if let Some(db) = &self.db {
             match db.borrow().cf_handle(name) {
                 None => Err(PyException::new_err(format!(
-                    "column name `{}` does not exist, use `create_cf` to creat it",
-                    name
+                    "column name `{name}` does not exist, use `create_cf` to creat it",
                 ))),
                 Some(cf) => Ok(Self {
                     db: Some(db.clone()),
@@ -764,8 +763,7 @@ impl Rdict {
         if let Some(db) = &self.db {
             match db.borrow().cf_handle(name) {
                 None => Err(PyException::new_err(format!(
-                    "column name `{}` does not exist, use `create_cf` to creat it",
-                    name
+                    "column name `{name}` does not exist, use `create_cf` to creat it",
                 ))),
                 Some(cf) => Ok(ColumnFamilyPy { cf, db: db.clone() }),
             }
