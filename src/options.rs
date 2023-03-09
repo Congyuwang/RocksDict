@@ -419,6 +419,8 @@ pub(crate) struct BottommostLevelCompactionPy(BottommostLevelCompaction);
 #[pyclass(name = "CompactOptions")]
 pub(crate) struct CompactOptionsPy(pub(crate) CompactOptions);
 
+unsafe impl Send for CompactOptionsPy {}
+
 impl OptionsPy {
     /// function that sets prefix extractor according to slice transform type
     fn set_prefix_extractor_inner(
@@ -2568,7 +2570,7 @@ impl EnvPy {
     /// Returns default env
     #[new]
     pub fn default() -> PyResult<Self> {
-        match Env::default() {
+        match Env::new() {
             Ok(env) => Ok(EnvPy(env)),
             Err(e) => Err(PyException::new_err(e.into_string())),
         }
