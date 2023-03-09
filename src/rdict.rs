@@ -237,7 +237,7 @@ impl Rdict {
                             DB::open_cf_descriptors_as_secondary(
                                 opt_inner,
                                 path,
-                                &secondary_path,
+                                secondary_path,
                                 cfs,
                             )
                         }
@@ -252,9 +252,11 @@ impl Rdict {
                             error_if_log_file_exist,
                         } => DB::open_for_read_only(opt_inner, path, *error_if_log_file_exist),
                         AccessTypeInner::Secondary { secondary_path } => {
-                            DB::open_as_secondary(opt_inner, path, &secondary_path)
+                            DB::open_as_secondary(opt_inner, path, secondary_path)
                         }
-                        AccessTypeInner::WithTTL { ttl } => DB::open_with_ttl(opt_inner, path, *ttl),
+                        AccessTypeInner::WithTTL { ttl } => {
+                            DB::open_with_ttl(opt_inner, path, *ttl)
+                        }
                     }
                 }
             } {
@@ -274,7 +276,7 @@ impl Rdict {
                         read_opt_py: r_opt,
                         column_family: None,
                         opt_py: options.clone(),
-                        access_type: access_type,
+                        access_type,
                         slice_transforms: Arc::new(RwLock::new(prefix_extractors)),
                     })
                 }
