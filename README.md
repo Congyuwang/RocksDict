@@ -138,7 +138,7 @@ def db_options():
     opt.set_max_bytes_for_level_multiplier(4.0)
     # use 8-byte prefix (2 ^ 64 is far enough for transaction counts)
     opt.set_prefix_extractor(SliceTransform.create_max_len_prefix(8))
-    # set to plain-table for better performance
+    # set to plain-table
     opt.set_plain_table_factory(PlainTableFactoryOptions())
     return opt
 
