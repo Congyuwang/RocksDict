@@ -374,8 +374,32 @@ impl Rdict {
         }
     }
 
-    fn get(&self, key: &PyAny, py: Python) -> PyResult<PyObject> {
-        self.__getitem__(key, py)
+    /// Get value from key.
+    ///
+    /// Args:
+    ///     key: the key or list of keys.
+    ///     default: the default value to return if key not found.
+    ///
+    /// Returns:
+    ///    None or default value if the key does not exist.
+    #[pyo3(signature = (key, default = None))]
+    fn get(&self, key: &PyAny, default: Option<&PyAny>, py: Python) -> PyResult<PyObject> {
+        let try_get = self.__getitem__(key, py);
+        match try_get {
+            Ok(val) => Ok(val),
+            Err(e) => {
+                // except KeyError to return None or default value
+                if e.is_instance_of::<PyKeyError>(py) {
+                    if let Some(default) = default {
+                        Ok(default.to_object(py))
+                    } else {
+                        Ok(py.None())
+                    }
+                } else {
+                    Err(e)
+                }
+            }
+        }
     }
 
     fn __setitem__(&self, key: &PyAny, value: &PyAny, py: Python) -> PyResult<()> {
