@@ -179,8 +179,8 @@ pub(crate) struct FlushOptionsPy {
 #[derive(Clone)]
 pub(crate) struct ReadOptionsPy {
     fill_cache: bool,
-    iterate_upper_bound: Option<Box<[u8]>>,
-    iterate_lower_bound: Option<Box<[u8]>>,
+    iterate_upper_bound: Option<Vec<u8>>,
+    iterate_lower_bound: Option<Vec<u8>>,
     prefix_same_as_start: bool,
     total_order_seek: bool,
     max_skippable_internal_keys: u64,
@@ -1909,13 +1909,21 @@ impl ReadOptionsPy {
     /// Sets the upper bound for an iterator.
     /// The upper bound itself is not included on the iteration result.
     pub fn set_iterate_upper_bound(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
-        self.iterate_upper_bound = Some(encode_value(key, &self.pickle_dumps, self.raw_mode, py)?);
+        self.iterate_upper_bound = Some(
+            encode_value(key, &self.pickle_dumps, self.raw_mode, py)?
+                .as_ref()
+                .to_vec(),
+        );
         Ok(())
     }
 
     /// Sets the lower bound for an iterator.
     pub fn set_iterate_lower_bound(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
-        self.iterate_lower_bound = Some(encode_value(key, &self.pickle_dumps, self.raw_mode, py)?);
+        self.iterate_lower_bound = Some(
+            encode_value(key, &self.pickle_dumps, self.raw_mode, py)?
+                .as_ref()
+                .to_vec(),
+        );
         Ok(())
     }
 

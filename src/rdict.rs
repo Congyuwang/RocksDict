@@ -1,4 +1,4 @@
-use crate::encoder::{decode_value, encode_key, encode_raw, encode_value};
+use crate::encoder::{decode_value, encode_key, encode_value};
 use crate::iter::{RdictItems, RdictKeys, RdictValues};
 use crate::options::{CachePy, EnvPy, SliceTransformType};
 use crate::{
@@ -13,6 +13,7 @@ use rocksdb::{
     ReadOptions, WriteOptions, DB, DEFAULT_COLUMN_FAMILY_NAME,
 };
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs;
@@ -328,7 +329,7 @@ impl Rdict {
         Ok(())
     }
 
-    /// Parse list for batch get.
+    /// Use list of keys for batch get.
     fn __getitem__(&self, key: &PyAny, py: Python) -> PyResult<PyObject> {
         if let Some(db) = &self.db {
             // batch_get
@@ -344,22 +345,15 @@ impl Rdict {
                 )?
                 .to_object(py));
             }
+            // single get
+            let key_bytes = encode_key(key, self.opt_py.raw_mode)?;
             let db = db.borrow();
-            let value_result = if self.opt_py.raw_mode {
-                let key = encode_raw(key)?;
-                if let Some(cf) = &self.column_family {
-                    db.get_pinned_cf_opt(cf.deref(), key, &self.read_opt)
-                } else {
-                    db.get_pinned_opt(key, &self.read_opt)
-                }
+            let value_result = if let Some(cf) = &self.column_family {
+                db.get_pinned_cf_opt(cf.deref(), key_bytes, &self.read_opt)
             } else {
-                let key = encode_key(key, self.opt_py.raw_mode)?;
-                if let Some(cf) = &self.column_family {
-                    db.get_pinned_cf_opt(cf.deref(), key, &self.read_opt)
-                } else {
-                    db.get_pinned_opt(key, &self.read_opt)
-                }
+                db.get_pinned_opt(key_bytes, &self.read_opt)
             };
+
             match value_result {
                 Ok(value) => match value {
                     None => Err(PyKeyError::new_err(format!("key {key} not found"))),
@@ -405,73 +399,40 @@ impl Rdict {
     fn __setitem__(&self, key: &PyAny, value: &PyAny, py: Python) -> PyResult<()> {
         if let Some(db) = &self.db {
             let db = db.borrow();
-            if self.opt_py.raw_mode {
-                let key = encode_raw(key)?;
-                let value = encode_raw(value)?;
-                let put_result = if let Some(cf) = &self.column_family {
-                    db.put_cf_opt(cf.deref(), key, value, &self.write_opt)
-                } else {
-                    db.put_opt(key, value, &self.write_opt)
-                };
-                match put_result {
-                    Ok(_) => Ok(()),
-                    Err(e) => Err(PyException::new_err(e.to_string())),
-                }
+            let key = encode_key(key, self.opt_py.raw_mode)?;
+            let value = encode_value(value, &self.pickle_dumps, self.opt_py.raw_mode, py)?;
+            let put_result = if let Some(cf) = &self.column_family {
+                db.put_cf_opt(cf.deref(), key, value, &self.write_opt)
             } else {
-                let key = encode_key(key, self.opt_py.raw_mode)?;
-                let value = encode_value(value, &self.pickle_dumps, self.opt_py.raw_mode, py)?;
-                let put_result = if let Some(cf) = &self.column_family {
-                    db.put_cf_opt(cf.deref(), key, value, &self.write_opt)
-                } else {
-                    db.put_opt(key, value, &self.write_opt)
-                };
-                match put_result {
-                    Ok(_) => Ok(()),
-                    Err(e) => Err(PyException::new_err(e.to_string())),
-                }
+                db.put_opt(key, value, &self.write_opt)
+            };
+            match put_result {
+                Ok(_) => Ok(()),
+                Err(e) => Err(PyException::new_err(e.to_string())),
             }
         } else {
             Err(PyException::new_err("DB already closed"))
         }
     }
-    
+
     fn put(&self, key: &PyAny, value: &PyAny, py: Python) -> PyResult<()> {
-            self.__setitem__(key, value, py)
+        self.__setitem__(key, value, py)
     }
 
     fn __contains__(&self, key: &PyAny) -> PyResult<bool> {
         if let Some(db) = &self.db {
             let db = db.borrow();
-            let may_exist = if self.opt_py.raw_mode {
-                let key = encode_raw(key)?;
-                if let Some(cf) = &self.column_family {
-                    db.key_may_exist_cf_opt(cf.deref(), key, &self.read_opt)
-                } else {
-                    db.key_may_exist_opt(key, &self.read_opt)
-                }
+            let key = encode_key(key, self.opt_py.raw_mode)?;
+            let may_exist = if let Some(cf) = &self.column_family {
+                db.key_may_exist_cf_opt(cf.deref(), &key[..], &self.read_opt)
             } else {
-                let key = encode_key(key, self.opt_py.raw_mode)?;
-                if let Some(cf) = &self.column_family {
-                    db.key_may_exist_cf_opt(cf.deref(), &key[..], &self.read_opt)
-                } else {
-                    db.key_may_exist_opt(&key[..], &self.read_opt)
-                }
+                db.key_may_exist_opt(&key[..], &self.read_opt)
             };
             if may_exist {
-                let value_result = if self.opt_py.raw_mode {
-                    let key = encode_raw(key)?;
-                    if let Some(cf) = &self.column_family {
-                        db.get_pinned_cf_opt(cf.deref(), key, &self.read_opt)
-                    } else {
-                        db.get_pinned_opt(key, &self.read_opt)
-                    }
+                let value_result = if let Some(cf) = &self.column_family {
+                    db.get_pinned_cf_opt(cf.deref(), key, &self.read_opt)
                 } else {
-                    let key = encode_key(key, self.opt_py.raw_mode)?;
-                    if let Some(cf) = &self.column_family {
-                        db.get_pinned_cf_opt(cf.deref(), &key[..], &self.read_opt)
-                    } else {
-                        db.get_pinned_opt(&key[..], &self.read_opt)
-                    }
+                    db.get_pinned_opt(key, &self.read_opt)
                 };
                 match value_result {
                     Ok(value) => match value {
@@ -491,20 +452,11 @@ impl Rdict {
     fn __delitem__(&self, key: &PyAny) -> PyResult<()> {
         if let Some(db) = &self.db {
             let db = db.borrow();
-            let del_result = if self.opt_py.raw_mode {
-                let key = encode_raw(key)?;
-                if let Some(cf) = &self.column_family {
-                    db.delete_cf_opt(cf.deref(), key, &self.write_opt)
-                } else {
-                    db.delete_opt(key, &self.write_opt)
-                }
+            let key = encode_key(key, self.opt_py.raw_mode)?;
+            let del_result = if let Some(cf) = &self.column_family {
+                db.delete_cf_opt(cf.deref(), key, &self.write_opt)
             } else {
-                let key = encode_key(key, self.opt_py.raw_mode)?;
-                if let Some(cf) = &self.column_family {
-                    db.delete_cf_opt(cf.deref(), &key[..], &self.write_opt)
-                } else {
-                    db.delete_opt(&key[..], &self.write_opt)
-                }
+                db.delete_opt(key, &self.write_opt)
             };
             match del_result {
                 Ok(_) => Ok(()),
@@ -1225,22 +1177,8 @@ fn get_batch_inner<'a>(
     raw_mode: bool,
 ) -> PyResult<&'a PyList> {
     let db = db.borrow();
-    let values = if raw_mode {
-        if let Some(cf) = column_family {
-            let mut keys_cols: Vec<(&ColumnFamily, &[u8])> = Vec::with_capacity(keys.len());
-            for key in keys {
-                keys_cols.push((cf.deref(), encode_raw(key)?));
-            }
-            db.multi_get_cf_opt(keys_cols, read_opt)
-        } else {
-            let mut keys_batch = Vec::with_capacity(keys.len());
-            for key in keys {
-                keys_batch.push(encode_raw(key)?);
-            }
-            db.multi_get_opt(keys_batch, read_opt)
-        }
-    } else if let Some(cf) = column_family {
-        let mut keys_cols: Vec<(&ColumnFamily, Box<[u8]>)> = Vec::with_capacity(keys.len());
+    let values = if let Some(cf) = column_family {
+        let mut keys_cols: Vec<(&ColumnFamily, Cow<[u8]>)> = Vec::with_capacity(keys.len());
         for key in keys {
             keys_cols.push((cf.deref(), encode_key(key, raw_mode)?));
         }
