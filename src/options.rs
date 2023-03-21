@@ -2179,13 +2179,6 @@ impl BlockBasedOptionsPy {
         self.0.set_block_cache(&cache.0)
     }
 
-    /// Sets global cache for compressed blocks. Cache must outlive DB instance which uses it.
-    ///
-    /// By default, rocksdb will not use a compressed block cache.
-    pub fn set_block_cache_compressed(&mut self, cache: PyRef<CachePy>) {
-        self.0.set_block_cache_compressed(&cache.0)
-    }
-
     /// Disable block cache
     pub fn disable_cache(&mut self) {
         self.0.disable_cache()
