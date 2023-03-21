@@ -36,6 +36,10 @@ class TestGetDel(unittest.TestCase):
     def testGetItem(self):
         self.assertEqual(self.test_dict["a"], "a")
         self.assertEqual(self.test_dict[123], 123)
+        self.assertIsNone(self.test_dict.get("b"))
+        self.assertIsNone(self.test_dict.get(250))
+        self.assertEqual(self.test_dict.get("b", "b"), "b")
+        self.assertEqual(self.test_dict.get(250, 1324123), 1324123)
         self.assertRaises(KeyError, lambda: self.test_dict["b"])
         self.assertRaises(KeyError, lambda: self.test_dict[250])
 

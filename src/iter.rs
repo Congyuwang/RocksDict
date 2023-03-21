@@ -1,4 +1,4 @@
-use crate::encoder::{decode_value, encode_key, encode_raw};
+use crate::encoder::{decode_value, encode_key};
 use crate::util::error_message;
 use crate::{ReadOpt, ReadOptionsPy};
 use core::slice;
@@ -193,24 +193,13 @@ impl RdictIter {
     ///         del iter, db
     ///         Rdict.destroy(path, Options())
     pub fn seek(&mut self, key: &PyAny) -> PyResult<()> {
-        if self.raw_mode {
-            let key = encode_raw(key)?;
-            unsafe {
-                librocksdb_sys::rocksdb_iter_seek(
-                    self.inner,
-                    key.as_ptr() as *const c_char,
-                    key.len() as size_t,
-                );
-            }
-        } else {
-            let key = encode_key(key, self.raw_mode)?;
-            unsafe {
-                librocksdb_sys::rocksdb_iter_seek(
-                    self.inner,
-                    key.as_ptr() as *const c_char,
-                    key.len() as size_t,
-                );
-            }
+        let key = encode_key(key, self.raw_mode)?;
+        unsafe {
+            librocksdb_sys::rocksdb_iter_seek(
+                self.inner,
+                key.as_ptr() as *const c_char,
+                key.len() as size_t,
+            );
         }
         Ok(())
     }
@@ -237,24 +226,13 @@ impl RdictIter {
     ///         del iter, db
     ///         Rdict.destroy(path, Options())
     pub fn seek_for_prev(&mut self, key: &PyAny) -> PyResult<()> {
-        if self.raw_mode {
-            let key = encode_raw(key)?;
-            unsafe {
-                librocksdb_sys::rocksdb_iter_seek_for_prev(
-                    self.inner,
-                    key.as_ptr() as *const c_char,
-                    key.len() as size_t,
-                );
-            }
-        } else {
-            let key = encode_key(key, self.raw_mode)?;
-            unsafe {
-                librocksdb_sys::rocksdb_iter_seek_for_prev(
-                    self.inner,
-                    key.as_ptr() as *const c_char,
-                    key.len() as size_t,
-                );
-            }
+        let key = encode_key(key, self.raw_mode)?;
+        unsafe {
+            librocksdb_sys::rocksdb_iter_seek_for_prev(
+                self.inner,
+                key.as_ptr() as *const c_char,
+                key.len() as size_t,
+            );
         }
         Ok(())
     }
