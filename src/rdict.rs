@@ -378,21 +378,46 @@ impl Rdict {
     ///    None or default value if the key does not exist.
     #[pyo3(signature = (key, default = None))]
     fn get(&self, key: &PyAny, default: Option<&PyAny>, py: Python) -> PyResult<PyObject> {
-        let try_get = self.__getitem__(key, py);
-        match try_get {
-            Ok(val) => Ok(val),
-            Err(e) => {
-                // except KeyError to return None or default value
-                if e.is_instance_of::<PyKeyError>(py) {
-                    if let Some(default) = default {
-                        Ok(default.to_object(py))
-                    } else {
-                        Ok(py.None())
-                    }
-                } else {
-                    Err(e)
-                }
+        if let Some(db) = &self.db {
+            // batch_get
+            if let Ok(keys) = PyTryFrom::try_from(key) {
+                return Ok(get_batch_inner(
+                    db,
+                    keys,
+                    py,
+                    &self.read_opt,
+                    &self.pickle_loads,
+                    &self.column_family,
+                    self.opt_py.raw_mode,
+                )?
+                .to_object(py));
             }
+            // single get
+            let key_bytes = encode_key(key, self.opt_py.raw_mode)?;
+            let db = db.borrow();
+            let value_result = if let Some(cf) = &self.column_family {
+                db.get_pinned_cf_opt(cf.deref(), key_bytes, &self.read_opt)
+            } else {
+                db.get_pinned_opt(key_bytes, &self.read_opt)
+            };
+
+            match value_result {
+                Ok(value) => match value {
+                    None => {
+                        if let Some(default) = default {
+                            Ok(default.to_object(py))
+                        } else {
+                            Ok(py.None())
+                        }
+                    }
+                    Some(slice) => {
+                        decode_value(py, slice.as_ref(), &self.pickle_loads, self.opt_py.raw_mode)
+                    }
+                },
+                Err(e) => Err(PyException::new_err(e.to_string())),
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
         }
     }
 
