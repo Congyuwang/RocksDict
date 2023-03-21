@@ -5,7 +5,7 @@ use crate::{
     CompactOptionsPy, FlushOptionsPy, IngestExternalFileOptionsPy, OptionsPy, RdictIter,
     ReadOptionsPy, Snapshot, WriteBatchPy, WriteOptionsPy,
 };
-use pyo3::exceptions::PyException;
+use pyo3::exceptions::{PyException, PyKeyError};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 use rocksdb::{
@@ -362,7 +362,7 @@ impl Rdict {
             };
             match value_result {
                 Ok(value) => match value {
-                    None => Err(PyException::new_err("key not found")),
+                    None => Err(PyKeyError::new_err(format!("key {key} not found"))),
                     Some(slice) => {
                         decode_value(py, slice.as_ref(), &self.pickle_loads, self.opt_py.raw_mode)
                     }

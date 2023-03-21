@@ -21,6 +21,35 @@ def compare_dicts(test_case: unittest.TestCase,
     test_case.assertEqual({k: v for k, v in test_dict.items()}, ref_dict)
 
 
+class TestGetDel(unittest.TestCase):
+    test_dict = None
+    opt = None
+    path = "./test_get_pul_del"
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.opt = Options()
+        cls.test_dict = Rdict(cls.path, cls.opt)
+        cls.test_dict["a"] = "a"
+        cls.test_dict[123] = 123
+
+    def testGetItem(self):
+        self.assertEqual(self.test_dict["a"], "a")
+        self.assertEqual(self.test_dict[123], 123)
+        self.assertRaises(KeyError, lambda: self.test_dict["b"])
+        self.assertRaises(KeyError, lambda: self.test_dict[250])
+
+    def testDelItem(self):
+        # no exception raise when deleting non-existing key
+        self.test_dict.__delitem__("b")
+        self.test_dict.__delitem__(250)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.test_dict.close()
+        Rdict.destroy(cls.path, Options())
+
+
 class TestIterBytes(unittest.TestCase):
     test_dict = None
     ref_dict = None
