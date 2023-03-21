@@ -213,19 +213,19 @@
                                 <a class="function" href="#WriteOptions.__init__">WriteOptions</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.low_pri">low_pri</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#WriteOptions.no_slowdown">no_slowdown</a>
-                        </li>
-                        <li>
                                 <a class="variable" href="#WriteOptions.sync">sync</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#WriteOptions.memtable_insert_hint_per_batch">memtable_insert_hint_per_batch</a>
                         </li>
                         <li>
                                 <a class="variable" href="#WriteOptions.disable_wal">disable_wal</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.memtable_insert_hint_per_batch">memtable_insert_hint_per_batch</a>
+                                <a class="variable" href="#WriteOptions.no_slowdown">no_slowdown</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#WriteOptions.low_pri">low_pri</a>
                         </li>
                         <li>
                                 <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
@@ -758,6 +758,9 @@
                         <li>
                                 <a class="function" href="#BlockBasedOptions.set_data_block_hash_ratio">set_data_block_hash_ratio</a>
                         </li>
+                        <li>
+                                <a class="function" href="#BlockBasedOptions.set_checksum_type">set_checksum_type</a>
+                        </li>
                 </ul>
 
             </li>
@@ -801,19 +804,19 @@
                                 <a class="function" href="#UniversalCompactOptions.__init__">UniversalCompactOptions</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#UniversalCompactOptions.compression_size_percent">compression_size_percent</a>
+                                <a class="variable" href="#UniversalCompactOptions.min_merge_width">min_merge_width</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.max_merge_width">max_merge_width</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
+                                <a class="variable" href="#UniversalCompactOptions.compression_size_percent">compression_size_percent</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.min_merge_width">min_merge_width</a>
+                                <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.max_size_amplification_percent">max_size_amplification_percent</a>
@@ -901,6 +904,30 @@
                         </li>
                         <li>
                                 <a class="function" href="#Cache.set_capacity">set_capacity</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
+                    <a class="class" href="#ChecksumType">ChecksumType</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#ChecksumType.__init__">ChecksumType</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#ChecksumType.no_checksum">no_checksum</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#ChecksumType.crc32c">crc32c</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#ChecksumType.xxhash">xxhash</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#ChecksumType.xxhash64">xxhash64</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#ChecksumType.xxh3">xxh3</a>
                         </li>
                 </ul>
 
@@ -1209,16 +1236,17 @@ supports <code>pickle</code>.</li>
 </span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a>           <span class="s2">&quot;DataBlockIndexType&quot;</span><span class="p">,</span>
 </span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a>           <span class="s2">&quot;BlockBasedIndexType&quot;</span><span class="p">,</span>
 </span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a>           <span class="s2">&quot;Cache&quot;</span><span class="p">,</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>           <span class="s2">&quot;DBCompactionStyle&quot;</span><span class="p">,</span>
-</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>           <span class="s2">&quot;DBCompressionType&quot;</span><span class="p">,</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a>           <span class="s2">&quot;DBRecoveryMode&quot;</span><span class="p">,</span>
-</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a>           <span class="s2">&quot;Env&quot;</span><span class="p">,</span>
-</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a>           <span class="s2">&quot;FifoCompactOptions&quot;</span><span class="p">,</span>
-</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a>           <span class="s2">&quot;CompactOptions&quot;</span><span class="p">,</span>
-</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a>           <span class="s2">&quot;BottommostLevelCompaction&quot;</span><span class="p">]</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a>
-</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a><span class="n">Rdict</span><span class="o">.</span><span class="fm">__enter__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span>
-</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a><span class="n">Rdict</span><span class="o">.</span><span class="fm">__exit__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>           <span class="s2">&quot;ChecksumType&quot;</span><span class="p">,</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>           <span class="s2">&quot;DBCompactionStyle&quot;</span><span class="p">,</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a>           <span class="s2">&quot;DBCompressionType&quot;</span><span class="p">,</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a>           <span class="s2">&quot;DBRecoveryMode&quot;</span><span class="p">,</span>
+</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a>           <span class="s2">&quot;Env&quot;</span><span class="p">,</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a>           <span class="s2">&quot;FifoCompactOptions&quot;</span><span class="p">,</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a>           <span class="s2">&quot;CompactOptions&quot;</span><span class="p">,</span>
+</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a>           <span class="s2">&quot;BottommostLevelCompaction&quot;</span><span class="p">]</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a>
+</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a><span class="n">Rdict</span><span class="o">.</span><span class="fm">__enter__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a><span class="n">Rdict</span><span class="o">.</span><span class="fm">__exit__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </span></pre></div>
 
 
@@ -2620,41 +2648,6 @@ del db
     
 
                             </div>
-                            <div id="WriteOptions.low_pri" class="classattr">
-                                <div class="attr variable">
-            <span class="name">low_pri</span>
-
-        
-    </div>
-    <a class="headerlink" href="#WriteOptions.low_pri"></a>
-    
-            <div class="docstring"><p>If true, this write request is of lower priority if compaction is
-behind. In this case, no_slowdown = true, the request will be cancelled
-immediately with Status::Incomplete() returned. Otherwise, it will be
-slowed down. The slowdown value is determined by RocksDB to guarantee
-it introduces minimum impacts to high priority writes.</p>
-
-<p>Default: false</p>
-</div>
-
-
-                            </div>
-                            <div id="WriteOptions.no_slowdown" class="classattr">
-                                <div class="attr variable">
-            <span class="name">no_slowdown</span>
-
-        
-    </div>
-    <a class="headerlink" href="#WriteOptions.no_slowdown"></a>
-    
-            <div class="docstring"><p>If true and we need to wait or sleep for the write request, fails
-immediately with Status::Incomplete().</p>
-
-<p>Default: false</p>
-</div>
-
-
-                            </div>
                             <div id="WriteOptions.sync" class="classattr">
                                 <div class="attr variable">
             <span class="name">sync</span>
@@ -2666,6 +2659,25 @@ immediately with Status::Incomplete().</p>
             <div class="docstring"><p>Sets the sync mode. If true, the write will be flushed
 from the operating system buffer cache before the write is considered complete.
 If this flag is true, writes will be slower.</p>
+
+<p>Default: false</p>
+</div>
+
+
+                            </div>
+                            <div id="WriteOptions.memtable_insert_hint_per_batch" class="classattr">
+                                <div class="attr variable">
+            <span class="name">memtable_insert_hint_per_batch</span>
+
+        
+    </div>
+    <a class="headerlink" href="#WriteOptions.memtable_insert_hint_per_batch"></a>
+    
+            <div class="docstring"><p>If true, writebatch will maintain the last insert positions of each
+memtable as hints in concurrent write. It can improve write performance
+in concurrent writes if keys in one writebatch are sequential. In
+non-concurrent writes (when concurrent_memtable_writes is false) this
+option will be ignored.</p>
 
 <p>Default: false</p>
 </div>
@@ -2689,19 +2701,35 @@ and the write may got lost after a crash.</p>
 
 
                             </div>
-                            <div id="WriteOptions.memtable_insert_hint_per_batch" class="classattr">
+                            <div id="WriteOptions.no_slowdown" class="classattr">
                                 <div class="attr variable">
-            <span class="name">memtable_insert_hint_per_batch</span>
+            <span class="name">no_slowdown</span>
 
         
     </div>
-    <a class="headerlink" href="#WriteOptions.memtable_insert_hint_per_batch"></a>
+    <a class="headerlink" href="#WriteOptions.no_slowdown"></a>
     
-            <div class="docstring"><p>If true, writebatch will maintain the last insert positions of each
-memtable as hints in concurrent write. It can improve write performance
-in concurrent writes if keys in one writebatch are sequential. In
-non-concurrent writes (when concurrent_memtable_writes is false) this
-option will be ignored.</p>
+            <div class="docstring"><p>If true and we need to wait or sleep for the write request, fails
+immediately with Status::Incomplete().</p>
+
+<p>Default: false</p>
+</div>
+
+
+                            </div>
+                            <div id="WriteOptions.low_pri" class="classattr">
+                                <div class="attr variable">
+            <span class="name">low_pri</span>
+
+        
+    </div>
+    <a class="headerlink" href="#WriteOptions.low_pri"></a>
+    
+            <div class="docstring"><p>If true, this write request is of lower priority if compaction is
+behind. In this case, no_slowdown = true, the request will be cancelled
+immediately with Status::Incomplete() returned. Otherwise, it will be
+slowed down. The slowdown value is determined by RocksDB to guarantee
+it introduces minimum impacts to high priority writes.</p>
 
 <p>Default: false</p>
 </div>
@@ -6247,6 +6275,23 @@ lookup at the price of more space overhead.</p>
 
 
                             </div>
+                            <div id="BlockBasedOptions.set_checksum_type" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">set_checksum_type</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">checksum_type</span></span><span class="return-annotation">):</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#BlockBasedOptions.set_checksum_type"></a>
+    
+            <div class="docstring"><p>Use the specified checksum type.
+Newly created table files will be protected with this checksum type.
+Old table files will still be readable, even though they have different checksum type.</p>
+</div>
+
+
+                            </div>
                 </section>
                 <section id="PlainTableFactoryOptions">
                     <div class="attr class">
@@ -6432,19 +6477,32 @@ Default: true</p>
     
 
                             </div>
-                            <div id="UniversalCompactOptions.size_ratio" class="classattr">
+                            <div id="UniversalCompactOptions.min_merge_width" class="classattr">
                                 <div class="attr variable">
-            <span class="name">size_ratio</span>
+            <span class="name">min_merge_width</span>
 
         
     </div>
-    <a class="headerlink" href="#UniversalCompactOptions.size_ratio"></a>
+    <a class="headerlink" href="#UniversalCompactOptions.min_merge_width"></a>
     
-            <div class="docstring"><p>Sets the percentage flexibility while comparing file size.
-If the candidate file(s) size is 1% smaller than the next file's size,
-then include next file into this candidate set.</p>
+            <div class="docstring"><p>Sets the minimum number of files in a single compaction run.</p>
 
-<p>Default: 1</p>
+<p>Default: 2</p>
+</div>
+
+
+                            </div>
+                            <div id="UniversalCompactOptions.max_merge_width" class="classattr">
+                                <div class="attr variable">
+            <span class="name">max_merge_width</span>
+
+        
+    </div>
+    <a class="headerlink" href="#UniversalCompactOptions.max_merge_width"></a>
+    
+            <div class="docstring"><p>Sets the maximum number of files in a single compaction run.</p>
+
+<p>Default: UINT_MAX</p>
 </div>
 
 
@@ -6480,17 +6538,19 @@ will be compressed iff
 
 
                             </div>
-                            <div id="UniversalCompactOptions.max_merge_width" class="classattr">
+                            <div id="UniversalCompactOptions.size_ratio" class="classattr">
                                 <div class="attr variable">
-            <span class="name">max_merge_width</span>
+            <span class="name">size_ratio</span>
 
         
     </div>
-    <a class="headerlink" href="#UniversalCompactOptions.max_merge_width"></a>
+    <a class="headerlink" href="#UniversalCompactOptions.size_ratio"></a>
     
-            <div class="docstring"><p>Sets the maximum number of files in a single compaction run.</p>
+            <div class="docstring"><p>Sets the percentage flexibility while comparing file size.
+If the candidate file(s) size is 1% smaller than the next file's size,
+then include next file into this candidate set.</p>
 
-<p>Default: UINT_MAX</p>
+<p>Default: 1</p>
 </div>
 
 
@@ -6506,21 +6566,6 @@ will be compressed iff
             <div class="docstring"><p>Sets the algorithm used to stop picking files into a single compaction run.</p>
 
 <p>Default: ::Total</p>
-</div>
-
-
-                            </div>
-                            <div id="UniversalCompactOptions.min_merge_width" class="classattr">
-                                <div class="attr variable">
-            <span class="name">min_merge_width</span>
-
-        
-    </div>
-    <a class="headerlink" href="#UniversalCompactOptions.min_merge_width"></a>
-    
-            <div class="docstring"><p>Sets the minimum number of files in a single compaction run.</p>
-
-<p>Default: 2</p>
 </div>
 
 
@@ -6869,6 +6914,109 @@ a prefix extractor has been provided through Options::set_prefix_extractor.</p>
 
                             </div>
                 </section>
+                <section id="ChecksumType">
+                    <div class="attr class">
+            
+    <span class="def">class</span>
+    <span class="name">ChecksumType</span>:
+
+        
+    </div>
+    <a class="headerlink" href="#ChecksumType"></a>
+    
+            <div class="docstring"><p>Used by BlockBasedOptions::set_checksum_type.</p>
+
+<p>Call the corresponding functions of each
+to get one of the following.</p>
+
+<ul>
+<li>NoChecksum</li>
+<li>CRC32c</li>
+<li>XXHash</li>
+<li>XXHash64</li>
+<li>XXH3</li>
+</ul>
+</div>
+
+
+                            <div id="ChecksumType.__init__" class="classattr">
+                                <div class="attr function">
+            
+        <span class="name">ChecksumType</span><span class="signature pdoc-code condensed">()</span>
+
+        
+    </div>
+    <a class="headerlink" href="#ChecksumType.__init__"></a>
+    
+    
+
+                            </div>
+                            <div id="ChecksumType.no_checksum" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">no_checksum</span><span class="signature pdoc-code condensed">(<span class="return-annotation">):</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#ChecksumType.no_checksum"></a>
+    
+    
+
+                            </div>
+                            <div id="ChecksumType.crc32c" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">crc32c</span><span class="signature pdoc-code condensed">(<span class="return-annotation">):</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#ChecksumType.crc32c"></a>
+    
+    
+
+                            </div>
+                            <div id="ChecksumType.xxhash" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">xxhash</span><span class="signature pdoc-code condensed">(<span class="return-annotation">):</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#ChecksumType.xxhash"></a>
+    
+    
+
+                            </div>
+                            <div id="ChecksumType.xxhash64" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">xxhash64</span><span class="signature pdoc-code condensed">(<span class="return-annotation">):</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#ChecksumType.xxhash64"></a>
+    
+    
+
+                            </div>
+                            <div id="ChecksumType.xxh3" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">xxh3</span><span class="signature pdoc-code condensed">(<span class="return-annotation">):</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#ChecksumType.xxh3"></a>
+    
+    
+
+                            </div>
+                </section>
                 <section id="DBCompactionStyle">
                     <div class="attr class">
             
@@ -6881,7 +7029,7 @@ a prefix extractor has been provided through Options::set_prefix_extractor.</p>
     
             <div class="docstring"><p>This is to be treated as an enum.</p>
 
-<p>Calling the corresponding functions of each
+<p>Call the corresponding functions of each
 to get one of the following.</p>
 
 <ul>
@@ -6968,7 +7116,7 @@ opt.set_compaction_style(<a href="#DBCompactionStyle.fifo">DBCompactionStyle.fif
     
             <div class="docstring"><p>This is to be treated as an enum.</p>
 
-<p>Calling the corresponding functions of each
+<p>Call the corresponding functions of each
 to get one of the following.</p>
 
 <ul>
