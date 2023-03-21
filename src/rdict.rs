@@ -374,6 +374,10 @@ impl Rdict {
         }
     }
 
+    fn get(&self, key: &PyAny, py: Python) -> PyResult<PyObject> {
+        self.__getitem__(key, py)
+    }
+
     fn __setitem__(&self, key: &PyAny, value: &PyAny, py: Python) -> PyResult<()> {
         if let Some(db) = &self.db {
             let db = db.borrow();
@@ -405,6 +409,10 @@ impl Rdict {
         } else {
             Err(PyException::new_err("DB already closed"))
         }
+    }
+    
+    fn put(&self, key: &PyAny, value: &PyAny, py: Python) -> PyResult<()> {
+            self.__setitem__(key, value, py)
     }
 
     fn __contains__(&self, key: &PyAny) -> PyResult<bool> {
@@ -481,6 +489,10 @@ impl Rdict {
         } else {
             Err(PyException::new_err("DB already closed"))
         }
+    }
+
+    fn delete(&self, key: &PyAny) -> PyResult<()> {
+        self.__delitem__(key)
     }
 
     /// Reversible for iterating over keys and values.
