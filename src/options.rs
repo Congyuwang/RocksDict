@@ -263,7 +263,7 @@ pub(crate) struct DBPathPy {
 
 /// This is to be treated as an enum.
 ///
-/// Calling the corresponding functions of each
+/// Call the corresponding functions of each
 /// to get one of the following.
 /// - None
 /// - Snappy
@@ -286,7 +286,7 @@ pub(crate) struct DBCompressionTypePy(DBCompressionType);
 
 /// This is to be treated as an enum.
 ///
-/// Calling the corresponding functions of each
+/// Call the corresponding functions of each
 /// to get one of the following.
 /// - Level
 /// - Universal
@@ -302,6 +302,31 @@ pub(crate) struct DBCompressionTypePy(DBCompressionType);
 ///
 #[pyclass(name = "DBCompactionStyle")]
 pub(crate) struct DBCompactionStylePy(DBCompactionStyle);
+
+/// Used by BlockBasedOptions::set_checksum_type.
+///
+/// Call the corresponding functions of each
+/// to get one of the following.
+/// - NoChecksum
+/// - CRC32c
+/// - XXHash
+/// - XXHash64
+/// - XXH3
+///
+#[pyclass(name = "ChecksumType")]
+pub(crate) struct ChecksumTypePy(ChecksumType);
+
+impl Clone for ChecksumTypePy {
+    fn clone(&self) -> Self {
+        match self.0 {
+            ChecksumType::NoChecksum => ChecksumTypePy(ChecksumType::NoChecksum),
+            ChecksumType::CRC32c => ChecksumTypePy(ChecksumType::CRC32c),
+            ChecksumType::XXHash => ChecksumTypePy(ChecksumType::XXHash),
+            ChecksumType::XXHash64 => ChecksumTypePy(ChecksumType::XXHash64),
+            ChecksumType::XXH3 => ChecksumTypePy(ChecksumType::XXH3),
+        }
+    }
+}
 
 /// This is to be treated as an enum.
 ///
@@ -2299,6 +2324,13 @@ impl BlockBasedOptionsPy {
     pub fn set_data_block_hash_ratio(&mut self, ratio: f64) {
         self.0.set_data_block_hash_ratio(ratio)
     }
+
+    /// Use the specified checksum type.
+    /// Newly created table files will be protected with this checksum type.
+    /// Old table files will still be readable, even though they have different checksum type.
+    pub fn set_checksum_type(&mut self, checksum_type: ChecksumTypePy) {
+        self.0.set_checksum_type(checksum_type.0)
+    }
 }
 
 #[pymethods]
@@ -2540,6 +2572,35 @@ impl DBCompactionStylePy {
     #[staticmethod]
     pub fn fifo() -> Self {
         DBCompactionStylePy(DBCompactionStyle::Fifo)
+    }
+}
+
+#[pymethods]
+impl ChecksumTypePy {
+
+    #[staticmethod]
+    pub fn no_checksum() -> Self {
+        ChecksumTypePy(ChecksumType::NoChecksum)
+    }
+
+    #[staticmethod]
+    pub fn crc32c() -> Self {
+        ChecksumTypePy(ChecksumType::CRC32c)
+    }
+
+    #[staticmethod]
+    pub fn xxhash() -> Self {
+        ChecksumTypePy(ChecksumType::XXHash)
+    }
+
+    #[staticmethod]
+    pub fn xxhash64() -> Self {
+        ChecksumTypePy(ChecksumType::XXHash64)
+    }
+
+    #[staticmethod]
+    pub fn xxh3() -> Self {
+        ChecksumTypePy(ChecksumType::XXH3)
     }
 }
 
