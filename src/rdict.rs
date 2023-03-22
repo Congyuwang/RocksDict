@@ -199,65 +199,56 @@ impl Rdict {
         let opt_inner = &options.inner_opt;
         match fs::create_dir_all(path) {
             Ok(_) => match {
-                if let Some(cf) = column_families {
-                    let mut has_default_cf = false;
-                    // check options_raw_mode for column families
-                    for (cf_name, cf_opt) in cf.iter() {
-                        if cf_opt.raw_mode != options.raw_mode {
-                            return Err(PyException::new_err(format!(
-                                "Options should have raw_mode={}",
-                                options.raw_mode
-                            )));
-                        }
-                        if cf_name.as_str() == DEFAULT_COLUMN_FAMILY_NAME {
-                            has_default_cf = true;
-                        }
-                    }
-                    let mut cfs = cf
-                        .into_iter()
-                        .map(|(name, opt)| ColumnFamilyDescriptor::new(name, opt.inner_opt))
-                        .collect::<Vec<_>>();
-                    // automatically add default column families
-                    if !has_default_cf {
-                        cfs.push(ColumnFamilyDescriptor::new(
+                let cfs = match column_families {
+                    None => {
+                        vec![ColumnFamilyDescriptor::new(
                             DEFAULT_COLUMN_FAMILY_NAME,
                             opt_inner.clone(),
-                        ));
+                        )]
                     }
-                    match &access_type.0 {
-                        AccessTypeInner::ReadWrite => DB::open_cf_descriptors(opt_inner, path, cfs),
-                        AccessTypeInner::ReadOnly {
-                            error_if_log_file_exist,
-                        } => DB::open_cf_descriptors_read_only(
-                            opt_inner,
-                            path,
-                            cfs,
-                            *error_if_log_file_exist,
-                        ),
-                        AccessTypeInner::Secondary { secondary_path } => {
-                            DB::open_cf_descriptors_as_secondary(
-                                opt_inner,
-                                path,
-                                secondary_path,
-                                cfs,
-                            )
+                    Some(cf) => {
+                        let mut has_default_cf = false;
+                        // check options_raw_mode for column families
+                        for (cf_name, cf_opt) in cf.iter() {
+                            if cf_opt.raw_mode != options.raw_mode {
+                                return Err(PyException::new_err(format!(
+                                    "Options should have raw_mode={}",
+                                    options.raw_mode
+                                )));
+                            }
+                            if cf_name.as_str() == DEFAULT_COLUMN_FAMILY_NAME {
+                                has_default_cf = true;
+                            }
                         }
-                        AccessTypeInner::WithTTL { ttl } => {
-                            DB::open_cf_descriptors_with_ttl(opt_inner, path, cfs, *ttl)
+                        let mut cfs = cf
+                            .into_iter()
+                            .map(|(name, opt)| ColumnFamilyDescriptor::new(name, opt.inner_opt))
+                            .collect::<Vec<_>>();
+                        // automatically add default column families
+                        if !has_default_cf {
+                            cfs.push(ColumnFamilyDescriptor::new(
+                                DEFAULT_COLUMN_FAMILY_NAME,
+                                opt_inner.clone(),
+                            ));
                         }
+                        cfs
                     }
-                } else {
-                    match &access_type.0 {
-                        AccessTypeInner::ReadWrite => DB::open(opt_inner, path),
-                        AccessTypeInner::ReadOnly {
-                            error_if_log_file_exist,
-                        } => DB::open_for_read_only(opt_inner, path, *error_if_log_file_exist),
-                        AccessTypeInner::Secondary { secondary_path } => {
-                            DB::open_as_secondary(opt_inner, path, secondary_path)
-                        }
-                        AccessTypeInner::WithTTL { ttl } => {
-                            DB::open_with_ttl(opt_inner, path, *ttl)
-                        }
+                };
+                match &access_type.0 {
+                    AccessTypeInner::ReadWrite => DB::open_cf_descriptors(opt_inner, path, cfs),
+                    AccessTypeInner::ReadOnly {
+                        error_if_log_file_exist,
+                    } => DB::open_cf_descriptors_read_only(
+                        opt_inner,
+                        path,
+                        cfs,
+                        *error_if_log_file_exist,
+                    ),
+                    AccessTypeInner::Secondary { secondary_path } => {
+                        DB::open_cf_descriptors_as_secondary(opt_inner, path, secondary_path, cfs)
+                    }
+                    AccessTypeInner::WithTTL { ttl } => {
+                        DB::open_cf_descriptors_with_ttl(opt_inner, path, cfs, *ttl)
                     }
                 }
             } {
