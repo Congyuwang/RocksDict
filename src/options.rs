@@ -191,7 +191,6 @@ pub(crate) struct ReadOptionsPy {
     tailing: bool,
     pin_data: bool,
     pickle_dumps: PyObject,
-    pub(crate) raw_mode: bool,
 }
 
 pub(crate) struct ReadOpt(pub(crate) *mut librocksdb_sys::rocksdb_readoptions_t);
@@ -1896,8 +1895,7 @@ impl From<&FlushOptionsPy> for FlushOptions {
 #[pymethods]
 impl ReadOptionsPy {
     #[new]
-    #[pyo3(signature = (raw_mode = false))]
-    pub fn default(raw_mode: bool, py: Python) -> PyResult<Self> {
+    pub fn default(py: Python) -> PyResult<Self> {
         let pickle_dumps = PyModule::import(py, "pickle")?
             .to_object(py)
             .getattr(py, "dumps")?;
@@ -1915,7 +1913,6 @@ impl ReadOptionsPy {
             tailing: false,
             pin_data: false,
             pickle_dumps,
-            raw_mode,
         })
     }
 
@@ -1929,10 +1926,16 @@ impl ReadOptionsPy {
     }
 
     /// Sets the upper bound for an iterator.
-    /// The upper bound itself is not included on the iteration result.
-    pub fn set_iterate_upper_bound(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
+    ///
+    /// Must pass raw_mode to ensure the correct encoding.
+    pub fn set_iterate_upper_bound(
+        &mut self,
+        key: &PyAny,
+        raw_mode: bool,
+        py: Python,
+    ) -> PyResult<()> {
         self.iterate_upper_bound = Some(
-            encode_value(key, &self.pickle_dumps, self.raw_mode, py)?
+            encode_value(key, &self.pickle_dumps, raw_mode, py)?
                 .as_ref()
                 .to_vec(),
         );
@@ -1940,9 +1943,16 @@ impl ReadOptionsPy {
     }
 
     /// Sets the lower bound for an iterator.
-    pub fn set_iterate_lower_bound(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
+    ///
+    /// Must pass raw_mode to ensure the correct encoding.
+    pub fn set_iterate_lower_bound(
+        &mut self,
+        key: &PyAny,
+        raw_mode: bool,
+        py: Python,
+    ) -> PyResult<()> {
         self.iterate_lower_bound = Some(
-            encode_value(key, &self.pickle_dumps, self.raw_mode, py)?
+            encode_value(key, &self.pickle_dumps, raw_mode, py)?
                 .as_ref()
                 .to_vec(),
         );
