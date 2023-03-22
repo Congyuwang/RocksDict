@@ -52,6 +52,7 @@ pub fn config_file(path: &str) -> PathBuf {
 ///     options (Options): Options object
 ///     column_families (dict): (name, options) pairs, these `Options`
 ///         must have the same `raw_mode` argument as the main `Options`.
+///         A column family called 'default' is always created.
 ///     access_type (AccessType): there are four access types:
 ///         ReadWrite, ReadOnly, WithTTL, and Secondary, use
 ///         AccessType class to create.
