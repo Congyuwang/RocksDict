@@ -9,8 +9,8 @@ use pyo3::exceptions::{PyException, PyKeyError};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 use rocksdb::{
-    ColumnFamily, ColumnFamilyDescriptor, Direction, FlushOptions, IteratorMode, LiveFile,
-    ReadOptions, WriteOptions, DB, DEFAULT_COLUMN_FAMILY_NAME,
+    ColumnFamily, ColumnFamilyDescriptor, FlushOptions, LiveFile, ReadOptions, WriteOptions, DB,
+    DEFAULT_COLUMN_FAMILY_NAME,
 };
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -479,6 +479,55 @@ impl Rdict {
         }
     }
 
+    /// Check if a key may exist without doing any IO.
+    ///
+    /// Notes:
+    ///     If the key definitely does not exist in the database,
+    ///     then this method returns False, else True.
+    ///     If the caller wants to obtain value when the key is found in memory,
+    ///     fetch should be set to True.
+    ///     This check is potentially lighter-weight than invoking DB::get().
+    ///     One way to make this lighter weight is to avoid doing any IOs.
+    ///
+    /// Args:
+    ///     key: Key to check
+    ///     fetch: Obtain also the value if found
+    ///
+    /// Returns:
+    ///     (True, None) if key is found but value not in memory.
+    ///     (True, None) if key is found and fetch=False.
+    ///     (True, data) if key is found and value in memory and fetch=True.
+    ///     (False, None) if key is not found.
+    // fn key_may_exist(&self, key: &PyAny, py: Python) -> PyResult<(bool, Option<PyObject>)> {
+    //     if let Some(db) = &self.db {
+    //         let db = db.borrow();
+    //         let key = encode_key(key, self.opt_py.raw_mode)?;
+    //         let may_exist = if let Some(cf) = &self.column_family {
+    //             db.key_may_exist_cf_opt(cf.deref(), &key[..], &self.read_opt)
+    //         } else {
+    //             db.key_may_exist_opt(&key[..], &self.read_opt)
+    //         };
+    //         if may_exist {
+    //             let value_result = if let Some(cf) = &self.column_family {
+    //                 db.get_pinned_cf_opt(cf.deref(), key, &self.read_opt)
+    //             } else {
+    //                 db.get_pinned_opt(key, &self.read_opt)
+    //             };
+    //             match value_result {
+    //                 Ok(value) => match value {
+    //                     None => Ok(false),
+    //                     Some(_) => Ok(true),
+    //                 },
+    //                 Err(e) => Err(PyException::new_err(e.to_string())),
+    //             }
+    //         } else {
+    //             Ok(false)
+    //         }
+    //     } else {
+    //         Err(PyException::new_err("DB already closed"))
+    //     }
+    // }
+
     fn __delitem__(&self, key: &PyAny) -> PyResult<()> {
         self.delete(key, None)
     }
@@ -901,7 +950,11 @@ impl Rdict {
     ///     write_batch: WriteBatch instance. This instance will be consumed.
     ///     write_opt: use default value if not provided.
     #[pyo3(signature = (write_batch, write_opt = None))]
-    pub fn write(&self, write_batch: &mut WriteBatchPy, write_opt: Option<&WriteOptionsPy>) -> PyResult<()> {
+    pub fn write(
+        &self,
+        write_batch: &mut WriteBatchPy,
+        write_opt: Option<&WriteOptionsPy>,
+    ) -> PyResult<()> {
         if let Some(db) = &self.db {
             if self.opt_py.raw_mode != write_batch.raw_mode {
                 return if self.opt_py.raw_mode {
@@ -934,38 +987,31 @@ impl Rdict {
     /// Args:
     ///     begin: included
     ///     end: excluded
-    pub fn delete_range(&self, begin: &PyAny, end: &PyAny) -> PyResult<()> {
+    ///     write_opt: WriteOptions
+    pub fn delete_range(
+        &self,
+        begin: &PyAny,
+        end: &PyAny,
+        write_opt: Option<&WriteOptionsPy>,
+    ) -> PyResult<()> {
         if let Some(db) = &self.db {
             let db = db.borrow();
             let from = encode_key(begin, self.opt_py.raw_mode)?;
             let to = encode_key(end, self.opt_py.raw_mode)?;
-            match &self.column_family {
+            let cf = match &self.column_family {
                 None => {
-                    // manual implementation when there is no column
-                    let mut r_opt = ReadOptions::default();
-                    r_opt.set_iterate_lower_bound(from.to_vec());
-                    r_opt.set_iterate_upper_bound(to.to_vec());
-                    let mode = IteratorMode::From(&from, Direction::Forward);
-                    let iter = db.iterator_opt(mode, r_opt);
-                    for item in iter {
-                        match item {
-                            Ok((key, _)) => {
-                                if let Err(e) = db.delete_opt(key, &self.write_opt) {
-                                    return Err(PyException::new_err(e.to_string()));
-                                }
-                            }
-                            Err(e) => {
-                                return Err(PyException::new_err(e.to_string()));
-                            }
-                        }
-                    }
-                    Ok(())
+                    self.get_column_family_handle(DEFAULT_COLUMN_FAMILY_NAME)?
+                        .cf
                 }
-                Some(cf) => match db.delete_range_cf_opt(cf.deref(), from, to, &self.write_opt) {
-                    Ok(_) => Ok(()),
-                    Err(e) => Err(PyException::new_err(e.to_string())),
-                },
-            }
+                Some(cf) => cf.clone(),
+            };
+            let write_opt_option = write_opt.map(WriteOptions::from);
+            let write_opt = match &write_opt_option {
+                None => &self.write_opt,
+                Some(opt) => opt,
+            };
+            db.delete_range_cf_opt(cf.deref(), from, to, write_opt)
+                .map_err(|e| PyException::new_err(e.to_string()))
         } else {
             Err(PyException::new_err("DB already closed"))
         }
