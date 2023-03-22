@@ -318,14 +318,9 @@ impl Rdict {
 
     /// Configure Read Options for all the get operations.
     fn set_read_options(&mut self, read_opt: &ReadOptionsPy) -> PyResult<()> {
-        if self.opt_py.raw_mode != read_opt.raw_mode {
-            return Err(PyException::new_err(format!(
-                "ReadOptions raw_mode should be set to {}",
-                read_opt.raw_mode
-            )));
-        }
         self.read_opt = read_opt.into();
         self.read_opt_py = read_opt.clone();
+        self.read_opt_py.raw_mode = self.opt_py.raw_mode;
         Ok(())
     }
 
