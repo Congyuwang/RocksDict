@@ -899,9 +899,9 @@ impl Rdict {
     ///
     /// Args:
     ///     write_batch: WriteBatch instance. This instance will be consumed.
-    ///     write_opt: has default value.
-    #[pyo3(signature = (write_batch, write_opt = WriteOptionsPy::new()))]
-    pub fn write(&self, write_batch: &mut WriteBatchPy, write_opt: WriteOptionsPy) -> PyResult<()> {
+    ///     write_opt: use default value if not provided.
+    #[pyo3(signature = (write_batch, write_opt = None))]
+    pub fn write(&self, write_batch: &mut WriteBatchPy, write_opt: Option<&WriteOptionsPy>) -> PyResult<()> {
         if let Some(db) = &self.db {
             if self.opt_py.raw_mode != write_batch.raw_mode {
                 return if self.opt_py.raw_mode {
@@ -914,8 +914,13 @@ impl Rdict {
                     ))
                 };
             }
+            let write_opt_option = write_opt.map(WriteOptions::from);
+            let write_opt = match &write_opt_option {
+                None => &self.write_opt,
+                Some(opt) => opt,
+            };
             let db = db.borrow();
-            match db.write_opt(write_batch.consume()?, &WriteOptions::from(&write_opt)) {
+            match db.write_opt(write_batch.consume()?, write_opt) {
                 Ok(_) => Ok(()),
                 Err(e) => Err(PyException::new_err(e.to_string())),
             }
