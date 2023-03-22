@@ -90,6 +90,13 @@ class TestIterBytes(unittest.TestCase):
         ref_list.sort(reverse=True)
         self.assertEqual([k for k in self.test_dict.keys(from_key=key, backwards=True)], ref_list)
 
+    def test_may_exists(self):
+        for k, v in self.ref_dict.items():
+            may_exists, value = self.test_dict.key_may_exist(k, fetch=True)
+            self.assertTrue(may_exists)
+            if value is not None:
+                self.assertEqual(v, value)
+
     def test_seek_forward(self):
         key = randbytes(20)
         self.assertEqual({k: v for k, v in self.test_dict.items(from_key=key)},

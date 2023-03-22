@@ -484,44 +484,69 @@ impl Rdict {
     ///     This check is potentially lighter-weight than invoking DB::get().
     ///     One way to make this lighter weight is to avoid doing any IOs.
     ///
+    ///     The API follows the following principle:
+    ///       - True, and value found => the key must exist.
+    ///       - True => the key may or may not exist.
+    ///       - False => the key definitely does not exist.
+    ///
+    ///     Flip it around:
+    ///       - key exists => must return True, but value may or may not be found.
+    ///       - key doesn't exists => might still return True.
+    ///
     /// Args:
     ///     key: Key to check
-    ///     fetch: Obtain also the value if found
+    ///     read_opt: ReadOptions
     ///
     /// Returns:
-    ///     (True, None) if key is found but value not in memory.
-    ///     (True, None) if key is found and fetch=False.
-    ///     (True, data) if key is found and value in memory and fetch=True.
-    ///     (False, None) if key is not found.
-    // fn key_may_exist(&self, key: &PyAny, py: Python) -> PyResult<(bool, Option<PyObject>)> {
-    //     if let Some(db) = &self.db {
-    //         let db = db.borrow();
-    //         let key = encode_key(key, self.opt_py.raw_mode)?;
-    //         let may_exist = if let Some(cf) = &self.column_family {
-    //             db.key_may_exist_cf_opt(cf.deref(), &key[..], &self.read_opt)
-    //         } else {
-    //             db.key_may_exist_opt(&key[..], &self.read_opt)
-    //         };
-    //         if may_exist {
-    //             let value_result = if let Some(cf) = &self.column_family {
-    //                 db.get_pinned_cf_opt(cf.deref(), key, &self.read_opt)
-    //             } else {
-    //                 db.get_pinned_opt(key, &self.read_opt)
-    //             };
-    //             match value_result {
-    //                 Ok(value) => match value {
-    //                     None => Ok(false),
-    //                     Some(_) => Ok(true),
-    //                 },
-    //                 Err(e) => Err(PyException::new_err(e.to_string())),
-    //             }
-    //         } else {
-    //             Ok(false)
-    //         }
-    //     } else {
-    //         Err(PyException::new_err("DB already closed"))
-    //     }
-    // }
+    ///     if `fetch = False`,
+    ///         returning True implies that the key may exist.
+    ///         returning False implies that the key definitely does not exist.
+    ///     if `fetch = True`,
+    ///         returning (True, value) implies that the key is found and definitely exist.
+    ///         returning (False, None) implies that the key definitely does not exist.
+    ///         returning (True,  None) implies that the key may exist.
+    #[pyo3(signature = (key, fetch = false, read_opt = None))]
+    fn key_may_exist(
+        &self,
+        key: &PyAny,
+        fetch: bool,
+        read_opt: Option<&ReadOptionsPy>,
+        py: Python,
+    ) -> PyResult<PyObject> {
+        if let Some(db) = &self.db {
+            let db = db.borrow();
+            let key = encode_key(key, self.opt_py.raw_mode)?;
+            let read_opt_option = read_opt.map(ReadOptions::from);
+            let read_opt = match &read_opt_option {
+                None => &self.read_opt,
+                Some(opt) => opt,
+            };
+            let cf = match &self.column_family {
+                None => {
+                    self.get_column_family_handle(DEFAULT_COLUMN_FAMILY_NAME)?
+                        .cf
+                }
+                Some(cf) => cf.clone(),
+            };
+            if !fetch {
+                let may_exist = db.key_may_exist_cf_opt(cf.deref(), &key[..], read_opt);
+                Ok(may_exist.to_object(py))
+            } else {
+                let (may_exist, value) =
+                    db.key_may_exist_cf_opt_value(cf.deref(), &key[..], read_opt);
+                match value {
+                    None => Ok((may_exist, py.None()).to_object(py)),
+                    Some(dat) => Ok((
+                        may_exist,
+                        decode_value(py, &dat, &self.pickle_loads, self.opt_py.raw_mode)?,
+                    )
+                        .to_object(py)),
+                }
+            }
+        } else {
+            Err(PyException::new_err("DB already closed"))
+        }
+    }
 
     fn __delitem__(&self, key: &PyAny) -> PyResult<()> {
         self.delete(key, None)
