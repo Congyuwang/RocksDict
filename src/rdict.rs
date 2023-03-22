@@ -484,11 +484,13 @@ impl Rdict {
     ///     This check is potentially lighter-weight than invoking DB::get().
     ///     One way to make this lighter weight is to avoid doing any IOs.
     ///
-    ///     Note that returning True doesn't mean the key definitely exists.
-    ///     Moreover, if the key does not exist, it might still return True.
-    ///
-    ///     The key certainly exists if value is returned.
-    ///     The key certainly does not exist if False is returned.
+    ///     The API follows the following principle
+    ///       - True => the key may or may not exist.
+    ///       - False => the key definitely does not exist.
+    ///       - If the key exists => must return True
+    ///       - If the key does not exist => might return False or True
+    ///       - If the key exists => value might or might not be found.
+    ///       - If value is found => the key definitely exists.
     ///
     /// Args:
     ///     key: Key to check
@@ -496,12 +498,12 @@ impl Rdict {
     ///
     /// Returns:
     ///     if `fetch = False`,
-    ///         returns True if the key may exist.
-    ///         returns False if the key definitely does not exist.
+    ///         returning True implies that the key may exist.
+    ///         returning False implies that the key definitely does not exist.
     ///     if `fetch = True`,
-    ///         returns (True, value) if key is found and definitely exist.
-    ///         returns (False, None) the key definitely does not exist.
-    ///         returns (True,  None) the key may exist.
+    ///         returning (True, value) implies that the key is found and definitely exist.
+    ///         returning (False, None) implies that the key definitely does not exist.
+    ///         returning (True,  None) implies that the key may exist.
     #[pyo3(signature = (key, fetch = false, read_opt = None))]
     fn key_may_exist(
         &self,

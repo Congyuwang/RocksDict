@@ -219,19 +219,19 @@
                                 <a class="variable" href="#WriteOptions.no_slowdown">no_slowdown</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.disable_wal">disable_wal</a>
+                                <a class="variable" href="#WriteOptions.sync">sync</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.low_pri">low_pri</a>
+                                <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#WriteOptions.disable_wal">disable_wal</a>
                         </li>
                         <li>
                                 <a class="variable" href="#WriteOptions.memtable_insert_hint_per_batch">memtable_insert_hint_per_batch</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.sync">sync</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
+                                <a class="variable" href="#WriteOptions.low_pri">low_pri</a>
                         </li>
                 </ul>
 
@@ -807,22 +807,22 @@
                                 <a class="function" href="#UniversalCompactOptions.__init__">UniversalCompactOptions</a>
                         </li>
                         <li>
+                                <a class="variable" href="#UniversalCompactOptions.max_size_amplification_percent">max_size_amplification_percent</a>
+                        </li>
+                        <li>
                                 <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.min_merge_width">min_merge_width</a>
+                                <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.compression_size_percent">compression_size_percent</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.max_size_amplification_percent">max_size_amplification_percent</a>
+                                <a class="variable" href="#UniversalCompactOptions.min_merge_width">min_merge_width</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.max_merge_width">max_merge_width</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
                         </li>
                 </ul>
 
@@ -1442,11 +1442,16 @@ del db
   This check is potentially lighter-weight than invoking DB::get().
   One way to make this lighter weight is to avoid doing any IOs.</p>
   
-  <p>Note that returning True doesn't mean the key definitely exists.
-  Moreover, if the key does not exist, it might still return True.</p>
+  <p>The API follows the following principle</p>
   
-  <p>The key certainly exists if value is returned.
-  The key certainly does not exist if False is returned.</p>
+  <ul>
+  <li>True =&gt; the key may or may not exist.</li>
+  <li>False =&gt; the key definitely does not exist.</li>
+  <li>If the key exists =&gt; must return True</li>
+  <li>If the key does not exist =&gt; might return False or True</li>
+  <li>If the key exists =&gt; value might or might not be found.</li>
+  <li>If value is found =&gt; the key definitely exists.</li>
+  </ul>
 </blockquote>
 
 <h6 id="args">Args</h6>
@@ -1460,12 +1465,12 @@ del db
 
 <blockquote>
   <p>if <code>fetch = False</code>,
-      returns True if the key may exist.
-      returns False if the key definitely does not exist.
+      returning True implies that the key may exist.
+      returning False implies that the key definitely does not exist.
   if <code>fetch = True</code>,
-      returns (True, value) if key is found and definitely exist.
-      returns (False, None) the key definitely does not exist.
-      returns (True,  None) the key may exist.</p>
+      returning (True, value) implies that the key is found and definitely exist.
+      returning (False, None) implies that the key definitely does not exist.
+      returning (True,  None) implies that the key may exist.</p>
 </blockquote>
 </div>
 
@@ -2743,61 +2748,6 @@ immediately with Status::Incomplete().</p>
 
 
                             </div>
-                            <div id="WriteOptions.disable_wal" class="classattr">
-                                <div class="attr variable">
-            <span class="name">disable_wal</span>
-
-        
-    </div>
-    <a class="headerlink" href="#WriteOptions.disable_wal"></a>
-    
-            <div class="docstring"><p>Sets whether WAL should be active or not.
-If true, writes will not first go to the write ahead log,
-and the write may got lost after a crash.</p>
-
-<p>Default: false</p>
-</div>
-
-
-                            </div>
-                            <div id="WriteOptions.low_pri" class="classattr">
-                                <div class="attr variable">
-            <span class="name">low_pri</span>
-
-        
-    </div>
-    <a class="headerlink" href="#WriteOptions.low_pri"></a>
-    
-            <div class="docstring"><p>If true, this write request is of lower priority if compaction is
-behind. In this case, no_slowdown = true, the request will be cancelled
-immediately with Status::Incomplete() returned. Otherwise, it will be
-slowed down. The slowdown value is determined by RocksDB to guarantee
-it introduces minimum impacts to high priority writes.</p>
-
-<p>Default: false</p>
-</div>
-
-
-                            </div>
-                            <div id="WriteOptions.memtable_insert_hint_per_batch" class="classattr">
-                                <div class="attr variable">
-            <span class="name">memtable_insert_hint_per_batch</span>
-
-        
-    </div>
-    <a class="headerlink" href="#WriteOptions.memtable_insert_hint_per_batch"></a>
-    
-            <div class="docstring"><p>If true, writebatch will maintain the last insert positions of each
-memtable as hints in concurrent write. It can improve write performance
-in concurrent writes if keys in one writebatch are sequential. In
-non-concurrent writes (when concurrent_memtable_writes is false) this
-option will be ignored.</p>
-
-<p>Default: false</p>
-</div>
-
-
-                            </div>
                             <div id="WriteOptions.sync" class="classattr">
                                 <div class="attr variable">
             <span class="name">sync</span>
@@ -2826,6 +2776,61 @@ If this flag is true, writes will be slower.</p>
             <div class="docstring"><p>If true and if user is trying to write to column families that don't exist (they were dropped),
 ignore the write (don't return an error). If there are multiple writes in a WriteBatch,
 other writes will succeed.</p>
+
+<p>Default: false</p>
+</div>
+
+
+                            </div>
+                            <div id="WriteOptions.disable_wal" class="classattr">
+                                <div class="attr variable">
+            <span class="name">disable_wal</span>
+
+        
+    </div>
+    <a class="headerlink" href="#WriteOptions.disable_wal"></a>
+    
+            <div class="docstring"><p>Sets whether WAL should be active or not.
+If true, writes will not first go to the write ahead log,
+and the write may got lost after a crash.</p>
+
+<p>Default: false</p>
+</div>
+
+
+                            </div>
+                            <div id="WriteOptions.memtable_insert_hint_per_batch" class="classattr">
+                                <div class="attr variable">
+            <span class="name">memtable_insert_hint_per_batch</span>
+
+        
+    </div>
+    <a class="headerlink" href="#WriteOptions.memtable_insert_hint_per_batch"></a>
+    
+            <div class="docstring"><p>If true, writebatch will maintain the last insert positions of each
+memtable as hints in concurrent write. It can improve write performance
+in concurrent writes if keys in one writebatch are sequential. In
+non-concurrent writes (when concurrent_memtable_writes is false) this
+option will be ignored.</p>
+
+<p>Default: false</p>
+</div>
+
+
+                            </div>
+                            <div id="WriteOptions.low_pri" class="classattr">
+                                <div class="attr variable">
+            <span class="name">low_pri</span>
+
+        
+    </div>
+    <a class="headerlink" href="#WriteOptions.low_pri"></a>
+    
+            <div class="docstring"><p>If true, this write request is of lower priority if compaction is
+behind. In this case, no_slowdown = true, the request will be cancelled
+immediately with Status::Incomplete() returned. Otherwise, it will be
+slowed down. The slowdown value is determined by RocksDB to guarantee
+it introduces minimum impacts to high priority writes.</p>
 
 <p>Default: false</p>
 </div>
@@ -6559,6 +6564,30 @@ Default: true</p>
     
 
                             </div>
+                            <div id="UniversalCompactOptions.max_size_amplification_percent" class="classattr">
+                                <div class="attr variable">
+            <span class="name">max_size_amplification_percent</span>
+
+        
+    </div>
+    <a class="headerlink" href="#UniversalCompactOptions.max_size_amplification_percent"></a>
+    
+            <div class="docstring"><p>sets the size amplification.</p>
+
+<p>It is defined as the amount (in percentage) of
+additional storage needed to store a single byte of data in the database.
+For example, a size amplification of 2% means that a database that
+contains 100 bytes of user-data may occupy upto 102 bytes of
+physical storage. By this definition, a fully compacted database has
+a size amplification of 0%. Rocksdb uses the following heuristic
+to calculate size amplification: it assumes that all files excluding
+the earliest file contribute to the size amplification.</p>
+
+<p>Default: 200, which means that a 100 byte database could require upto 300 bytes of storage.</p>
+</div>
+
+
+                            </div>
                             <div id="UniversalCompactOptions.stop_style" class="classattr">
                                 <div class="attr variable">
             <span class="name">stop_style</span>
@@ -6574,17 +6603,19 @@ Default: true</p>
 
 
                             </div>
-                            <div id="UniversalCompactOptions.min_merge_width" class="classattr">
+                            <div id="UniversalCompactOptions.size_ratio" class="classattr">
                                 <div class="attr variable">
-            <span class="name">min_merge_width</span>
+            <span class="name">size_ratio</span>
 
         
     </div>
-    <a class="headerlink" href="#UniversalCompactOptions.min_merge_width"></a>
+    <a class="headerlink" href="#UniversalCompactOptions.size_ratio"></a>
     
-            <div class="docstring"><p>Sets the minimum number of files in a single compaction run.</p>
+            <div class="docstring"><p>Sets the percentage flexibility while comparing file size.
+If the candidate file(s) size is 1% smaller than the next file's size,
+then include next file into this candidate set.</p>
 
-<p>Default: 2</p>
+<p>Default: 1</p>
 </div>
 
 
@@ -6620,26 +6651,17 @@ will be compressed iff
 
 
                             </div>
-                            <div id="UniversalCompactOptions.max_size_amplification_percent" class="classattr">
+                            <div id="UniversalCompactOptions.min_merge_width" class="classattr">
                                 <div class="attr variable">
-            <span class="name">max_size_amplification_percent</span>
+            <span class="name">min_merge_width</span>
 
         
     </div>
-    <a class="headerlink" href="#UniversalCompactOptions.max_size_amplification_percent"></a>
+    <a class="headerlink" href="#UniversalCompactOptions.min_merge_width"></a>
     
-            <div class="docstring"><p>sets the size amplification.</p>
+            <div class="docstring"><p>Sets the minimum number of files in a single compaction run.</p>
 
-<p>It is defined as the amount (in percentage) of
-additional storage needed to store a single byte of data in the database.
-For example, a size amplification of 2% means that a database that
-contains 100 bytes of user-data may occupy upto 102 bytes of
-physical storage. By this definition, a fully compacted database has
-a size amplification of 0%. Rocksdb uses the following heuristic
-to calculate size amplification: it assumes that all files excluding
-the earliest file contribute to the size amplification.</p>
-
-<p>Default: 200, which means that a 100 byte database could require upto 300 bytes of storage.</p>
+<p>Default: 2</p>
 </div>
 
 
@@ -6655,23 +6677,6 @@ the earliest file contribute to the size amplification.</p>
             <div class="docstring"><p>Sets the maximum number of files in a single compaction run.</p>
 
 <p>Default: UINT_MAX</p>
-</div>
-
-
-                            </div>
-                            <div id="UniversalCompactOptions.size_ratio" class="classattr">
-                                <div class="attr variable">
-            <span class="name">size_ratio</span>
-
-        
-    </div>
-    <a class="headerlink" href="#UniversalCompactOptions.size_ratio"></a>
-    
-            <div class="docstring"><p>Sets the percentage flexibility while comparing file size.
-If the candidate file(s) size is 1% smaller than the next file's size,
-then include next file into this candidate set.</p>
-
-<p>Default: 1</p>
 </div>
 
 

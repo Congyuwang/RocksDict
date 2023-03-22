@@ -92,7 +92,8 @@ class TestIterBytes(unittest.TestCase):
 
     def test_may_exists(self):
         for k, v in self.ref_dict.items():
-            _, value = self.test_dict.key_may_exist(k, fetch=True)
+            may_exists, value = self.test_dict.key_may_exist(k, fetch=True)
+            self.assertTrue(may_exists)
             if value is not None:
                 self.assertEqual(v, value)
 
