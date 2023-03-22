@@ -373,11 +373,24 @@ impl Rdict {
     /// Args:
     ///     key: the key or list of keys.
     ///     default: the default value to return if key not found.
+    ///     read_opt: override preset read options
+    ///         (or use Rdict.set_read_options to preset a read options used by default).
     ///
     /// Returns:
     ///    None or default value if the key does not exist.
-    #[pyo3(signature = (key, default = None))]
-    fn get(&self, key: &PyAny, default: Option<&PyAny>, py: Python) -> PyResult<PyObject> {
+    #[pyo3(signature = (key, default = None, read_opt = None))]
+    fn get(
+        &self,
+        key: &PyAny,
+        default: Option<&PyAny>,
+        read_opt: Option<&ReadOptionsPy>,
+        py: Python,
+    ) -> PyResult<PyObject> {
+        let read_opt_option = read_opt.map(ReadOptions::from);
+        let read_opt = match &read_opt_option {
+            None => &self.read_opt,
+            Some(opt) => opt,
+        };
         if let Some(db) = &self.db {
             // batch_get
             if let Ok(keys) = PyTryFrom::try_from(key) {
@@ -385,7 +398,7 @@ impl Rdict {
                     db,
                     keys,
                     py,
-                    &self.read_opt,
+                    read_opt,
                     &self.pickle_loads,
                     &self.column_family,
                     self.opt_py.raw_mode,
@@ -396,9 +409,9 @@ impl Rdict {
             let key_bytes = encode_key(key, self.opt_py.raw_mode)?;
             let db = db.borrow();
             let value_result = if let Some(cf) = &self.column_family {
-                db.get_pinned_cf_opt(cf.deref(), key_bytes, &self.read_opt)
+                db.get_pinned_cf_opt(cf.deref(), key_bytes, read_opt)
             } else {
-                db.get_pinned_opt(key_bytes, &self.read_opt)
+                db.get_pinned_opt(key_bytes, read_opt)
             };
 
             match value_result {
