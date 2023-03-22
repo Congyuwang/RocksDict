@@ -348,6 +348,13 @@ impl Rdict {
             None => &self.read_opt,
             Some(opt) => opt,
         };
+        let cf = match &self.column_family {
+            None => {
+                self.get_column_family_handle(DEFAULT_COLUMN_FAMILY_NAME)?
+                    .cf
+            }
+            Some(cf) => cf.clone(),
+        };
         if let Some(db) = &self.db {
             // batch_get
             if let Ok(keys) = PyTryFrom::try_from(key) {
@@ -358,7 +365,7 @@ impl Rdict {
                         py,
                         read_opt,
                         &self.pickle_loads,
-                        &self.column_family,
+                        &cf,
                         self.opt_py.raw_mode,
                     )?
                     .to_object(py),
@@ -368,11 +375,7 @@ impl Rdict {
             // single get
             let key_bytes = encode_key(key, self.opt_py.raw_mode)?;
             let db = db.borrow();
-            let value_result = if let Some(cf) = &self.column_family {
-                db.get_pinned_cf_opt(cf.deref(), key_bytes, read_opt)
-            } else {
-                db.get_pinned_opt(key_bytes, read_opt)
-            };
+            let value_result = db.get_pinned_cf_opt(cf.deref(), key_bytes, read_opt);
 
             match value_result {
                 Ok(value) => match value {
@@ -1255,26 +1258,20 @@ fn display_live_file_dict(
 #[inline(always)]
 fn get_batch_inner<'a>(
     db: &RefCell<DB>,
-    keys: &'a PyList,
+    key_list: &'a PyList,
     py: Python<'a>,
     read_opt: &ReadOptions,
     pickle_loads: &PyObject,
-    column_family: &Option<Arc<ColumnFamily>>,
+    cf: &Arc<ColumnFamily>,
     raw_mode: bool,
 ) -> PyResult<&'a PyList> {
     let db = db.borrow();
-    let values = if let Some(cf) = column_family {
-        let mut keys_cols: Vec<(&ColumnFamily, Cow<[u8]>)> = Vec::with_capacity(keys.len());
-        for key in keys {
-            keys_cols.push((cf.deref(), encode_key(key, raw_mode)?));
+    let values = {
+        let mut keys: Vec<Cow<[u8]>> = Vec::with_capacity(key_list.len());
+        for key in key_list {
+            keys.push(encode_key(key, raw_mode)?);
         }
-        db.multi_get_cf_opt(keys_cols, read_opt)
-    } else {
-        let mut keys_batch = Vec::with_capacity(keys.len());
-        for key in keys {
-            keys_batch.push(encode_key(key, raw_mode)?);
-        }
-        db.multi_get_opt(keys_batch, read_opt)
+        db.batched_multi_get_cf_opt(cf.deref(), keys, false, read_opt)
     };
     let result = PyList::empty(py);
     for v in values {
