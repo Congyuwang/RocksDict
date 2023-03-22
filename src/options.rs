@@ -728,7 +728,7 @@ impl OptionsPy {
     /// e.g. to read/write files, schedule background work, etc. In the near
     /// future, support for doing storage operations such as read/write files
     /// through env will be deprecated in favor of file_system.
-    pub fn set_env(&mut self, env: PyRef<EnvPy>) {
+    pub fn set_env(&mut self, env: &EnvPy) {
         self.inner_opt.set_env(&env.0)
     }
 
@@ -744,7 +744,7 @@ impl OptionsPy {
     ///
     ///         opts = Options()
     ///         opts.set_compression_type(DBCompressionType.snappy())
-    pub fn set_compression_type(&mut self, t: PyRef<DBCompressionTypePy>) {
+    pub fn set_compression_type(&mut self, t: &DBCompressionTypePy) {
         self.inner_opt.set_compression_type(t.0)
     }
 
@@ -863,10 +863,7 @@ impl OptionsPy {
     //     self.inner_opt.set_comparator(name, compare_fn)
     // }
 
-    pub fn set_prefix_extractor(
-        &mut self,
-        prefix_extractor: PyRef<SliceTransformPy>,
-    ) -> PyResult<()> {
+    pub fn set_prefix_extractor(&mut self, prefix_extractor: &SliceTransformPy) -> PyResult<()> {
         let transform = match &prefix_extractor.0 {
             SliceTransformType::Fixed(len) => SliceTransform::create_fixed_prefix(*len),
             SliceTransformType::MaxLen(len) => match create_max_len_transform(*len) {
@@ -1234,7 +1231,7 @@ impl OptionsPy {
     /// Sets the compaction style.
     ///
     /// Default: DBCompactionStyle.level()
-    pub fn set_compaction_style(&mut self, style: PyRef<DBCompactionStylePy>) {
+    pub fn set_compaction_style(&mut self, style: &DBCompactionStylePy) {
         self.inner_opt.set_compaction_style(style.0)
     }
 
@@ -1458,7 +1455,7 @@ impl OptionsPy {
     ///
     ///         opts.set_allow_concurrent_memtable_write(false)
     ///         opts.set_memtable_factory(factory)
-    pub fn set_memtable_factory(&mut self, factory: PyRef<MemtableFactoryPy>) {
+    pub fn set_memtable_factory(&mut self, factory: &MemtableFactoryPy) {
         self.inner_opt.set_memtable_factory(match factory.0 {
             MemtableFactory::Vector => MemtableFactory::Vector,
             MemtableFactory::HashSkipList {
@@ -1476,7 +1473,7 @@ impl OptionsPy {
         })
     }
 
-    pub fn set_block_based_table_factory(&mut self, factory: PyRef<BlockBasedOptionsPy>) {
+    pub fn set_block_based_table_factory(&mut self, factory: &BlockBasedOptionsPy) {
         self.inner_opt.set_block_based_table_factory(&factory.0)
     }
 
@@ -1499,7 +1496,7 @@ impl OptionsPy {
     ///         factory_opts.set_use_module_hash(false)
     ///
     ///         opts.set_cuckoo_table_factory(factory_opts)
-    pub fn set_cuckoo_table_factory(&mut self, factory: PyRef<CuckooTableOptionsPy>) {
+    pub fn set_cuckoo_table_factory(&mut self, factory: &CuckooTableOptionsPy) {
         self.inner_opt.set_cuckoo_table_factory(&factory.0)
     }
 
@@ -1553,7 +1550,7 @@ impl OptionsPy {
     /// Recovery mode to control the consistency while replaying WAL.
     ///
     /// Default: DBRecoveryMode::PointInTime
-    pub fn set_wal_recovery_mode(&mut self, mode: PyRef<DBRecoveryModePy>) {
+    pub fn set_wal_recovery_mode(&mut self, mode: &DBRecoveryModePy) {
         self.inner_opt.set_wal_recovery_mode(mode.0)
     }
 
@@ -1721,7 +1718,7 @@ impl OptionsPy {
     ///
     /// Default: null (disabled)
     /// Not supported in ROCKSDB_LITE mode!
-    pub fn set_row_cache(&mut self, cache: PyRef<CachePy>) {
+    pub fn set_row_cache(&mut self, cache: &CachePy) {
         self.inner_opt.set_row_cache(&cache.0)
     }
 
@@ -2200,7 +2197,7 @@ impl BlockBasedOptionsPy {
     ///
     /// If set, use the specified cache for blocks.
     /// By default, rocksdb will automatically create and use an 8MB internal cache.
-    pub fn set_block_cache(&mut self, cache: PyRef<CachePy>) {
+    pub fn set_block_cache(&mut self, cache: &CachePy) {
         self.0.set_block_cache(&cache.0)
     }
 
@@ -2229,7 +2226,7 @@ impl BlockBasedOptionsPy {
     ///         block_opts = BlockBasedOptions()
     ///         block_opts.set_index_type(BlockBasedIndexType.hash_search())
     ///         opts.set_block_based_table_factory(block_opts)
-    pub fn set_index_type(&mut self, index_type: PyRef<BlockBasedIndexTypePy>) {
+    pub fn set_index_type(&mut self, index_type: &BlockBasedIndexTypePy) {
         self.0.set_index_type(match index_type.0 {
             BlockBasedIndexType::BinarySearch => BlockBasedIndexType::BinarySearch,
             BlockBasedIndexType::HashSearch => BlockBasedIndexType::HashSearch,
@@ -2307,7 +2304,7 @@ impl BlockBasedOptionsPy {
     ///         block_opts.set_data_block_index_type(DataBlockIndexType.binary_and_hash())
     ///         block_opts.set_data_block_hash_ratio(0.85)
     ///         opts.set_block_based_table_factory(block_opts)
-    pub fn set_data_block_index_type(&mut self, index_type: PyRef<DataBlockIndexTypePy>) {
+    pub fn set_data_block_index_type(&mut self, index_type: &DataBlockIndexTypePy) {
         self.0.set_data_block_index_type(match index_type.0 {
             DataBlockIndexType::BinarySearch => DataBlockIndexType::BinarySearch,
             DataBlockIndexType::BinaryAndHash => DataBlockIndexType::BinaryAndHash,
@@ -2577,7 +2574,6 @@ impl DBCompactionStylePy {
 
 #[pymethods]
 impl ChecksumTypePy {
-
     #[staticmethod]
     pub fn no_checksum() -> Self {
         ChecksumTypePy(ChecksumType::NoChecksum)
