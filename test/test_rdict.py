@@ -163,8 +163,6 @@ class TestInt(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.opt = Options()
         cls.opt.create_if_missing(True)
-        cls.opt.set_plain_table_factory(PlainTableFactoryOptions())
-        cls.opt.set_prefix_extractor(SliceTransform.create_max_len_prefix(8))
         cls.test_dict = Rdict(cls.path, cls.opt)
         cls.ref_dict = dict()
 
@@ -184,6 +182,16 @@ class TestInt(unittest.TestCase):
                 del self.ref_dict[key]
                 del self.test_dict[key]
 
+        compare_dicts(self, self.ref_dict, self.test_dict)
+
+    def test_delete_range(self):
+        to_delete = []
+        for key in self.ref_dict:
+            if key >= 99999:
+                to_delete.append(key)
+        for key in to_delete:
+            del self.ref_dict[key]
+        self.test_dict.delete_range(99999, 10000000)
         compare_dicts(self, self.ref_dict, self.test_dict)
 
     def test_reopen(self):
