@@ -325,40 +325,10 @@ impl Rdict {
 
     /// Use list of keys for batch get.
     fn __getitem__(&self, key: &PyAny, py: Python) -> PyResult<PyObject> {
-        if let Some(db) = &self.db {
-            // batch_get
-            if let Ok(keys) = PyTryFrom::try_from(key) {
-                return Ok(get_batch_inner(
-                    db,
-                    keys,
-                    py,
-                    &self.read_opt,
-                    &self.pickle_loads,
-                    &self.column_family,
-                    self.opt_py.raw_mode,
-                )?
-                .to_object(py));
-            }
-            // single get
-            let key_bytes = encode_key(key, self.opt_py.raw_mode)?;
-            let db = db.borrow();
-            let value_result = if let Some(cf) = &self.column_family {
-                db.get_pinned_cf_opt(cf.deref(), key_bytes, &self.read_opt)
-            } else {
-                db.get_pinned_opt(key_bytes, &self.read_opt)
-            };
-
-            match value_result {
-                Ok(value) => match value {
-                    None => Err(PyKeyError::new_err(format!("key {key} not found"))),
-                    Some(slice) => {
-                        decode_value(py, slice.as_ref(), &self.pickle_loads, self.opt_py.raw_mode)
-                    }
-                },
-                Err(e) => Err(PyException::new_err(e.to_string())),
-            }
-        } else {
-            Err(PyException::new_err("DB already closed"))
+        match self.get(key, None, None, py) {
+            Ok(Some(v)) => Ok(v),
+            Ok(None) => Err(PyKeyError::new_err(format!("key {key} not found"))),
+            Err(e) => Err(e),
         }
     }
 
@@ -372,6 +342,7 @@ impl Rdict {
     ///
     /// Returns:
     ///    None or default value if the key does not exist.
+    #[inline]
     #[pyo3(signature = (key, default = None, read_opt = None))]
     fn get(
         &self,
@@ -379,7 +350,7 @@ impl Rdict {
         default: Option<&PyAny>,
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<Option<PyObject>> {
         let read_opt_option = read_opt.map(ReadOptions::from);
         let read_opt = match &read_opt_option {
             None => &self.read_opt,
@@ -388,17 +359,20 @@ impl Rdict {
         if let Some(db) = &self.db {
             // batch_get
             if let Ok(keys) = PyTryFrom::try_from(key) {
-                return Ok(get_batch_inner(
-                    db,
-                    keys,
-                    py,
-                    read_opt,
-                    &self.pickle_loads,
-                    &self.column_family,
-                    self.opt_py.raw_mode,
-                )?
-                .to_object(py));
+                return Ok(Some(
+                    get_batch_inner(
+                        db,
+                        keys,
+                        py,
+                        read_opt,
+                        &self.pickle_loads,
+                        &self.column_family,
+                        self.opt_py.raw_mode,
+                    )?
+                    .to_object(py),
+                ));
             }
+
             // single get
             let key_bytes = encode_key(key, self.opt_py.raw_mode)?;
             let db = db.borrow();
@@ -411,15 +385,19 @@ impl Rdict {
             match value_result {
                 Ok(value) => match value {
                     None => {
+                        // try to return default value
                         if let Some(default) = default {
-                            Ok(default.to_object(py))
+                            Ok(Some(default.to_object(py)))
                         } else {
-                            Ok(py.None())
+                            Ok(None)
                         }
                     }
-                    Some(slice) => {
-                        decode_value(py, slice.as_ref(), &self.pickle_loads, self.opt_py.raw_mode)
-                    }
+                    Some(slice) => Ok(Some(decode_value(
+                        py,
+                        slice.as_ref(),
+                        &self.pickle_loads,
+                        self.opt_py.raw_mode,
+                    )?)),
                 },
                 Err(e) => Err(PyException::new_err(e.to_string())),
             }
