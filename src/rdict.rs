@@ -429,14 +429,38 @@ impl Rdict {
     }
 
     fn __setitem__(&self, key: &PyAny, value: &PyAny, py: Python) -> PyResult<()> {
+        self.put(key, value, None, py)
+    }
+
+    /// Insert key value into database.
+    ///
+    /// Args:
+    ///     key: the key.
+    ///     value: the value.
+    ///     write_opt: override preset write options
+    ///         (or use Rdict.set_write_options to preset a write options used by default).
+    #[inline]
+    #[pyo3(signature = (key, value, write_opt = None))]
+    fn put(
+        &self,
+        key: &PyAny,
+        value: &PyAny,
+        write_opt: Option<&WriteOptionsPy>,
+        py: Python,
+    ) -> PyResult<()> {
+        let write_opt_option = write_opt.map(WriteOptions::from);
+        let write_opt = match &write_opt_option {
+            None => &self.write_opt,
+            Some(opt) => opt,
+        };
         if let Some(db) = &self.db {
             let db = db.borrow();
             let key = encode_key(key, self.opt_py.raw_mode)?;
             let value = encode_value(value, &self.pickle_dumps, self.opt_py.raw_mode, py)?;
             let put_result = if let Some(cf) = &self.column_family {
-                db.put_cf_opt(cf.deref(), key, value, &self.write_opt)
+                db.put_cf_opt(cf.deref(), key, value, write_opt)
             } else {
-                db.put_opt(key, value, &self.write_opt)
+                db.put_opt(key, value, write_opt)
             };
             match put_result {
                 Ok(_) => Ok(()),
@@ -445,10 +469,6 @@ impl Rdict {
         } else {
             Err(PyException::new_err("DB already closed"))
         }
-    }
-
-    fn put(&self, key: &PyAny, value: &PyAny, py: Python) -> PyResult<()> {
-        self.__setitem__(key, value, py)
     }
 
     fn __contains__(&self, key: &PyAny) -> PyResult<bool> {
@@ -482,13 +502,30 @@ impl Rdict {
     }
 
     fn __delitem__(&self, key: &PyAny) -> PyResult<()> {
+        self.delete(key, None)
+    }
+
+    /// Delete entry from the database.
+    ///
+    /// Args:
+    ///     key: the key.
+    ///     write_opt: override preset write options
+    ///         (or use Rdict.set_write_options to preset a write options used by default).
+    #[inline]
+    #[pyo3(signature = (key, write_opt = None))]
+    fn delete(&self, key: &PyAny, write_opt: Option<&WriteOptionsPy>) -> PyResult<()> {
+        let write_opt_option = write_opt.map(WriteOptions::from);
+        let write_opt = match &write_opt_option {
+            None => &self.write_opt,
+            Some(opt) => opt,
+        };
         if let Some(db) = &self.db {
             let db = db.borrow();
             let key = encode_key(key, self.opt_py.raw_mode)?;
             let del_result = if let Some(cf) = &self.column_family {
-                db.delete_cf_opt(cf.deref(), key, &self.write_opt)
+                db.delete_cf_opt(cf.deref(), key, write_opt)
             } else {
-                db.delete_opt(key, &self.write_opt)
+                db.delete_opt(key, write_opt)
             };
             match del_result {
                 Ok(_) => Ok(()),
@@ -497,10 +534,6 @@ impl Rdict {
         } else {
             Err(PyException::new_err("DB already closed"))
         }
-    }
-
-    fn delete(&self, key: &PyAny) -> PyResult<()> {
-        self.__delitem__(key)
     }
 
     /// Reversible for iterating over keys and values.
