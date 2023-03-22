@@ -262,7 +262,7 @@ impl Rdict {
                 }
             } {
                 Ok(db) => {
-                    let r_opt = ReadOptionsPy::default(options.raw_mode, py)?;
+                    let r_opt = ReadOptionsPy::default(py)?;
                     let w_opt = WriteOptionsPy::new();
                     // save rocksdict config
                     rocksdict_config.save(config_path)?;
@@ -320,7 +320,6 @@ impl Rdict {
     fn set_read_options(&mut self, read_opt: &ReadOptionsPy) -> PyResult<()> {
         self.read_opt = read_opt.into();
         self.read_opt_py = read_opt.clone();
-        self.read_opt_py.raw_mode = self.opt_py.raw_mode;
         Ok(())
     }
 
@@ -543,13 +542,13 @@ impl Rdict {
     ///         Rdict.destroy(path)
     ///
     /// Args:
-    ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
+    ///     read_opt: ReadOptions
     ///
     /// Returns: Reversible
     #[pyo3(signature = (read_opt = None))]
     fn iter(&self, read_opt: Option<&ReadOptionsPy>, py: Python) -> PyResult<RdictIter> {
         let read_opt: ReadOptionsPy = match read_opt {
-            None => ReadOptionsPy::default(self.opt_py.raw_mode, py)?,
+            None => ReadOptionsPy::default(py)?,
             Some(opt) => opt.clone(),
         };
         if let Some(db) = &self.db {
@@ -578,7 +577,7 @@ impl Rdict {
     ///     from_key: iterate from key, first seek to this key
     ///         or the nearest next key for iteration
     ///         (depending on iteration direction).
-    ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
+    ///     read_opt: ReadOptions
     #[pyo3(signature = (backwards = false, from_key = None, read_opt = None))]
     fn items(
         &self,
@@ -602,7 +601,7 @@ impl Rdict {
     ///     from_key: iterate from key, first seek to this key
     ///         or the nearest next key for iteration
     ///         (depending on iteration direction).
-    ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
+    ///     read_opt: ReadOptions
     #[pyo3(signature = (backwards = false, from_key = None, read_opt = None))]
     fn keys(
         &self,

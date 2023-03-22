@@ -55,31 +55,25 @@ impl RdictIter {
         pickle_loads: &PyObject,
         raw_mode: bool,
     ) -> PyResult<Self> {
-        if readopts.raw_mode != raw_mode {
-            Err(PyException::new_err(format!(
-                "ReadOptions should have raw_mode={raw_mode}",
-            )))
-        } else {
-            let readopts = ReadOpt::from(&readopts);
-            Ok(RdictIter {
-                db: db.clone(),
-                inner: unsafe {
-                    match cf {
-                        None => {
-                            librocksdb_sys::rocksdb_create_iterator(db.borrow().inner(), readopts.0)
-                        }
-                        Some(cf) => librocksdb_sys::rocksdb_create_iterator_cf(
-                            db.borrow().inner(),
-                            readopts.0,
-                            cf.inner(),
-                        ),
+        let readopts = ReadOpt::from(&readopts);
+        Ok(RdictIter {
+            db: db.clone(),
+            inner: unsafe {
+                match cf {
+                    None => {
+                        librocksdb_sys::rocksdb_create_iterator(db.borrow().inner(), readopts.0)
                     }
-                },
-                readopts,
-                pickle_loads: pickle_loads.clone(),
-                raw_mode,
-            })
-        }
+                    Some(cf) => librocksdb_sys::rocksdb_create_iterator_cf(
+                        db.borrow().inner(),
+                        readopts.0,
+                        cf.inner(),
+                    ),
+                }
+            },
+            readopts,
+            pickle_loads: pickle_loads.clone(),
+            raw_mode,
+        })
     }
 }
 

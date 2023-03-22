@@ -57,7 +57,7 @@ impl Snapshot {
     #[pyo3(signature = (read_opt = None))]
     fn iter(&self, read_opt: Option<&ReadOptionsPy>, py: Python) -> PyResult<RdictIter> {
         let read_opt: ReadOptionsPy = match read_opt {
-            None => ReadOptionsPy::default(self.raw_mode, py)?,
+            None => ReadOptionsPy::default(py)?,
             Some(opt) => opt.clone(),
         };
         let opt_pointer = ReadOpt::from(&read_opt);
