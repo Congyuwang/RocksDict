@@ -484,13 +484,14 @@ impl Rdict {
     ///     This check is potentially lighter-weight than invoking DB::get().
     ///     One way to make this lighter weight is to avoid doing any IOs.
     ///
-    ///     The API follows the following principle
+    ///     The API follows the following principle:
+    ///       - True, and value found => the key must exist.
     ///       - True => the key may or may not exist.
     ///       - False => the key definitely does not exist.
-    ///       - If the key exists => must return True
-    ///       - If the key does not exist => might return False or True
-    ///       - If the key exists => value might or might not be found.
-    ///       - If value is found => the key definitely exists.
+    ///
+    ///     Flip it around:
+    ///       - key exists => must return True, but value may or may not be found.
+    ///       - key doesn't exists => might still return True.
     ///
     /// Args:
     ///     key: Key to check
