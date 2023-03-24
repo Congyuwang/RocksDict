@@ -20,7 +20,7 @@ jobs:
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: 1.68.0
           default: true
       - name: Build wheels - universal2
         run: |
@@ -61,7 +61,7 @@ jobs:
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: 1.68.0
           default: true
       - name: Build wheels
         uses: messense/maturin-action@v1
@@ -95,7 +95,7 @@ jobs:
       - name: Build Wheels
         uses: messense/maturin-action@v1
         with:
-          rust-toolchain: stable
+          rust-toolchain: 1.68.0
           rustup-components: rustfmt
           target: ${{ matrix.target }}
           manylinux: 2_28
@@ -127,7 +127,7 @@ jobs:
       - name: Build Wheels
         uses: messense/maturin-action@v1
         with:
-          rust-toolchain: stable
+          rust-toolchain: 1.68.0
           rustup-components: rustfmt
           target: ${{ matrix.target }}
           manylinux: 2014
@@ -158,7 +158,7 @@ jobs:
       - name: Build Wheels
         uses: messense/maturin-action@v1
         with:
-          rust-toolchain: stable
+          rust-toolchain: 1.68.0
           rustup-components: rustfmt
           target: ${{ matrix.target }}
           manylinux: 2_28
