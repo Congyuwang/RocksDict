@@ -1320,9 +1320,7 @@ fn get_batch_inner<'a>(
         match v {
             Ok(value) => match value {
                 None => result.append(py.None())?,
-                Some(slice) => {
-                    result.append(decode_value(py, slice.as_ref(), loads, raw_mode)?)?
-                }
+                Some(slice) => result.append(decode_value(py, slice.as_ref(), loads, raw_mode)?)?,
             },
             Err(e) => return Err(PyException::new_err(e.to_string())),
         }
