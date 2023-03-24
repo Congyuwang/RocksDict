@@ -1,4 +1,4 @@
-use crate::encoder::encode_value;
+use crate::encoder::encode_key;
 use crate::rdict::{RocksDictConfig, ROCKSDICT_CONFIG_FILE};
 use libc::{c_char, c_uchar, size_t};
 use num_bigint::BigInt;
@@ -179,8 +179,8 @@ pub(crate) struct FlushOptionsPy {
 #[derive(Clone)]
 pub(crate) struct ReadOptionsPy {
     fill_cache: bool,
-    iterate_upper_bound: Option<Vec<u8>>,
-    iterate_lower_bound: Option<Vec<u8>>,
+    iterate_upper_bound: PyObject,
+    iterate_lower_bound: PyObject,
     prefix_same_as_start: bool,
     total_order_seek: bool,
     max_skippable_internal_keys: u64,
@@ -190,7 +190,6 @@ pub(crate) struct ReadOptionsPy {
     readahead_size: usize,
     tailing: bool,
     pin_data: bool,
-    pickle_dumps: PyObject,
 }
 
 pub(crate) struct ReadOpt(pub(crate) *mut librocksdb_sys::rocksdb_readoptions_t);
@@ -1896,13 +1895,10 @@ impl From<&FlushOptionsPy> for FlushOptions {
 impl ReadOptionsPy {
     #[new]
     pub fn default(py: Python) -> PyResult<Self> {
-        let pickle_dumps = PyModule::import(py, "pickle")?
-            .to_object(py)
-            .getattr(py, "dumps")?;
         Ok(Self {
             fill_cache: true,
-            iterate_upper_bound: None,
-            iterate_lower_bound: None,
+            iterate_upper_bound: py.None(),
+            iterate_lower_bound: py.None(),
             prefix_same_as_start: false,
             total_order_seek: false,
             max_skippable_internal_keys: 0,
@@ -1912,7 +1908,6 @@ impl ReadOptionsPy {
             readahead_size: 0,
             tailing: false,
             pin_data: false,
-            pickle_dumps,
         })
     }
 
@@ -1926,36 +1921,14 @@ impl ReadOptionsPy {
     }
 
     /// Sets the upper bound for an iterator.
-    ///
-    /// Must pass raw_mode to ensure the correct encoding.
-    pub fn set_iterate_upper_bound(
-        &mut self,
-        key: &PyAny,
-        raw_mode: bool,
-        py: Python,
-    ) -> PyResult<()> {
-        self.iterate_upper_bound = Some(
-            encode_value(key, &self.pickle_dumps, raw_mode, py)?
-                .as_ref()
-                .to_vec(),
-        );
+    pub fn set_iterate_upper_bound(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
+        self.iterate_upper_bound = key.to_object(py);
         Ok(())
     }
 
     /// Sets the lower bound for an iterator.
-    ///
-    /// Must pass raw_mode to ensure the correct encoding.
-    pub fn set_iterate_lower_bound(
-        &mut self,
-        key: &PyAny,
-        raw_mode: bool,
-        py: Python,
-    ) -> PyResult<()> {
-        self.iterate_lower_bound = Some(
-            encode_value(key, &self.pickle_dumps, raw_mode, py)?
-                .as_ref()
-                .to_vec(),
-        );
+    pub fn set_iterate_lower_bound(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
+        self.iterate_upper_bound = key.to_object(py);
         Ok(())
     }
 
@@ -2049,34 +2022,34 @@ impl ReadOptionsPy {
     }
 }
 
-impl From<&ReadOptionsPy> for ReadOptions {
-    fn from(r_opt: &ReadOptionsPy) -> Self {
+impl ReadOptionsPy {
+    pub(crate) fn to_read_options(&self, raw_mode: bool, py: Python) -> PyResult<ReadOptions> {
         let mut opt = ReadOptions::default();
-        opt.fill_cache(r_opt.fill_cache);
-        if let Some(lower_bound) = &r_opt.iterate_lower_bound {
-            opt.set_iterate_lower_bound(lower_bound.clone());
+        opt.fill_cache(self.fill_cache);
+        if !self.iterate_lower_bound.is_none(py) {
+            let lower_bound = encode_key(self.iterate_lower_bound.as_ref(py), raw_mode)?;
+            opt.set_iterate_lower_bound(lower_bound);
         }
-        if let Some(upper_bound) = &r_opt.iterate_upper_bound {
-            opt.set_iterate_upper_bound(upper_bound.clone());
+        if !self.iterate_upper_bound.is_none(py) {
+            let upper_bound = encode_key(self.iterate_upper_bound.as_ref(py), raw_mode)?;
+            opt.set_iterate_upper_bound(upper_bound);
         }
-        opt.set_prefix_same_as_start(r_opt.prefix_same_as_start);
-        opt.set_total_order_seek(r_opt.total_order_seek);
-        opt.set_max_skippable_internal_keys(r_opt.max_skippable_internal_keys);
-        opt.set_background_purge_on_iterator_cleanup(r_opt.background_purge_on_iterator_cleanup);
-        opt.set_ignore_range_deletions(r_opt.ignore_range_deletions);
-        opt.set_verify_checksums(r_opt.verify_checksums);
-        opt.set_readahead_size(r_opt.readahead_size);
-        opt.set_tailing(r_opt.tailing);
-        opt.set_pin_data(r_opt.pin_data);
-        opt
+        opt.set_prefix_same_as_start(self.prefix_same_as_start);
+        opt.set_total_order_seek(self.total_order_seek);
+        opt.set_max_skippable_internal_keys(self.max_skippable_internal_keys);
+        opt.set_background_purge_on_iterator_cleanup(self.background_purge_on_iterator_cleanup);
+        opt.set_ignore_range_deletions(self.ignore_range_deletions);
+        opt.set_verify_checksums(self.verify_checksums);
+        opt.set_readahead_size(self.readahead_size);
+        opt.set_tailing(self.tailing);
+        opt.set_pin_data(self.pin_data);
+        Ok(opt)
     }
-}
 
-impl From<&ReadOptionsPy> for ReadOpt {
-    fn from(r_opt: &ReadOptionsPy) -> Self {
+    pub(crate) fn to_read_opt(&self, raw_mode: bool, py: Python) -> PyResult<ReadOpt> {
         let opt = unsafe { ReadOpt(librocksdb_sys::rocksdb_readoptions_create()) };
-        if let Some(lower_bound) = &r_opt.iterate_lower_bound {
-            let lower_bound = &lower_bound[..];
+        if !self.iterate_lower_bound.is_none(py) {
+            let lower_bound = encode_key(self.iterate_lower_bound.as_ref(py), raw_mode)?;
 
             unsafe {
                 librocksdb_sys::rocksdb_readoptions_set_iterate_lower_bound(
@@ -2086,8 +2059,8 @@ impl From<&ReadOptionsPy> for ReadOpt {
                 );
             }
         }
-        if let Some(upper_bound) = &r_opt.iterate_upper_bound {
-            let upper_bound = &upper_bound[..];
+        if !self.iterate_upper_bound.is_none(py) {
+            let upper_bound = encode_key(self.iterate_upper_bound.as_ref(py), raw_mode)?;
 
             unsafe {
                 librocksdb_sys::rocksdb_readoptions_set_iterate_upper_bound(
@@ -2098,39 +2071,39 @@ impl From<&ReadOptionsPy> for ReadOpt {
             }
         }
         unsafe {
-            librocksdb_sys::rocksdb_readoptions_set_fill_cache(opt.0, r_opt.fill_cache as c_uchar);
+            librocksdb_sys::rocksdb_readoptions_set_fill_cache(opt.0, self.fill_cache as c_uchar);
             librocksdb_sys::rocksdb_readoptions_set_prefix_same_as_start(
                 opt.0,
-                r_opt.prefix_same_as_start as c_uchar,
+                self.prefix_same_as_start as c_uchar,
             );
             librocksdb_sys::rocksdb_readoptions_set_total_order_seek(
                 opt.0,
-                r_opt.total_order_seek as c_uchar,
+                self.total_order_seek as c_uchar,
             );
             librocksdb_sys::rocksdb_readoptions_set_max_skippable_internal_keys(
                 opt.0,
-                r_opt.max_skippable_internal_keys,
+                self.max_skippable_internal_keys,
             );
             librocksdb_sys::rocksdb_readoptions_set_background_purge_on_iterator_cleanup(
                 opt.0,
-                r_opt.background_purge_on_iterator_cleanup as c_uchar,
+                self.background_purge_on_iterator_cleanup as c_uchar,
             );
             librocksdb_sys::rocksdb_readoptions_set_ignore_range_deletions(
                 opt.0,
-                r_opt.ignore_range_deletions as c_uchar,
+                self.ignore_range_deletions as c_uchar,
             );
             librocksdb_sys::rocksdb_readoptions_set_verify_checksums(
                 opt.0,
-                r_opt.verify_checksums as c_uchar,
+                self.verify_checksums as c_uchar,
             );
             librocksdb_sys::rocksdb_readoptions_set_readahead_size(
                 opt.0,
-                r_opt.readahead_size as size_t,
+                self.readahead_size as size_t,
             );
-            librocksdb_sys::rocksdb_readoptions_set_tailing(opt.0, r_opt.tailing as c_uchar);
-            librocksdb_sys::rocksdb_readoptions_set_pin_data(opt.0, r_opt.pin_data as c_uchar);
+            librocksdb_sys::rocksdb_readoptions_set_tailing(opt.0, self.tailing as c_uchar);
+            librocksdb_sys::rocksdb_readoptions_set_pin_data(opt.0, self.pin_data as c_uchar);
         }
-        opt
+        Ok(opt)
     }
 }
 

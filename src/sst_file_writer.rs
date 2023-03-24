@@ -39,7 +39,7 @@ macro_rules! ffi_try_impl {
 pub struct SstFileWriterPy {
     pub(crate) inner: *mut librocksdb_sys::rocksdb_sstfilewriter_t,
     opts: Options,
-    pickle_dumps: PyObject,
+    dumps: PyObject,
     raw_mode: bool,
 }
 
@@ -84,9 +84,14 @@ impl SstFileWriterPy {
         Ok(Self {
             inner: writer,
             opts: options.clone(),
-            pickle_dumps,
+            dumps: pickle_dumps,
             raw_mode,
         })
+    }
+
+    /// set custom dumps function
+    fn set_dumps(&mut self, dumps: PyObject) {
+        self.dumps = dumps
     }
 
     /// Prepare SstFileWriter to write into file located at "file_path".
@@ -114,7 +119,7 @@ impl SstFileWriterPy {
     /// REQUIRES: key is after any previously added key according to comparator.
     fn __setitem__(&mut self, key: &PyAny, value: &PyAny, py: Python) -> PyResult<()> {
         let key = encode_key(key, self.raw_mode)?;
-        let value = encode_value(value, &self.pickle_dumps, self.raw_mode, py)?;
+        let value = encode_value(value, &self.dumps, self.raw_mode, py)?;
         unsafe {
             ffi_try!(librocksdb_sys::rocksdb_sstfilewriter_put(
                 self.inner,

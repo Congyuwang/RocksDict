@@ -4,6 +4,7 @@ from rocksdict import Rdict, Options, PlainTableFactoryOptions, SliceTransform, 
 from random import randint, random, getrandbits
 import os
 import sys
+from json import loads, dumps
 
 
 TEST_INT_RANGE_UPPER = 999999
@@ -40,6 +41,44 @@ class TestGetDel(unittest.TestCase):
         self.assertIsNone(self.test_dict.get(250))
         self.assertEqual(self.test_dict.get("b", "b"), "b")
         self.assertEqual(self.test_dict.get(250, 1324123), 1324123)
+        self.assertRaises(KeyError, lambda: self.test_dict["b"])
+        self.assertRaises(KeyError, lambda: self.test_dict[250])
+
+    def testDelItem(self):
+        # no exception raise when deleting non-existing key
+        self.test_dict.__delitem__("b")
+        self.test_dict.__delitem__(250)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.test_dict.close()
+        Rdict.destroy(cls.path, Options())
+
+
+class TestGetDelCustomDumpsLoads(unittest.TestCase):
+    test_dict = None
+    opt = None
+    path = "./test_get_pul_del_loads_dumps"
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.opt = Options()
+        cls.test_dict = Rdict(cls.path, cls.opt)
+        cls.test_dict.set_loads(lambda x: loads(x.decode('utf-8')))
+        cls.test_dict.set_dumps(lambda x: bytes(dumps(x), 'utf-8'))
+        cls.test_dict["a"] = "a"
+        cls.test_dict[123] = 123
+        cls.test_dict["ok"] = ["o", "k"]
+
+    def testGetItem(self):
+        self.assertEqual(self.test_dict["a"], "a")
+        self.assertEqual(self.test_dict[123], 123)
+        self.assertEqual(self.test_dict["ok"], ["o", "k"])
+        self.assertIsNone(self.test_dict.get("b"))
+        self.assertIsNone(self.test_dict.get(250))
+        self.assertEqual(self.test_dict.get("b", "b"), "b")
+        self.assertEqual(self.test_dict.get(250, 1324123), 1324123)
+        self.assertEqual(self.test_dict["ok"], ["o", "k"])
         self.assertRaises(KeyError, lambda: self.test_dict["b"])
         self.assertRaises(KeyError, lambda: self.test_dict[250])
 
@@ -414,6 +453,7 @@ class TestColumnFamiliesDefaultOpts(unittest.TestCase):
         compare_dicts(self, {str(i): str(i**2) for i in range(1000)}, ds)
         ds.close()
         di.close()
+        self.test_dict.close()
 
     @classmethod
     def tearDownClass(cls):
@@ -456,6 +496,7 @@ class TestColumnFamiliesDefaultOptsCreate(unittest.TestCase):
         compare_dicts(self, {str(i): str(i**2) for i in range(1000)}, ds)
         ds.close()
         di.close()
+        self.test_dict.close()
 
     @classmethod
     def tearDownClass(cls):
@@ -500,6 +541,7 @@ class TestColumnFamiliesCustomOpts(unittest.TestCase):
         compare_dicts(self, {str(i): str(i**2) for i in range(1000)}, ds)
         ds.close()
         di.close()
+        self.test_dict.close()
 
     @classmethod
     def tearDownClass(cls):
@@ -544,6 +586,7 @@ class TestColumnFamiliesCustomOptionsCreate(unittest.TestCase):
         compare_dicts(self, {str(i): str(i**2) for i in range(1000)}, ds)
         ds.close()
         di.close()
+        self.test_dict.close()
 
     @classmethod
     def tearDownClass(cls):

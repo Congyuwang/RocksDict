@@ -66,7 +66,7 @@ pub(crate) fn encode_key(key: &PyAny, raw_mode: bool) -> PyResult<Cow<[u8]>> {
 #[inline(always)]
 pub(crate) fn encode_value<'a>(
     value: &'a PyAny,
-    pickle_dumps: &PyObject,
+    dumps: &PyObject,
     raw_mode: bool,
     py: Python,
 ) -> PyResult<Cow<'a, [u8]>> {
@@ -92,7 +92,7 @@ pub(crate) fn encode_value<'a>(
                 concat_type_encoding(type_encoding, if value { &[1u8] } else { &[0u8] })
             }
             ValueTypes::Any(value) => {
-                let pickle_bytes: Vec<u8> = pickle_dumps.call1(py, (value,))?.extract(py)?;
+                let pickle_bytes: Vec<u8> = dumps.call1(py, (value,))?.extract(py)?;
                 concat_type_encoding(type_encoding, &pickle_bytes[..])
             }
         };
@@ -124,7 +124,7 @@ fn py_to_value_types(value: &PyAny) -> PyResult<ValueTypes> {
 pub(crate) fn decode_value(
     py: Python,
     bytes: &[u8],
-    pickle_loads: &PyObject,
+    loads: &PyObject,
     raw_mode: bool,
 ) -> PyResult<PyObject> {
     if raw_mode {
@@ -150,7 +150,7 @@ pub(crate) fn decode_value(
                 Ok(float.into_py(py))
             }
             5 => Ok((bytes[1] != 0).to_object(py)),
-            6 => pickle_loads.call1(py, (PyBytes::new(py, &bytes[1..]),)),
+            6 => loads.call1(py, (PyBytes::new(py, &bytes[1..]),)),
             _ => Err(PyException::new_err("Unknown value type")),
         },
     }

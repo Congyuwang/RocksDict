@@ -1,5 +1,5 @@
 use crate::encoder::{decode_value, encode_key};
-use crate::{Rdict, RdictItems, RdictIter, RdictKeys, RdictValues, ReadOpt, ReadOptionsPy};
+use crate::{Rdict, RdictItems, RdictIter, RdictKeys, RdictValues, ReadOptionsPy};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use rocksdb::{ColumnFamily, ReadOptions, DB};
@@ -60,7 +60,7 @@ impl Snapshot {
             None => ReadOptionsPy::default(py)?,
             Some(opt) => opt.clone(),
         };
-        let opt_pointer = ReadOpt::from(&read_opt);
+        let opt_pointer = read_opt.to_read_opt(self.raw_mode, py)?;
         unsafe {
             set_snapshot(opt_pointer.0, self.inner);
         }
@@ -70,6 +70,7 @@ impl Snapshot {
             read_opt,
             &self.pickle_loads,
             self.raw_mode,
+            py,
         )
     }
 
@@ -150,18 +151,20 @@ impl Snapshot {
 }
 
 impl Snapshot {
-    pub(crate) fn new(rdict: &Rdict) -> PyResult<Self> {
+    pub(crate) fn new(rdict: &Rdict, py: Python) -> PyResult<Self> {
         if let Some(db) = &rdict.db {
             let db_borrow = db.borrow();
             let snapshot = unsafe { librocksdb_sys::rocksdb_create_snapshot(db_borrow.inner()) };
-            let r_opt: ReadOptions = (&rdict.read_opt_py).into();
+            let r_opt: ReadOptions = rdict
+                .read_opt_py
+                .to_read_options(rdict.opt_py.raw_mode, py)?;
             unsafe {
                 set_snapshot(r_opt.inner(), snapshot);
             }
             Ok(Snapshot {
                 inner: snapshot,
                 column_family: rdict.column_family.clone(),
-                pickle_loads: rdict.pickle_loads.clone(),
+                pickle_loads: rdict.loads.clone(),
                 read_opt: r_opt,
                 db: db.clone(),
                 raw_mode: rdict.opt_py.raw_mode,
