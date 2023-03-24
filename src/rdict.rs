@@ -262,7 +262,7 @@ impl Rdict {
                         db: Some(Arc::new(RefCell::new(db))),
                         write_opt: (&w_opt).into(),
                         flush_opt: FlushOptionsPy::new(),
-                        read_opt: (&r_opt).into(),
+                        read_opt: r_opt.to_read_options(options.raw_mode, py)?,
                         pickle_loads: pickle.getattr(py, "loads")?,
                         pickle_dumps: pickle.getattr(py, "dumps")?,
                         write_opt_py: w_opt,
@@ -309,8 +309,8 @@ impl Rdict {
     }
 
     /// Configure Read Options for all the get operations.
-    fn set_read_options(&mut self, read_opt: &ReadOptionsPy) -> PyResult<()> {
-        self.read_opt = read_opt.into();
+    fn set_read_options(&mut self, read_opt: &ReadOptionsPy, py: Python) -> PyResult<()> {
+        self.read_opt = read_opt.to_read_options(self.opt_py.raw_mode, py)?;
         self.read_opt_py = read_opt.clone();
         Ok(())
     }
@@ -343,7 +343,10 @@ impl Rdict {
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<Option<PyObject>> {
-        let read_opt_option = read_opt.map(ReadOptions::from);
+        let read_opt_option = match read_opt {
+            None => None,
+            Some(opt) => Some(opt.to_read_options(self.opt_py.raw_mode, py)?),
+        };
         let read_opt = match &read_opt_option {
             None => &self.read_opt,
             Some(opt) => opt,
@@ -516,7 +519,10 @@ impl Rdict {
         if let Some(db) = &self.db {
             let db = db.borrow();
             let key = encode_key(key, self.opt_py.raw_mode)?;
-            let read_opt_option = read_opt.map(ReadOptions::from);
+            let read_opt_option = match read_opt {
+                None => None,
+                Some(opt) => Some(opt.to_read_options(self.opt_py.raw_mode, py)?),
+            };
             let read_opt = match &read_opt_option {
                 None => &self.read_opt,
                 Some(opt) => opt,
@@ -638,6 +644,7 @@ impl Rdict {
                 read_opt,
                 &self.pickle_loads,
                 self.opt_py.raw_mode,
+                py,
             )?)
         } else {
             Err(PyException::new_err("DB already closed"))
@@ -772,7 +779,7 @@ impl Rdict {
     /// Return:
     ///     the newly created column family
     #[pyo3(signature = (name, options = OptionsPy::new(false)))]
-    fn create_column_family(&self, name: &str, options: OptionsPy) -> PyResult<Rdict> {
+    fn create_column_family(&self, name: &str, options: OptionsPy, py: Python) -> PyResult<Rdict> {
         if options.raw_mode != self.opt_py.raw_mode {
             return Err(PyException::new_err(format!(
                 "Options should have raw_mode={}",
@@ -790,7 +797,7 @@ impl Rdict {
         if let Some(db) = &self.db {
             let create_result = db.borrow_mut().create_cf(name, &options.inner_opt);
             match create_result {
-                Ok(_) => Ok(self.get_column_family(name)?),
+                Ok(_) => Ok(self.get_column_family(name, py)?),
                 Err(e) => Err(PyException::new_err(e.to_string())),
             }
         } else {
@@ -818,7 +825,7 @@ impl Rdict {
     ///
     /// Return:
     ///     the column family Rdict of this name
-    pub fn get_column_family(&self, name: &str) -> PyResult<Self> {
+    pub fn get_column_family(&self, name: &str, py: Python) -> PyResult<Self> {
         if let Some(db) = &self.db {
             match db.borrow().cf_handle(name) {
                 None => Err(PyException::new_err(format!(
@@ -828,7 +835,7 @@ impl Rdict {
                     db: Some(db.clone()),
                     write_opt: (&self.write_opt_py).into(),
                     flush_opt: self.flush_opt,
-                    read_opt: (&self.read_opt_py).into(),
+                    read_opt: self.read_opt_py.to_read_options(self.opt_py.raw_mode, py)?,
                     pickle_loads: self.pickle_loads.clone(),
                     pickle_dumps: self.pickle_dumps.clone(),
                     column_family: Some(cf),
@@ -901,8 +908,8 @@ impl Rdict {
     ///         del snapshot, db
     ///
     ///         Rdict.destroy("tmp")
-    fn snapshot(&self) -> PyResult<Snapshot> {
-        Snapshot::new(self)
+    fn snapshot(&self, py: Python) -> PyResult<Snapshot> {
+        Snapshot::new(self, py)
     }
 
     /// Loads a list of external SST files created with SstFileWriter

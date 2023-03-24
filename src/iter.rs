@@ -54,8 +54,9 @@ impl RdictIter {
         readopts: ReadOptionsPy,
         pickle_loads: &PyObject,
         raw_mode: bool,
+        py: Python,
     ) -> PyResult<Self> {
-        let readopts = ReadOpt::from(&readopts);
+        let readopts = readopts.to_read_opt(raw_mode, py)?;
         Ok(RdictIter {
             db: db.clone(),
             inner: unsafe {
