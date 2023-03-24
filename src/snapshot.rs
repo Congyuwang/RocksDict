@@ -164,7 +164,7 @@ impl Snapshot {
             Ok(Snapshot {
                 inner: snapshot,
                 column_family: rdict.column_family.clone(),
-                pickle_loads: rdict.pickle_loads.clone(),
+                pickle_loads: rdict.loads.clone(),
                 read_opt: r_opt,
                 db: db.clone(),
                 raw_mode: rdict.opt_py.raw_mode,

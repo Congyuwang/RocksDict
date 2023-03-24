@@ -61,8 +61,8 @@ pub(crate) struct Rdict {
     pub(crate) write_opt: WriteOptions,
     pub(crate) flush_opt: FlushOptionsPy,
     pub(crate) read_opt: ReadOptions,
-    pub(crate) pickle_loads: PyObject,
-    pub(crate) pickle_dumps: PyObject,
+    pub(crate) loads: PyObject,
+    pub(crate) dumps: PyObject,
     pub(crate) write_opt_py: WriteOptionsPy,
     pub(crate) read_opt_py: ReadOptionsPy,
     pub(crate) column_family: Option<Arc<ColumnFamily>>,
@@ -263,8 +263,8 @@ impl Rdict {
                         write_opt: (&w_opt).into(),
                         flush_opt: FlushOptionsPy::new(),
                         read_opt: r_opt.to_read_options(options.raw_mode, py)?,
-                        pickle_loads: pickle.getattr(py, "loads")?,
-                        pickle_dumps: pickle.getattr(py, "dumps")?,
+                        loads: pickle.getattr(py, "loads")?,
+                        dumps: pickle.getattr(py, "dumps")?,
                         write_opt_py: w_opt,
                         read_opt_py: r_opt,
                         column_family: None,
@@ -277,6 +277,16 @@ impl Rdict {
             },
             Err(e) => Err(PyException::new_err(e.to_string())),
         }
+    }
+
+    /// set custom dumps function
+    fn set_dumps(&mut self, dumps: PyObject) {
+        self.dumps = dumps
+    }
+
+    /// set custom loads function
+    fn set_loads(&mut self, loads: PyObject) {
+        self.loads = loads
     }
 
     /// Optionally disable WAL or sync for this write.
@@ -367,7 +377,7 @@ impl Rdict {
                         keys,
                         py,
                         read_opt,
-                        &self.pickle_loads,
+                        &self.loads,
                         &cf,
                         self.opt_py.raw_mode,
                     )?
@@ -393,7 +403,7 @@ impl Rdict {
                     Some(slice) => Ok(Some(decode_value(
                         py,
                         slice.as_ref(),
-                        &self.pickle_loads,
+                        &self.loads,
                         self.opt_py.raw_mode,
                     )?)),
                 },
@@ -432,7 +442,7 @@ impl Rdict {
         if let Some(db) = &self.db {
             let db = db.borrow();
             let key = encode_key(key, self.opt_py.raw_mode)?;
-            let value = encode_value(value, &self.pickle_dumps, self.opt_py.raw_mode, py)?;
+            let value = encode_value(value, &self.dumps, self.opt_py.raw_mode, py)?;
             let put_result = if let Some(cf) = &self.column_family {
                 db.put_cf_opt(cf.deref(), key, value, write_opt)
             } else {
@@ -544,7 +554,7 @@ impl Rdict {
                     None => Ok((may_exist, py.None()).to_object(py)),
                     Some(dat) => Ok((
                         may_exist,
-                        decode_value(py, &dat, &self.pickle_loads, self.opt_py.raw_mode)?,
+                        decode_value(py, &dat, &self.loads, self.opt_py.raw_mode)?,
                     )
                         .to_object(py)),
                 }
@@ -642,7 +652,7 @@ impl Rdict {
                 db,
                 &self.column_family,
                 read_opt,
-                &self.pickle_loads,
+                &self.loads,
                 self.opt_py.raw_mode,
                 py,
             )?)
@@ -836,8 +846,8 @@ impl Rdict {
                     write_opt: (&self.write_opt_py).into(),
                     flush_opt: self.flush_opt,
                     read_opt: self.read_opt_py.to_read_options(self.opt_py.raw_mode, py)?,
-                    pickle_loads: self.pickle_loads.clone(),
-                    pickle_dumps: self.pickle_dumps.clone(),
+                    loads: self.loads.clone(),
+                    dumps: self.dumps.clone(),
                     column_family: Some(cf),
                     write_opt_py: self.write_opt_py.clone(),
                     read_opt_py: self.read_opt_py.clone(),
@@ -1210,7 +1220,7 @@ impl Rdict {
                         result.append(display_live_file_dict(
                             lf,
                             py,
-                            &self.pickle_loads,
+                            &self.loads,
                             self.opt_py.raw_mode,
                         )?)?
                     }
@@ -1293,7 +1303,7 @@ fn get_batch_inner<'a>(
     key_list: &'a PyList,
     py: Python<'a>,
     read_opt: &ReadOptions,
-    pickle_loads: &PyObject,
+    loads: &PyObject,
     cf: &Arc<ColumnFamily>,
     raw_mode: bool,
 ) -> PyResult<&'a PyList> {
@@ -1311,7 +1321,7 @@ fn get_batch_inner<'a>(
             Ok(value) => match value {
                 None => result.append(py.None())?,
                 Some(slice) => {
-                    result.append(decode_value(py, slice.as_ref(), pickle_loads, raw_mode)?)?
+                    result.append(decode_value(py, slice.as_ref(), loads, raw_mode)?)?
                 }
             },
             Err(e) => return Err(PyException::new_err(e.to_string())),

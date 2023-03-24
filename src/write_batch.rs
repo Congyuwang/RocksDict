@@ -17,7 +17,7 @@ use std::ops::Deref;
 pub(crate) struct WriteBatchPy {
     inner: Option<WriteBatch>,
     default_column_family: Option<ColumnFamilyPy>,
-    pickle_dumps: PyObject,
+    dumps: PyObject,
     pub(crate) raw_mode: bool,
 }
 
@@ -38,9 +38,14 @@ impl WriteBatchPy {
         Ok(WriteBatchPy {
             inner: Some(WriteBatch::default()),
             default_column_family: None,
-            pickle_dumps: pickle.getattr(py, "dumps")?,
+            dumps: pickle.getattr(py, "dumps")?,
             raw_mode,
         })
+    }
+
+    /// change to a custom dumps function
+    pub fn set_dumps(&mut self, dumps: PyObject) {
+        self.dumps = dumps
     }
 
     pub fn __len__(&self) -> PyResult<usize> {
@@ -50,7 +55,7 @@ impl WriteBatchPy {
     pub fn __setitem__(&mut self, key: &PyAny, value: &PyAny, py: Python) -> PyResult<()> {
         if let Some(inner) = &mut self.inner {
             let key = encode_key(key, self.raw_mode)?;
-            let value = encode_value(value, &self.pickle_dumps, self.raw_mode, py)?;
+            let value = encode_value(value, &self.dumps, self.raw_mode, py)?;
             match &self.default_column_family {
                 None => inner.put(key, value),
                 Some(cf) => inner.put_cf(cf.cf.deref(), key, value),
@@ -145,7 +150,7 @@ impl WriteBatchPy {
     ) -> PyResult<()> {
         if let Some(inner) = &mut self.inner {
             let key = encode_key(key, self.raw_mode)?;
-            let value = encode_value(value, &self.pickle_dumps, self.raw_mode, py)?;
+            let value = encode_value(value, &self.dumps, self.raw_mode, py)?;
             match column_family {
                 Some(cf) => inner.put_cf(cf.cf.deref(), key, value),
                 None => inner.put(key, value),
