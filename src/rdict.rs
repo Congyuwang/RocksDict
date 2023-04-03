@@ -554,7 +554,7 @@ impl Rdict {
                     None => Ok((may_exist, py.None()).to_object(py)),
                     Some(dat) => Ok((
                         may_exist,
-                        decode_value(py, &dat, &self.loads, self.opt_py.raw_mode)?,
+                        decode_value(py, dat.as_ref(), &self.loads, self.opt_py.raw_mode)?,
                     )
                         .to_object(py)),
                 }
