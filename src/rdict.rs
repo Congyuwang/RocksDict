@@ -162,7 +162,7 @@ impl Rdict {
             path,
             EnvPy::default()?,
             false,
-            CachePy::new_lru_cache(DEFAULT_LRU_CACHE_SIZE)?,
+            CachePy::new_lru_cache(DEFAULT_LRU_CACHE_SIZE),
         );
         let (options, column_families) = match (options_loaded, options, column_families) {
             (Ok((opt_loaded, cols_loaded)), opt, cols) => match (opt, cols) {

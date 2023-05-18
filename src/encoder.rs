@@ -120,6 +120,7 @@ fn py_to_value_types(value: &PyAny) -> PyResult<ValueTypes> {
     Ok(ValueTypes::Any(value))
 }
 
+/// this function is used for decoding value from bytes
 #[inline(always)]
 pub(crate) fn decode_value(
     py: Python,
@@ -127,6 +128,7 @@ pub(crate) fn decode_value(
     loads: &PyObject,
     raw_mode: bool,
 ) -> PyResult<PyObject> {
+    // directly return bytes if raw_mode is true
     if raw_mode {
         return Ok(PyBytes::new(py, bytes).to_object(py));
     }

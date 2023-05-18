@@ -527,13 +527,17 @@ impl OptionsPy {
     }
 
     fn set_rocksdict_comparator(opt: &mut Options) {
-        opt.set_comparator("rocksdict", |v1, v2| {
-            if let (Some(3), Some(3)) = (v1.first(), v2.first()) {
-                BigInt::from_signed_bytes_be(&v1[1..]).cmp(&BigInt::from_signed_bytes_be(&v2[1..]))
-            } else {
-                v1.cmp(v2)
-            }
-        });
+        opt.set_comparator(
+            "rocksdict",
+            Box::new(|v1, v2| {
+                if let (Some(3), Some(3)) = (v1.first(), v2.first()) {
+                    BigInt::from_signed_bytes_be(&v1[1..])
+                        .cmp(&BigInt::from_signed_bytes_be(&v2[1..]))
+                } else {
+                    v1.cmp(v2)
+                }
+            }),
+        );
     }
 }
 
@@ -564,7 +568,7 @@ impl OptionsPy {
         path,
         env = EnvPy::default().unwrap(),
         ignore_unknown_options = false,
-        cache = CachePy::new_lru_cache(8 * 1024 * 1204).unwrap()
+        cache = CachePy::new_lru_cache(8 * 1024 * 1204)
     ))]
     pub fn load_latest(
         path: &str,
@@ -2401,11 +2405,36 @@ impl PlainTableFactoryOptionsPy {
 impl CachePy {
     /// Create a lru cache with capacity
     #[new]
-    pub fn new_lru_cache(capacity: size_t) -> PyResult<CachePy> {
-        match Cache::new_lru_cache(capacity) {
-            Ok(cache) => Ok(CachePy(cache)),
-            Err(e) => Err(PyException::new_err(e.into_string())),
-        }
+    pub fn new_lru_cache(capacity: size_t) -> CachePy {
+        CachePy(Cache::new_lru_cache(capacity))
+    }
+
+    /// Creates a HyperClockCache with capacity in bytes.
+    ///
+    /// `estimated_entry_charge` is an important tuning parameter. The optimal
+    /// choice at any given time is
+    /// `(cache.get_usage() - 64 * cache.get_table_address_count()) /
+    /// cache.get_occupancy_count()`, or approximately `cache.get_usage() /
+    /// cache.get_occupancy_count()`.
+    ///
+    /// However, the value cannot be changed dynamically, so as the cache
+    /// composition changes at runtime, the following tradeoffs apply:
+    ///
+    /// * If the estimate is substantially too high (e.g., 25% higher),
+    ///   the cache may have to evict entries to prevent load factors that
+    ///   would dramatically affect lookup times.
+    /// * If the estimate is substantially too low (e.g., less than half),
+    ///   then meta data space overhead is substantially higher.
+    ///
+    /// The latter is generally preferable, and picking the larger of
+    /// block size and meta data block size is a reasonable choice that
+    /// errs towards this side.
+    #[staticmethod]
+    pub fn new_hyper_clock_cache(capacity: size_t, estimated_entry_charge: size_t) -> CachePy {
+        CachePy(Cache::new_hyper_clock_cache(
+            capacity,
+            estimated_entry_charge,
+        ))
     }
 
     /// Returns the Cache memory usage

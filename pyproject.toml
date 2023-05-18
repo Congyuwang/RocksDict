@@ -1,6 +1,6 @@
 [project]
 name = "rocksdict"
-version = "0.3.11"
+version = "0.3.12"
 description = "Rocksdb Python Binding"
 long_description_content_type="text/markdown"
 readme = "README.md"
