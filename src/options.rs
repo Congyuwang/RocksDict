@@ -190,6 +190,7 @@ pub(crate) struct ReadOptionsPy {
     readahead_size: usize,
     tailing: bool,
     pin_data: bool,
+    async_io: bool,
 }
 
 pub(crate) struct ReadOpt(pub(crate) *mut librocksdb_sys::rocksdb_readoptions_t);
@@ -1912,6 +1913,7 @@ impl ReadOptionsPy {
             readahead_size: 0,
             tailing: false,
             pin_data: false,
+            async_io: false,
         })
     }
 
@@ -2024,6 +2026,15 @@ impl ReadOptionsPy {
     pub fn set_pin_data(&mut self, v: bool) {
         self.pin_data = v
     }
+
+    /// Asynchronously prefetch some data.
+    ///
+    /// Used for sequential reads and internal automatic prefetching.
+    ///
+    /// Default: `false`
+    pub fn set_async_io(&mut self, v: bool) {
+        self.async_io = v
+    }
 }
 
 impl ReadOptionsPy {
@@ -2047,6 +2058,7 @@ impl ReadOptionsPy {
         opt.set_readahead_size(self.readahead_size);
         opt.set_tailing(self.tailing);
         opt.set_pin_data(self.pin_data);
+        opt.set_async_io(self.async_io);
         Ok(opt)
     }
 
