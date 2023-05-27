@@ -27,7 +27,7 @@ jobs:
           export MACOSX_DEPLOYMENT_TARGET=10.14
           rustup target add aarch64-apple-darwin
           pip install maturin
-          maturin build --release --universal2 --out dist
+          maturin build --release --target universal2-apple-darwin --out dist
       - name: Install built wheel - universal2
         run: |
           pip install rocksdict --no-index --find-links dist --force-reinstall
