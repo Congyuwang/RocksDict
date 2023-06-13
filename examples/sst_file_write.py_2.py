@@ -1,4 +1,4 @@
-from rocksdict import Rdict, Options, SstFileWriter
+from speedict import Rdict, Options, SstFileWriter
 import random
 
 # generate some rand bytes

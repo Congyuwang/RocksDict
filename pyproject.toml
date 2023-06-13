@@ -1,10 +1,10 @@
 [project]
-name = "rocksdict"
+name = "speedict"
 version = "0.3.11"
-description = "Rocksdb Python Binding"
+description = "Speedb Python Binding"
 long_description_content_type="text/markdown"
 readme = "README.md"
-keywords = ["rocksdb", "dbm", "dict", "key-value"]
+keywords = ["speedb", "dbm", "dict", "key-value"]
 
 classifiers=[
     "Programming Language :: Rust",

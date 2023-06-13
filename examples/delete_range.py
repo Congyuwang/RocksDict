@@ -1,6 +1,6 @@
 import shutil
 
-from rocksdict import Rdict, Options
+from speedict import Rdict, Options
 
 path = str("tmp")
 c1_name = str("c1")

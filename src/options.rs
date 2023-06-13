@@ -5,7 +5,7 @@ use num_bigint::BigInt;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList, PyTuple};
-use rocksdb::*;
+use speedb::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ffi::c_double;
@@ -20,7 +20,7 @@ use std::path::{Path, PathBuf};
 /// Example:
 ///     ::
 ///
-///         from rocksdict import Options, Rdict, DBCompactionStyle
+///         from speedict import Options, Rdict, DBCompactionStyle
 ///
 ///         def badly_tuned_for_somebody_elses_disk():
 ///
@@ -62,7 +62,7 @@ pub(crate) struct OptionsPy {
 /// Example:
 ///     ::
 ///
-///         from rocksdict import Rdict, Options, WriteBatch, WriteOptions
+///         from speedict import Rdict, Options, WriteBatch, WriteOptions
 ///
 ///         path = "_path_for_rocksdb_storageY1"
 ///         db = Rdict(path, Options())
@@ -192,7 +192,7 @@ pub(crate) struct ReadOptionsPy {
     pin_data: bool,
 }
 
-pub(crate) struct ReadOpt(pub(crate) *mut librocksdb_sys::rocksdb_readoptions_t);
+pub(crate) struct ReadOpt(pub(crate) *mut libspeedb_sys::rocksdb_readoptions_t);
 
 /// Defines the underlying memtable implementation.
 /// See official [wiki](https://github.com/facebook/rocksdb/wiki/MemTable) for more information.
@@ -527,13 +527,13 @@ impl OptionsPy {
     }
 
     fn set_rocksdict_comparator(opt: &mut Options) {
-        opt.set_comparator("rocksdict", |v1, v2| {
+        opt.set_comparator("speedict", Box::new(|v1, v2| {
             if let (Some(3), Some(3)) = (v1.first(), v2.first()) {
                 BigInt::from_signed_bytes_be(&v1[1..]).cmp(&BigInt::from_signed_bytes_be(&v2[1..]))
             } else {
                 v1.cmp(v2)
             }
-        });
+        }));
     }
 }
 
@@ -564,7 +564,7 @@ impl OptionsPy {
         path,
         env = EnvPy::default().unwrap(),
         ignore_unknown_options = false,
-        cache = CachePy::new_lru_cache(8 * 1024 * 1204).unwrap()
+        cache = CachePy::new_lru_cache(8 * 1024 * 1204)
     ))]
     pub fn load_latest(
         path: &str,
@@ -701,7 +701,7 @@ impl OptionsPy {
     ///
     /// Default: empty
     ///
-    ///     from rocksdict import Options, DBPath
+    ///     from speedict import Options, DBPath
     ///
     ///     opt = Options()
     ///     flash_path = DBPath("/flash_path", 10 * 1024 * 1024 * 1024) # 10 GB
@@ -738,7 +738,7 @@ impl OptionsPy {
     /// Example:
     ///     ::
     ///
-    ///         from rocksdict import Options, DBCompressionType
+    ///         from speedict import Options, DBCompressionType
     ///
     ///         opts = Options()
     ///         opts.set_compression_type(DBCompressionType.snappy())
@@ -757,7 +757,7 @@ impl OptionsPy {
     /// Example:
     ///     ::
     ///
-    ///         from rocksdict import Options, DBCompressionType
+    ///         from speedict import Options, DBCompressionType
     ///
     ///         opts = Options()
     ///         opts.set_compression_per_level([
@@ -1445,7 +1445,7 @@ impl OptionsPy {
     /// Example:
     ///     ::
     ///
-    ///         from rocksdict import Options, MemtableFactory
+    ///         from speedict import Options, MemtableFactory
     ///         opts = Options()
     ///         factory = MemtableFactory.hash_skip_list(bucket_count=1_000_000,
     ///                                                  height=4,
@@ -1483,7 +1483,7 @@ impl OptionsPy {
     /// Example:
     ///     ::
     ///
-    ///         from rocksdict import Options, CuckooTableOptions
+    ///         from speedict import Options, CuckooTableOptions
     ///
     ///         opts = Options()
     ///         factory_opts = CuckooTableOptions()
@@ -1509,7 +1509,7 @@ impl OptionsPy {
     /// Example:
     ///     ::
     ///
-    ///         from rocksdict import Options, PlainTableFactoryOptions
+    ///         from speedict import Options, PlainTableFactoryOptions
     ///
     ///         opts = Options()
     ///         factory_opts = PlainTableFactoryOptions()
@@ -1747,7 +1747,7 @@ impl OptionsPy {
     /// Example:
     ///     ::
     ///
-    ///         from rocksdict import Options
+    ///         from speedict import Options
     ///
     ///         options = Options()
     ///         options.set_max_log_file_size(0)
@@ -1777,7 +1777,7 @@ impl OptionsPy {
     /// Example:
     ///     ::
     ///
-    ///         from rocksdict import Options
+    ///         from speedict import Options
     ///
     ///         options = Options()
     ///         options.set_recycle_log_file_num(5)
@@ -1866,7 +1866,7 @@ impl From<&WriteOptionsPy> for WriteOptions {
 /// Example:
 ///     ::
 ///
-///         from rocksdict import Rdict, Options, FlushOptions
+///         from speedict import Rdict, Options, FlushOptions
 ///         path = "_path_for_rocksdb_storageY2"
 ///         db = Rdict(path, Options())
 ///         flush_options = FlushOptions()
@@ -1994,7 +1994,7 @@ impl ReadOptionsPy {
     /// improve the performance of forward iteration on spinning disks.
     /// Default: 0
     ///
-    /// from rocksdict import ReadOptions
+    /// from speedict import ReadOptions
     ///
     /// opts = ReadOptions()
     /// opts.set_readahead_size(4_194_304) # 4mb
@@ -2047,12 +2047,12 @@ impl ReadOptionsPy {
     }
 
     pub(crate) fn to_read_opt(&self, raw_mode: bool, py: Python) -> PyResult<ReadOpt> {
-        let opt = unsafe { ReadOpt(librocksdb_sys::rocksdb_readoptions_create()) };
+        let opt = unsafe { ReadOpt(libspeedb_sys::rocksdb_readoptions_create()) };
         if !self.iterate_lower_bound.is_none(py) {
             let lower_bound = encode_key(self.iterate_lower_bound.as_ref(py), raw_mode)?;
 
             unsafe {
-                librocksdb_sys::rocksdb_readoptions_set_iterate_lower_bound(
+                libspeedb_sys::rocksdb_readoptions_set_iterate_lower_bound(
                     opt.0,
                     lower_bound.as_ptr() as *const c_char,
                     lower_bound.len() as size_t,
@@ -2063,7 +2063,7 @@ impl ReadOptionsPy {
             let upper_bound = encode_key(self.iterate_upper_bound.as_ref(py), raw_mode)?;
 
             unsafe {
-                librocksdb_sys::rocksdb_readoptions_set_iterate_upper_bound(
+                libspeedb_sys::rocksdb_readoptions_set_iterate_upper_bound(
                     opt.0,
                     upper_bound.as_ptr() as *const c_char,
                     upper_bound.len() as size_t,
@@ -2071,37 +2071,37 @@ impl ReadOptionsPy {
             }
         }
         unsafe {
-            librocksdb_sys::rocksdb_readoptions_set_fill_cache(opt.0, self.fill_cache as c_uchar);
-            librocksdb_sys::rocksdb_readoptions_set_prefix_same_as_start(
+            libspeedb_sys::rocksdb_readoptions_set_fill_cache(opt.0, self.fill_cache as c_uchar);
+            libspeedb_sys::rocksdb_readoptions_set_prefix_same_as_start(
                 opt.0,
                 self.prefix_same_as_start as c_uchar,
             );
-            librocksdb_sys::rocksdb_readoptions_set_total_order_seek(
+            libspeedb_sys::rocksdb_readoptions_set_total_order_seek(
                 opt.0,
                 self.total_order_seek as c_uchar,
             );
-            librocksdb_sys::rocksdb_readoptions_set_max_skippable_internal_keys(
+            libspeedb_sys::rocksdb_readoptions_set_max_skippable_internal_keys(
                 opt.0,
                 self.max_skippable_internal_keys,
             );
-            librocksdb_sys::rocksdb_readoptions_set_background_purge_on_iterator_cleanup(
+            libspeedb_sys::rocksdb_readoptions_set_background_purge_on_iterator_cleanup(
                 opt.0,
                 self.background_purge_on_iterator_cleanup as c_uchar,
             );
-            librocksdb_sys::rocksdb_readoptions_set_ignore_range_deletions(
+            libspeedb_sys::rocksdb_readoptions_set_ignore_range_deletions(
                 opt.0,
                 self.ignore_range_deletions as c_uchar,
             );
-            librocksdb_sys::rocksdb_readoptions_set_verify_checksums(
+            libspeedb_sys::rocksdb_readoptions_set_verify_checksums(
                 opt.0,
                 self.verify_checksums as c_uchar,
             );
-            librocksdb_sys::rocksdb_readoptions_set_readahead_size(
+            libspeedb_sys::rocksdb_readoptions_set_readahead_size(
                 opt.0,
                 self.readahead_size as size_t,
             );
-            librocksdb_sys::rocksdb_readoptions_set_tailing(opt.0, self.tailing as c_uchar);
-            librocksdb_sys::rocksdb_readoptions_set_pin_data(opt.0, self.pin_data as c_uchar);
+            libspeedb_sys::rocksdb_readoptions_set_tailing(opt.0, self.tailing as c_uchar);
+            libspeedb_sys::rocksdb_readoptions_set_pin_data(opt.0, self.pin_data as c_uchar);
         }
         Ok(opt)
     }
@@ -2113,7 +2113,7 @@ unsafe impl Sync for ReadOpt {}
 
 impl Drop for ReadOpt {
     fn drop(&mut self) {
-        unsafe { librocksdb_sys::rocksdb_readoptions_destroy(self.0) }
+        unsafe { libspeedb_sys::rocksdb_readoptions_destroy(self.0) }
     }
 }
 
@@ -2203,7 +2203,7 @@ impl BlockBasedOptionsPy {
     /// Example:
     ///     ::
     ///
-    ///         from rocksdict import BlockBasedOptions, BlockBasedIndexType, Options
+    ///         from speedict import BlockBasedOptions, BlockBasedIndexType, Options
     ///
     ///         opts = Options()
     ///         block_opts = BlockBasedOptions()
@@ -2280,7 +2280,7 @@ impl BlockBasedOptionsPy {
     /// Example:
     ///     ::
     ///
-    ///         from rocksdict import BlockBasedOptions, BlockBasedIndexType, Options
+    ///         from speedict import BlockBasedOptions, BlockBasedIndexType, Options
     ///
     ///         opts = Options()
     ///         block_opts = BlockBasedOptions()
@@ -2401,11 +2401,8 @@ impl PlainTableFactoryOptionsPy {
 impl CachePy {
     /// Create a lru cache with capacity
     #[new]
-    pub fn new_lru_cache(capacity: size_t) -> PyResult<CachePy> {
-        match Cache::new_lru_cache(capacity) {
-            Ok(cache) => Ok(CachePy(cache)),
-            Err(e) => Err(PyException::new_err(e.into_string())),
-        }
+    pub fn new_lru_cache(capacity: size_t) -> CachePy {
+        CachePy(Cache::new_lru_cache(capacity))
     }
 
     /// Returns the Cache memory usage

@@ -28,7 +28,7 @@ use pyo3::prelude::*;
 /// ### Installation
 ///
 /// This package is built for macOS (x86/arm), Windows 64/32, and Linux x86.
-/// It can be installed from pypi with `pip install rocksdict`.
+/// It can be installed from pypi with `pip install speedict`.
 ///
 /// ## Introduction
 ///
@@ -46,7 +46,7 @@ use pyo3::prelude::*;
 /// Examples:
 ///     ::
 ///
-///         from rocksdict import Rdict, Options
+///         from speedict import Rdict, Options
 ///
 ///         path = str("./test_dict")
 ///
@@ -104,7 +104,7 @@ use pyo3::prelude::*;
 ///     supports `pickle`.
 ///
 #[pymodule]
-fn rocksdict(_py: Python, m: &PyModule) -> PyResult<()> {
+fn speedict(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<Rdict>()?;
     m.add_class::<OptionsPy>()?;
     m.add_class::<MemtableFactoryPy>()?;

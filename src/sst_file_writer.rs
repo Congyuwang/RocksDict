@@ -5,7 +5,7 @@ use libc::{self, c_char, size_t};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::PyResult;
-use rocksdb::Options;
+use speedb::Options;
 use std::ffi::CString;
 
 macro_rules! ffi_try {
@@ -37,7 +37,7 @@ macro_rules! ffi_try_impl {
 #[pyclass(name = "SstFileWriter")]
 #[allow(dead_code)]
 pub struct SstFileWriterPy {
-    pub(crate) inner: *mut librocksdb_sys::rocksdb_sstfilewriter_t,
+    pub(crate) inner: *mut libspeedb_sys::rocksdb_sstfilewriter_t,
     opts: Options,
     dumps: PyObject,
     raw_mode: bool,
@@ -47,20 +47,20 @@ unsafe impl Send for SstFileWriterPy {}
 unsafe impl Sync for SstFileWriterPy {}
 
 struct EnvOptions {
-    inner: *mut librocksdb_sys::rocksdb_envoptions_t,
+    inner: *mut libspeedb_sys::rocksdb_envoptions_t,
 }
 
 impl Drop for EnvOptions {
     fn drop(&mut self) {
         unsafe {
-            librocksdb_sys::rocksdb_envoptions_destroy(self.inner);
+            libspeedb_sys::rocksdb_envoptions_destroy(self.inner);
         }
     }
 }
 
 impl Default for EnvOptions {
     fn default() -> Self {
-        let opts = unsafe { librocksdb_sys::rocksdb_envoptions_create() };
+        let opts = unsafe { libspeedb_sys::rocksdb_envoptions_create() };
         Self { inner: opts }
     }
 }
@@ -103,7 +103,7 @@ impl SstFileWriterPy {
     /// Finalize writing to sst file and close file.
     fn finish(&mut self) -> PyResult<()> {
         unsafe {
-            ffi_try!(librocksdb_sys::rocksdb_sstfilewriter_finish(self.inner,));
+            ffi_try!(libspeedb_sys::rocksdb_sstfilewriter_finish(self.inner,));
             Ok(())
         }
     }
@@ -111,7 +111,7 @@ impl SstFileWriterPy {
     /// returns the current file size
     fn file_size(&self) -> u64 {
         let mut file_size: u64 = 0;
-        unsafe { librocksdb_sys::rocksdb_sstfilewriter_file_size(self.inner, &mut file_size) };
+        unsafe { libspeedb_sys::rocksdb_sstfilewriter_file_size(self.inner, &mut file_size) };
         file_size
     }
 
@@ -121,7 +121,7 @@ impl SstFileWriterPy {
         let key = encode_key(key, self.raw_mode)?;
         let value = encode_value(value, &self.dumps, self.raw_mode, py)?;
         unsafe {
-            ffi_try!(librocksdb_sys::rocksdb_sstfilewriter_put(
+            ffi_try!(libspeedb_sys::rocksdb_sstfilewriter_put(
                 self.inner,
                 key.as_ptr() as *const c_char,
                 key.len() as size_t,
@@ -137,7 +137,7 @@ impl SstFileWriterPy {
     fn __delitem__(&mut self, key: &PyAny) -> PyResult<()> {
         let key = encode_key(key, self.raw_mode)?;
         unsafe {
-            ffi_try!(librocksdb_sys::rocksdb_sstfilewriter_delete(
+            ffi_try!(libspeedb_sys::rocksdb_sstfilewriter_delete(
                 self.inner,
                 key.as_ptr() as *const c_char,
                 key.len() as size_t,
@@ -151,7 +151,7 @@ impl SstFileWriterPy {
     #[inline]
     fn open_raw(&self, cpath: &CString) -> PyResult<()> {
         unsafe {
-            ffi_try!(librocksdb_sys::rocksdb_sstfilewriter_open(
+            ffi_try!(libspeedb_sys::rocksdb_sstfilewriter_open(
                 self.inner,
                 cpath.as_ptr() as *const _
             ));
@@ -164,15 +164,15 @@ impl SstFileWriterPy {
     fn create_raw(
         opts: &Options,
         env_opts: &EnvOptions,
-    ) -> *mut librocksdb_sys::rocksdb_sstfilewriter_t {
-        unsafe { librocksdb_sys::rocksdb_sstfilewriter_create(env_opts.inner, opts.inner()) }
+    ) -> *mut libspeedb_sys::rocksdb_sstfilewriter_t {
+        unsafe { libspeedb_sys::rocksdb_sstfilewriter_create(env_opts.inner, opts.inner()) }
     }
 }
 
 impl Drop for SstFileWriterPy {
     fn drop(&mut self) {
         unsafe {
-            librocksdb_sys::rocksdb_sstfilewriter_destroy(self.inner);
+            libspeedb_sys::rocksdb_sstfilewriter_destroy(self.inner);
         }
     }
 }

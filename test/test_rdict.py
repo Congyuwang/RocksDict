@@ -1,6 +1,6 @@
 import unittest
 from sys import getrefcount
-from rocksdict import Rdict, Options, PlainTableFactoryOptions, SliceTransform, CuckooTableOptions
+from speedict import Rdict, Options, PlainTableFactoryOptions, SliceTransform, CuckooTableOptions
 from random import randint, random, getrandbits
 import os
 import sys

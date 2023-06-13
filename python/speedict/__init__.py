@@ -1,6 +1,6 @@
-from .rocksdict import *
+from .speedict import *
 
-__doc__ = rocksdict.__doc__
+__doc__ = speedict.__doc__
 
 __all__ = ["Rdict",
            "WriteBatch",

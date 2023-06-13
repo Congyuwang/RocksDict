@@ -12,7 +12,7 @@ import shelve
 import dbm
 import pyvidardb
 import cannondb
-from rocksdict import Rdict, Options, WriteBatch
+from speedict import Rdict, Options, WriteBatch
 from .abstract_db import ADB
 import shutil
 

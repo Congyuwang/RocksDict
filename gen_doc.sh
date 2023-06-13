@@ -1,4 +1,4 @@
 #!/bin/bash
 
 maturin develop --release || exit
-pdoc -o ./docs/ -d google rocksdict
+pdoc -o ./docs/ -d google speedict

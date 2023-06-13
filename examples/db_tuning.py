@@ -1,6 +1,6 @@
 import shutil
 
-from rocksdict import Rdict, Options, SliceTransform, PlainTableFactoryOptions
+from speedict import Rdict, Options, SliceTransform, PlainTableFactoryOptions
 import os
 
 def db_options():

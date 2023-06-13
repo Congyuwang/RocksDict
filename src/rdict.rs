@@ -8,7 +8,7 @@ use crate::{
 use pyo3::exceptions::{PyException, PyKeyError};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
-use rocksdb::{
+use speedb::{
     ColumnFamily, ColumnFamilyDescriptor, FlushOptions, LiveFile, ReadOptions, WriteOptions, DB,
     DEFAULT_COLUMN_FAMILY_NAME,
 };
@@ -22,7 +22,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
-pub const ROCKSDICT_CONFIG_FILE: &str = "rocksdict-config.json";
+pub const ROCKSDICT_CONFIG_FILE: &str = "speedict-config.json";
 /// 8MB default LRU cache size
 pub const DEFAULT_LRU_CACHE_SIZE: usize = 8 * 1024 * 1024;
 
@@ -38,7 +38,7 @@ pub fn config_file(path: &str) -> PathBuf {
 /// Example:
 ///     ::
 ///
-///         from rocksdict import Rdict
+///         from speedict import Rdict
 ///
 ///         db = Rdict("./test_dir")
 ///         db[0] = 1
@@ -85,7 +85,7 @@ pub(crate) struct Rdict {
 /// Examples:
 ///     ::
 ///
-///         from rocksdict import Rdict, AccessType
+///         from speedict import Rdict, AccessType
 ///
 ///         # open with 24 hours ttl
 ///         db = Rdict("./main_path", access_type = AccessType.with_ttl(24 * 3600))
@@ -162,7 +162,7 @@ impl Rdict {
             path,
             EnvPy::default()?,
             false,
-            CachePy::new_lru_cache(DEFAULT_LRU_CACHE_SIZE)?,
+            CachePy::new_lru_cache(DEFAULT_LRU_CACHE_SIZE),
         );
         let (options, column_families) = match (options_loaded, options, column_families) {
             (Ok((opt_loaded, cols_loaded)), opt, cols) => match (opt, cols) {
@@ -177,7 +177,7 @@ impl Rdict {
                 (OptionsPy::new(false), cols)
             }
         };
-        // save slice transforms types in rocksdict config
+        // save slice transforms types in speedict config
         let config_path = config_file(path);
         let mut prefix_extractors = HashMap::new();
         if let Some(slice_transform) = &options.prefix_extractor {
@@ -256,7 +256,7 @@ impl Rdict {
                 Ok(db) => {
                     let r_opt = ReadOptionsPy::default(py)?;
                     let w_opt = WriteOptionsPy::new();
-                    // save rocksdict config
+                    // save speedict config
                     rocksdict_config.save(config_path)?;
                     Ok(Rdict {
                         db: Some(Arc::new(RefCell::new(db))),
@@ -294,7 +294,7 @@ impl Rdict {
     /// Example:
     ///     ::
     ///
-    ///         from rocksdict import Rdict, Options, WriteBatch, WriteOptions
+    ///         from speedict import Rdict, Options, WriteBatch, WriteOptions
     ///
     ///         path = "_path_for_rocksdb_storageY1"
     ///         db = Rdict(path)
@@ -604,7 +604,7 @@ impl Rdict {
     /// Examples:
     ///     ::
     ///
-    ///         from rocksdict import Rdict, Options, ReadOptions
+    ///         from speedict import Rdict, Options, ReadOptions
     ///
     ///         path = "_path_for_rocksdb_storage5"
     ///         db = Rdict(path)
@@ -894,7 +894,7 @@ impl Rdict {
     /// Examples:
     ///     ::
     ///
-    ///         from rocksdict import Rdict
+    ///         from speedict import Rdict
     ///
     ///         db = Rdict("tmp")
     ///         for i in range(100):
@@ -1237,7 +1237,7 @@ impl Rdict {
     ///
     /// Args:
     ///     path (str): path to this database
-    ///     options (rocksdict.Options): Rocksdb options object
+    ///     options (speedict.Options): Rocksdb options object
     #[staticmethod]
     #[pyo3(signature = (path, options = OptionsPy::new(false)))]
     fn destroy(path: &str, options: OptionsPy) -> PyResult<()> {
@@ -1252,7 +1252,7 @@ impl Rdict {
     ///
     /// Args:
     ///     path (str): path to this database
-    ///     options (rocksdict.Options): Rocksdb options object
+    ///     options (speedict.Options): Rocksdb options object
     #[staticmethod]
     #[pyo3(signature = (path, options = OptionsPy::new(false)))]
     fn repair(path: &str, options: OptionsPy) -> PyResult<()> {
@@ -1376,7 +1376,7 @@ impl AccessType {
     /// Examples:
     ///     ::
     ///
-    ///         from rocksdict import Rdict, AccessType
+    ///         from speedict import Rdict, AccessType
     ///
     ///         # open with 24 hours ttl
     ///         db = Rdict("./main_path", access_type = AccessType.with_ttl(24 * 3600))
@@ -1405,7 +1405,7 @@ impl AccessType {
     /// Examples:
     ///     ::
     ///
-    ///         from rocksdict import Rdict, AccessType
+    ///         from speedict import Rdict, AccessType
     ///
     ///         # open with 24 hours ttl
     ///         db = Rdict("./main_path", access_type = AccessType.with_ttl(24 * 3600))
@@ -1437,7 +1437,7 @@ impl AccessType {
     /// Examples:
     ///     ::
     ///
-    ///         from rocksdict import Rdict, AccessType
+    ///         from speedict import Rdict, AccessType
     ///
     ///         # open with 24 hours ttl
     ///         db = Rdict("./main_path", access_type = AccessType.with_ttl(24 * 3600))
@@ -1466,7 +1466,7 @@ impl AccessType {
     /// Examples:
     ///     ::
     ///
-    ///         from rocksdict import Rdict, AccessType
+    ///         from speedict import Rdict, AccessType
     ///
     ///         # open with 24 hours ttl
     ///         db = Rdict("./main_path", access_type = AccessType.with_ttl(24 * 3600))

@@ -3,9 +3,9 @@
 **Key-value storage supporting any python object**
 
 ![CI](https://github.com/Congyuwang/RocksDict/actions/workflows/CI.yml/badge.svg)
-![PyPI](https://img.shields.io/pypi/dm/rocksdict)
-![PyPI](https://img.shields.io/pypi/wheel/rocksdict)
-[![Support python versions](https://img.shields.io/pypi/pyversions/rocksdict.svg)](https://pypi.org/project/rocksdict/)
+![PyPI](https://img.shields.io/pypi/dm/speedict)
+![PyPI](https://img.shields.io/pypi/wheel/speedict)
+[![Support python versions](https://img.shields.io/pypi/pyversions/speedict.svg)](https://pypi.org/project/speedict/)
 
 ## Introduction
 
@@ -24,14 +24,14 @@ which allows storing only `bytes`.
 
 ## Installation
 
-Wheels available, just `pip install rocksdict`.
+Wheels available, just `pip install speedict`.
 
 ## Examples
 
 ### A minimal example
 
 ```python
-from rocksdict import Rdict
+from speedict import Rdict
 import numpy as np
 import pandas as pd
 
@@ -78,7 +78,7 @@ Rdict.destroy(path)
 This mode allows only bytes as keys and values.
 
 ```python
-from rocksdict import Rdict, Options
+from speedict import Rdict, Options
 
 PATH_TO_ROCKSDB = str("path")
 
@@ -104,7 +104,7 @@ Loading Options from RocksDict Path.
 
 ### Load Options and add A New ColumnFamily
 ```python
-from rocksdict import Options, Rdict
+from speedict import Options, Rdict
 path = str("./rocksdict_path")
 
 opts, cols = Options.load_latest(path)
@@ -118,7 +118,7 @@ self.test_dict = Rdict(path, options=opts, column_families=cols)
 ```python
 import shutil
 
-from rocksdict import Rdict, Options, SliceTransform, PlainTableFactoryOptions
+from speedict import Rdict, Options, SliceTransform, PlainTableFactoryOptions
 import os
 
 def db_options():
@@ -167,5 +167,4 @@ Currently, do not support merge operation and custom comparator.
 
 ## Full Documentation
 
-See [rocksdict documentation](https://congyuwang.github.io/RocksDict/rocksdict.html).
-
+See [speedict documentation](https://congyuwang.github.io/RocksDict/speedict.html).

@@ -1,6 +1,6 @@
 import shutil
 
-from rocksdict import Rdict, WriteBatch, Options
+from speedict import Rdict, WriteBatch, Options
 
 # create db with two new column families
 path = str("tmp")

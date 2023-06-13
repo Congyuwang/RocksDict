@@ -2,7 +2,7 @@ use crate::encoder::{decode_value, encode_key};
 use crate::{Rdict, RdictItems, RdictIter, RdictKeys, RdictValues, ReadOptionsPy};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use rocksdb::{ColumnFamily, ReadOptions, DB};
+use speedb::{ColumnFamily, ReadOptions, DB};
 use std::cell::RefCell;
 use std::ops::Deref;
 use std::sync::Arc;
@@ -12,7 +12,7 @@ use std::sync::Arc;
 /// Examples:
 ///     ::
 ///
-///         from rocksdict import Rdict
+///         from speedict import Rdict
 ///
 ///         db = Rdict("tmp")
 ///         for i in range(100):
@@ -38,7 +38,7 @@ use std::sync::Arc;
 ///         Rdict.destroy("tmp")
 #[pyclass]
 pub struct Snapshot {
-    pub(crate) inner: *const librocksdb_sys::rocksdb_snapshot_t,
+    pub(crate) inner: *const libspeedb_sys::rocksdb_snapshot_t,
     pub(crate) column_family: Option<Arc<ColumnFamily>>,
     pub(crate) pickle_loads: PyObject,
     pub(crate) read_opt: ReadOptions,
@@ -154,7 +154,7 @@ impl Snapshot {
     pub(crate) fn new(rdict: &Rdict, py: Python) -> PyResult<Self> {
         if let Some(db) = &rdict.db {
             let db_borrow = db.borrow();
-            let snapshot = unsafe { librocksdb_sys::rocksdb_create_snapshot(db_borrow.inner()) };
+            let snapshot = unsafe { libspeedb_sys::rocksdb_create_snapshot(db_borrow.inner()) };
             let r_opt: ReadOptions = rdict
                 .read_opt_py
                 .to_read_options(rdict.opt_py.raw_mode, py)?;
@@ -178,7 +178,7 @@ impl Snapshot {
 impl Drop for Snapshot {
     fn drop(&mut self) {
         unsafe {
-            librocksdb_sys::rocksdb_release_snapshot(self.db.borrow().inner(), self.inner);
+            libspeedb_sys::rocksdb_release_snapshot(self.db.borrow().inner(), self.inner);
         }
     }
 }
@@ -190,8 +190,8 @@ unsafe impl Sync for Snapshot {}
 
 #[inline]
 pub(crate) unsafe fn set_snapshot(
-    read_opt: *mut librocksdb_sys::rocksdb_readoptions_t,
-    snapshot_inner: *const librocksdb_sys::rocksdb_snapshot_t,
+    read_opt: *mut libspeedb_sys::rocksdb_readoptions_t,
+    snapshot_inner: *const libspeedb_sys::rocksdb_snapshot_t,
 ) {
-    librocksdb_sys::rocksdb_readoptions_set_snapshot(read_opt, snapshot_inner);
+    libspeedb_sys::rocksdb_readoptions_set_snapshot(read_opt, snapshot_inner);
 }

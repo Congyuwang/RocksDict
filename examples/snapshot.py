@@ -1,6 +1,6 @@
 import shutil
 
-from rocksdict import Rdict
+from speedict import Rdict
 
 db = Rdict("tmp")
 for i in range(100):

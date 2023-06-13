@@ -1,6 +1,6 @@
 import shutil
 
-import rocksdict as rd
+import speedict as rd
 from tqdm import tqdm
 import os
 

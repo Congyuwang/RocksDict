@@ -1,18 +1,18 @@
 [package]
-name = "RocksDict"
+name = "SpeeDict"
 version = "0.3.3"
 edition = "2021"
-description = "Rocksdb Python Binding"
+description = "Speedb Python Binding"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-name = "rocksdict"
+name = "speedict"
 crate-type = ["cdylib"]
 
 [dependencies]
-rocksdb = { git = "https://github.com/Congyuwang/rust-rocksdb", tag = "v0.20.6+8.0.0" }
-librocksdb-sys = { git = "https://github.com/Congyuwang/rust-rocksdb", tag = "v0.20.6+8.0.0" }
+speedb = { git = "https://github.com/Congyuwang/rust-rocksdb", tag = "speedict-v2.4.1" }
+libspeedb-sys = { git = "https://github.com/Congyuwang/rust-rocksdb", tag = "speedict-v2.4.1" }
 pyo3-log = "0.8"
 log = "0.4"
 serde = { version = "1", features = ["derive"] }

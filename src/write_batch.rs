@@ -2,7 +2,7 @@ use crate::encoder::{encode_key, encode_value};
 use crate::ColumnFamilyPy;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use rocksdb::WriteBatch;
+use speedb::WriteBatch;
 use std::ops::Deref;
 
 /// WriteBatch class. Use db.write() to ingest WriteBatch.

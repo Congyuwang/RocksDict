@@ -5,7 +5,7 @@ use core::slice;
 use libc::{c_char, c_uchar, size_t};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use rocksdb::{AsColumnFamilyRef, ColumnFamily, DB};
+use speedb::{AsColumnFamilyRef, ColumnFamily, DB};
 use std::cell::RefCell;
 use std::ptr::null_mut;
 use std::sync::Arc;
@@ -16,7 +16,7 @@ pub(crate) struct RdictIter {
     /// iterator must keep a reference count of DB to keep DB alive.
     pub(crate) db: Arc<RefCell<DB>>,
 
-    pub(crate) inner: *mut librocksdb_sys::rocksdb_iterator_t,
+    pub(crate) inner: *mut libspeedb_sys::rocksdb_iterator_t,
 
     /// When iterate_upper_bound is set, the inner C iterator keeps a pointer to the upper bound
     /// inside `_readopts`. Storing this makes sure the upper bound is always alive when the
@@ -62,9 +62,9 @@ impl RdictIter {
             inner: unsafe {
                 match cf {
                     None => {
-                        librocksdb_sys::rocksdb_create_iterator(db.borrow().inner(), readopts.0)
+                        libspeedb_sys::rocksdb_create_iterator(db.borrow().inner(), readopts.0)
                     }
-                    Some(cf) => librocksdb_sys::rocksdb_create_iterator_cf(
+                    Some(cf) => libspeedb_sys::rocksdb_create_iterator_cf(
                         db.borrow().inner(),
                         readopts.0,
                         cf.inner(),
@@ -87,7 +87,7 @@ impl RdictIter {
     /// returned `false`, use the [`status`](DBRawIteratorWithThreadMode::status) method. `status` will never
     /// return an error when `valid` is `true`.
     pub fn valid(&self) -> bool {
-        unsafe { librocksdb_sys::rocksdb_iter_valid(self.inner) != 0 }
+        unsafe { libspeedb_sys::rocksdb_iter_valid(self.inner) != 0 }
     }
 
     /// Returns an error `Result` if the iterator has encountered an error
@@ -98,7 +98,7 @@ impl RdictIter {
     pub fn status(&self) -> PyResult<()> {
         let mut err: *mut c_char = null_mut();
         unsafe {
-            librocksdb_sys::rocksdb_iter_get_error(self.inner, &mut err);
+            libspeedb_sys::rocksdb_iter_get_error(self.inner, &mut err);
         }
         if !err.is_null() {
             Err(PyException::new_err(error_message(err)))
@@ -112,7 +112,7 @@ impl RdictIter {
     /// Example:
     ///     ::
     ///
-    ///         from rocksdict import Rdict, Options, ReadOptions
+    ///         from speedict import Rdict, Options, ReadOptions
     ///
     ///         path = "_path_for_rocksdb_storage5"
     ///         db = Rdict(path, Options())
@@ -133,7 +133,7 @@ impl RdictIter {
     ///         Rdict.destroy(path, Options())
     pub fn seek_to_first(&mut self) {
         unsafe {
-            librocksdb_sys::rocksdb_iter_seek_to_first(self.inner);
+            libspeedb_sys::rocksdb_iter_seek_to_first(self.inner);
         }
     }
 
@@ -142,7 +142,7 @@ impl RdictIter {
     /// Example:
     ///     ::
     ///
-    ///         from rocksdict import Rdict, Options, ReadOptions
+    ///         from speedict import Rdict, Options, ReadOptions
     ///
     ///         path = "_path_for_rocksdb_storage6"
     ///         db = Rdict(path, Options())
@@ -163,7 +163,7 @@ impl RdictIter {
     ///         Rdict.destroy(path, Options())
     pub fn seek_to_last(&mut self) {
         unsafe {
-            librocksdb_sys::rocksdb_iter_seek_to_last(self.inner);
+            libspeedb_sys::rocksdb_iter_seek_to_last(self.inner);
         }
     }
 
@@ -175,7 +175,7 @@ impl RdictIter {
     /// Example:
     ///     ::
     ///
-    ///         from rocksdict import Rdict, Options, ReadOptions
+    ///         from speedict import Rdict, Options, ReadOptions
     ///
     ///         path = "_path_for_rocksdb_storage6"
     ///         db = Rdict(path, Options())
@@ -190,7 +190,7 @@ impl RdictIter {
     pub fn seek(&mut self, key: &PyAny) -> PyResult<()> {
         let key = encode_key(key, self.raw_mode)?;
         unsafe {
-            librocksdb_sys::rocksdb_iter_seek(
+            libspeedb_sys::rocksdb_iter_seek(
                 self.inner,
                 key.as_ptr() as *const c_char,
                 key.len() as size_t,
@@ -208,7 +208,7 @@ impl RdictIter {
     /// Example:
     ///     ::
     ///
-    ///         from rocksdict import Rdict, Options, ReadOptions
+    ///         from speedict import Rdict, Options, ReadOptions
     ///
     ///         path = "_path_for_rocksdb_storage6"
     ///         db = Rdict(path, Options())
@@ -223,7 +223,7 @@ impl RdictIter {
     pub fn seek_for_prev(&mut self, key: &PyAny) -> PyResult<()> {
         let key = encode_key(key, self.raw_mode)?;
         unsafe {
-            librocksdb_sys::rocksdb_iter_seek_for_prev(
+            libspeedb_sys::rocksdb_iter_seek_for_prev(
                 self.inner,
                 key.as_ptr() as *const c_char,
                 key.len() as size_t,
@@ -235,14 +235,14 @@ impl RdictIter {
     /// Seeks to the next key.
     pub fn next(&mut self) {
         unsafe {
-            librocksdb_sys::rocksdb_iter_next(self.inner);
+            libspeedb_sys::rocksdb_iter_next(self.inner);
         }
     }
 
     /// Seeks to the previous key.
     pub fn prev(&mut self) {
         unsafe {
-            librocksdb_sys::rocksdb_iter_prev(self.inner);
+            libspeedb_sys::rocksdb_iter_prev(self.inner);
         }
     }
 
@@ -255,7 +255,7 @@ impl RdictIter {
                 let mut key_len: size_t = 0;
                 let key_len_ptr: *mut size_t = &mut key_len;
                 let key_ptr =
-                    librocksdb_sys::rocksdb_iter_key(self.inner, key_len_ptr) as *const c_uchar;
+                    libspeedb_sys::rocksdb_iter_key(self.inner, key_len_ptr) as *const c_uchar;
                 let key = slice::from_raw_parts(key_ptr, key_len);
                 Ok(decode_value(py, key, &self.pickle_loads, self.raw_mode)?)
             }
@@ -273,7 +273,7 @@ impl RdictIter {
                 let mut val_len: size_t = 0;
                 let val_len_ptr: *mut size_t = &mut val_len;
                 let val_ptr =
-                    librocksdb_sys::rocksdb_iter_value(self.inner, val_len_ptr) as *const c_uchar;
+                    libspeedb_sys::rocksdb_iter_value(self.inner, val_len_ptr) as *const c_uchar;
                 let value = slice::from_raw_parts(val_ptr, val_len);
                 Ok(decode_value(py, value, &self.pickle_loads, self.raw_mode)?)
             }
@@ -286,7 +286,7 @@ impl RdictIter {
 impl Drop for RdictIter {
     fn drop(&mut self) {
         unsafe {
-            librocksdb_sys::rocksdb_iter_destroy(self.inner);
+            libspeedb_sys::rocksdb_iter_destroy(self.inner);
         }
     }
 }
