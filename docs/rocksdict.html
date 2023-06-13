@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="pdoc 12.3.1"/>
+    <meta name="generator" content="pdoc 12.2.0"/>
     <title>rocksdict API documentation</title>
 
     <style>/*! * Bootstrap Reboot v5.0.0 (https://getbootstrap.com/) * Copyright 2011-2021 The Bootstrap Authors * Copyright 2011-2021 Twitter, Inc. * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE) * Forked from Normalize.css, licensed MIT (https://github.com/necolas/normalize.css/blob/master/LICENSE.md) */*,::after,::before{box-sizing:border-box}@media (prefers-reduced-motion:no-preference){:root{scroll-behavior:smooth}}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#fff;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}hr{margin:1rem 0;color:inherit;background-color:currentColor;border:0;opacity:.25}hr:not([size]){height:1px}h1,h2,h3,h4,h5,h6{margin-top:0;margin-bottom:.5rem;font-weight:500;line-height:1.2}h1{font-size:calc(1.375rem + 1.5vw)}@media (min-width:1200px){h1{font-size:2.5rem}}h2{font-size:calc(1.325rem + .9vw)}@media (min-width:1200px){h2{font-size:2rem}}h3{font-size:calc(1.3rem + .6vw)}@media (min-width:1200px){h3{font-size:1.75rem}}h4{font-size:calc(1.275rem + .3vw)}@media (min-width:1200px){h4{font-size:1.5rem}}h5{font-size:1.25rem}h6{font-size:1rem}p{margin-top:0;margin-bottom:1rem}abbr[data-bs-original-title],abbr[title]{-webkit-text-decoration:underline dotted;text-decoration:underline dotted;cursor:help;-webkit-text-decoration-skip-ink:none;text-decoration-skip-ink:none}address{margin-bottom:1rem;font-style:normal;line-height:inherit}ol,ul{padding-left:2rem}dl,ol,ul{margin-top:0;margin-bottom:1rem}ol ol,ol ul,ul ol,ul ul{margin-bottom:0}dt{font-weight:700}dd{margin-bottom:.5rem;margin-left:0}blockquote{margin:0 0 1rem}b,strong{font-weight:bolder}small{font-size:.875em}mark{padding:.2em;background-color:#fcf8e3}sub,sup{position:relative;font-size:.75em;line-height:0;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}a{color:#0d6efd;text-decoration:underline}a:hover{color:#0a58ca}a:not([href]):not([class]),a:not([href]):not([class]):hover{color:inherit;text-decoration:none}code,kbd,pre,samp{font-family:SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:1em;direction:ltr;unicode-bidi:bidi-override}pre{display:block;margin-top:0;margin-bottom:1rem;overflow:auto;font-size:.875em}pre code{font-size:inherit;color:inherit;word-break:normal}code{font-size:.875em;color:#d63384;word-wrap:break-word}a>code{color:inherit}kbd{padding:.2rem .4rem;font-size:.875em;color:#fff;background-color:#212529;border-radius:.2rem}kbd kbd{padding:0;font-size:1em;font-weight:700}figure{margin:0 0 1rem}img,svg{vertical-align:middle}table{caption-side:bottom;border-collapse:collapse}caption{padding-top:.5rem;padding-bottom:.5rem;color:#6c757d;text-align:left}th{text-align:inherit;text-align:-webkit-match-parent}tbody,td,tfoot,th,thead,tr{border-color:inherit;border-style:solid;border-width:0}label{display:inline-block}button{border-radius:0}button:focus:not(:focus-visible){outline:0}button,input,optgroup,select,textarea{margin:0;font-family:inherit;font-size:inherit;line-height:inherit}button,select{text-transform:none}[role=button]{cursor:pointer}select{word-wrap:normal}select:disabled{opacity:1}[list]::-webkit-calendar-picker-indicator{display:none}[type=button],[type=reset],[type=submit],button{-webkit-appearance:button}[type=button]:not(:disabled),[type=reset]:not(:disabled),[type=submit]:not(:disabled),button:not(:disabled){cursor:pointer}::-moz-focus-inner{padding:0;border-style:none}textarea{resize:vertical}fieldset{min-width:0;padding:0;margin:0;border:0}legend{float:left;width:100%;padding:0;margin-bottom:.5rem;font-size:calc(1.275rem + .3vw);line-height:inherit}@media (min-width:1200px){legend{font-size:1.5rem}}legend+*{clear:left}::-webkit-datetime-edit-day-field,::-webkit-datetime-edit-fields-wrapper,::-webkit-datetime-edit-hour-field,::-webkit-datetime-edit-minute,::-webkit-datetime-edit-month-field,::-webkit-datetime-edit-text,::-webkit-datetime-edit-year-field{padding:0}::-webkit-inner-spin-button{height:auto}[type=search]{outline-offset:-2px;-webkit-appearance:textfield}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-color-swatch-wrapper{padding:0}::file-selector-button{font:inherit}::-webkit-file-upload-button{font:inherit;-webkit-appearance:button}output{display:inline-block}iframe{border:0}summary{display:list-item;cursor:pointer}progress{vertical-align:baseline}[hidden]{display:none!important}</style>
@@ -228,22 +228,22 @@
                                 <a class="function" href="#WriteOptions.__init__">WriteOptions</a>
                         </li>
                         <li>
+                                <a class="variable" href="#WriteOptions.low_pri">low_pri</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#WriteOptions.disable_wal">disable_wal</a>
+                        </li>
+                        <li>
                                 <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#WriteOptions.sync">sync</a>
                         </li>
                         <li>
                                 <a class="variable" href="#WriteOptions.memtable_insert_hint_per_batch">memtable_insert_hint_per_batch</a>
                         </li>
                         <li>
                                 <a class="variable" href="#WriteOptions.no_slowdown">no_slowdown</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#WriteOptions.sync">sync</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#WriteOptions.disable_wal">disable_wal</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#WriteOptions.low_pri">low_pri</a>
                         </li>
                 </ul>
 
@@ -822,10 +822,7 @@
                                 <a class="function" href="#UniversalCompactOptions.__init__">UniversalCompactOptions</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.max_merge_width">max_merge_width</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#UniversalCompactOptions.compression_size_percent">compression_size_percent</a>
+                                <a class="variable" href="#UniversalCompactOptions.min_merge_width">min_merge_width</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
@@ -834,10 +831,13 @@
                                 <a class="variable" href="#UniversalCompactOptions.max_size_amplification_percent">max_size_amplification_percent</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.min_merge_width">min_merge_width</a>
+                                <a class="variable" href="#UniversalCompactOptions.compression_size_percent">compression_size_percent</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#UniversalCompactOptions.max_merge_width">max_merge_width</a>
                         </li>
                 </ul>
 
@@ -1160,7 +1160,7 @@ It can be installed from pypi with <code>pip install rocksdict</code>.</p>
 <li>Delete storage</li>
 </ul>
 
-<h6 id="examples">Examples:</h6>
+<h6 id="examples">Examples</h6>
 
 <blockquote>
   <p>::</p>
@@ -1284,7 +1284,7 @@ supports <code>pickle</code>.</li>
     
             <div class="docstring"><p>A persistent on-disk dictionary. Supports string, int, float, bytes as key, values.</p>
 
-<h6 id="example">Example:</h6>
+<h6 id="example">Example</h6>
 
 <blockquote>
   <p>::</p>
@@ -1300,7 +1300,7 @@ assert(db[0] == 1)
 </code></pre>
 </blockquote>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>path (str):</strong>  path to the database</li>
@@ -1369,7 +1369,7 @@ AccessType class to create.</li>
     
             <div class="docstring"><p>Optionally disable WAL or sync for this write.</p>
 
-<h6 id="example">Example:</h6>
+<h6 id="example">Example</h6>
 
 <blockquote>
   <p>::</p>
@@ -1418,7 +1418,7 @@ del db
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">get</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">default</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">get</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">default</span><span class="o">=</span><span class="kc">None</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1426,7 +1426,7 @@ del db
     
             <div class="docstring"><p>Get value from key.</p>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>key:</strong>  the key or list of keys.</li>
@@ -1435,7 +1435,7 @@ del db
 (or use <a href="#Rdict.set_read_options">Rdict.set_read_options</a> to preset a read options used by default).</li>
 </ul>
 
-<h6 id="returns">Returns:</h6>
+<h6 id="returns">Returns</h6>
 
 <blockquote>
   <p>None or default value if the key does not exist.</p>
@@ -1448,7 +1448,7 @@ del db
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">put</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">value</span>, </span><span class="param"><span class="n">write_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">put</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">value</span>, </span><span class="param"><span class="n">write_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1456,7 +1456,7 @@ del db
     
             <div class="docstring"><p>Insert key value into database.</p>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>key:</strong>  the key.</li>
@@ -1472,7 +1472,7 @@ del db
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">key_may_exist</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">fetch</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">key_may_exist</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">fetch</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1480,7 +1480,7 @@ del db
     
             <div class="docstring"><p>Check if a key may exist without doing any IO.</p>
 
-<h6 id="notes">Notes:</h6>
+<h6 id="notes">Notes</h6>
 
 <blockquote>
   <p>If the key definitely does not exist in the database,
@@ -1506,14 +1506,14 @@ del db
   </ul>
 </blockquote>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>key:</strong>  Key to check</li>
 <li><strong>read_opt:</strong>  ReadOptions</li>
 </ul>
 
-<h6 id="returns">Returns:</h6>
+<h6 id="returns">Returns</h6>
 
 <blockquote>
   <p>if <code>fetch = False</code>,
@@ -1532,7 +1532,7 @@ del db
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">delete</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">write_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">delete</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">write_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1540,7 +1540,7 @@ del db
     
             <div class="docstring"><p>Delete entry from the database.</p>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>key:</strong>  the key.</li>
@@ -1555,7 +1555,7 @@ del db
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">iter</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">iter</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1563,7 +1563,7 @@ del db
     
             <div class="docstring"><p>Reversible for iterating over keys and values.</p>
 
-<h6 id="examples">Examples:</h6>
+<h6 id="examples">Examples</h6>
 
 <blockquote>
   <p>::</p>
@@ -1603,7 +1603,7 @@ del iter, db
 </code></pre>
 </blockquote>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>read_opt:</strong>  ReadOptions</li>
@@ -1618,7 +1618,7 @@ del iter, db
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">items</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">items</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="kc">None</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1626,7 +1626,7 @@ del iter, db
     
             <div class="docstring"><p>Iterate through all keys and values pairs.</p>
 
-<h6 id="examples">Examples:</h6>
+<h6 id="examples">Examples</h6>
 
 <blockquote>
   <p>::</p>
@@ -1636,7 +1636,7 @@ del iter, db
 </code></pre>
 </blockquote>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>backwards:</strong>  iteration direction, forward if <code>False</code>.</li>
@@ -1653,7 +1653,7 @@ or the nearest next key for iteration
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">keys</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">keys</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="kc">None</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1661,7 +1661,7 @@ or the nearest next key for iteration
     
             <div class="docstring"><p>Iterate through all keys</p>
 
-<h6 id="examples">Examples:</h6>
+<h6 id="examples">Examples</h6>
 
 <blockquote>
   <p>::</p>
@@ -1670,7 +1670,7 @@ or the nearest next key for iteration
 </code></pre>
 </blockquote>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>backwards:</strong>  iteration direction, forward if <code>False</code>.</li>
@@ -1687,7 +1687,7 @@ or the nearest next key for iteration
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">values</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">values</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="kc">None</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1695,7 +1695,7 @@ or the nearest next key for iteration
     
             <div class="docstring"><p>Iterate through all values.</p>
 
-<h6 id="examples">Examples:</h6>
+<h6 id="examples">Examples</h6>
 
 <blockquote>
   <p>::</p>
@@ -1704,7 +1704,7 @@ or the nearest next key for iteration
 </code></pre>
 </blockquote>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>backwards:</strong>  iteration direction, forward if <code>False</code>.</li>
@@ -1721,7 +1721,7 @@ or the nearest next key for iteration
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">flush</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">wait</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">flush</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">wait</span><span class="o">=</span><span class="kc">True</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1729,7 +1729,7 @@ or the nearest next key for iteration
     
             <div class="docstring"><p>Manually flush the current column family.</p>
 
-<h6 id="notes">Notes:</h6>
+<h6 id="notes">Notes</h6>
 
 <blockquote>
   <p>Manually call mem-table flush.
@@ -1738,7 +1738,7 @@ or the nearest next key for iteration
   key-value pairs have been flushed to the disk.</p>
 </blockquote>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>wait (bool):</strong>  whether to wait for the flush to finish.</li>
@@ -1751,7 +1751,7 @@ or the nearest next key for iteration
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">flush_wal</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">sync</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">flush_wal</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">sync</span><span class="o">=</span><span class="kc">True</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1775,14 +1775,14 @@ the data to disk.</p>
     
             <div class="docstring"><p>Creates column family with given name and options.</p>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>name:</strong>  name of this column family</li>
 <li><strong>options:</strong>  Rdict Options for this column family</li>
 </ul>
 
-<h6 id="return">Return:</h6>
+<h6 id="return">Return</h6>
 
 <blockquote>
   <p>the newly created column family</p>
@@ -1818,14 +1818,14 @@ the data to disk.</p>
     
             <div class="docstring"><p>Get a column family Rdict</p>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>name:</strong>  name of this column family</li>
 <li><strong>options:</strong>  Rdict Options for this column family</li>
 </ul>
 
-<h6 id="return">Return:</h6>
+<h6 id="return">Return</h6>
 
 <blockquote>
   <p>the column family Rdict of this name</p>
@@ -1846,7 +1846,7 @@ the data to disk.</p>
     
             <div class="docstring"><p>Use this method to obtain a ColumnFamily instance, which can be used in WriteBatch.</p>
 
-<h6 id="example">Example:</h6>
+<h6 id="example">Example</h6>
 
 <blockquote>
   <p>::</p>
@@ -1879,7 +1879,7 @@ db.write(wb)
     
             <div class="docstring"><p>A snapshot of the current column family.</p>
 
-<h6 id="examples">Examples:</h6>
+<h6 id="examples">Examples</h6>
 
 <blockquote>
   <p>::</p>
@@ -1927,7 +1927,7 @@ del snapshot, db
             <div class="docstring"><p>Loads a list of external SST files created with SstFileWriter
 into the current column family.</p>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>paths:</strong>  a list a paths</li>
@@ -1972,7 +1972,7 @@ log files.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">write</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">write_batch</span>, </span><span class="param"><span class="n">write_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">write</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">write_batch</span>, </span><span class="param"><span class="n">write_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1980,13 +1980,13 @@ log files.</p>
     
             <div class="docstring"><p>WriteBatch</p>
 
-<h6 id="notes">Notes:</h6>
+<h6 id="notes">Notes</h6>
 
 <blockquote>
   <p>This WriteBatch does not write to the current column family.</p>
 </blockquote>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>write_batch:</strong>  WriteBatch instance. This instance will be consumed.</li>
@@ -2000,7 +2000,7 @@ log files.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">delete_range</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">begin</span>, </span><span class="param"><span class="n">end</span>, </span><span class="param"><span class="n">write_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">delete_range</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">begin</span>, </span><span class="param"><span class="n">end</span>, </span><span class="param"><span class="n">write_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -2008,7 +2008,7 @@ log files.</p>
     
             <div class="docstring"><p>Removes the database entries in the range <code>["from", "to")</code> of the current column family.</p>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>begin:</strong>  included</li>
@@ -2031,7 +2031,7 @@ log files.</p>
     
             <div class="docstring"><p>Flush memory to disk, and drop the current column family.</p>
 
-<h6 id="notes">Notes:</h6>
+<h6 id="notes">Notes</h6>
 
 <blockquote>
   <p>Calling <code>db.close()</code> is nearly equivalent to first calling
@@ -2168,7 +2168,7 @@ log files.</p>
     
             <div class="docstring"><p>Delete the database.</p>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>path (str):</strong>  path to this database</li>
@@ -2190,7 +2190,7 @@ log files.</p>
     
             <div class="docstring"><p>Repair the database.</p>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>path (str):</strong>  path to this database</li>
@@ -2226,14 +2226,14 @@ log files.</p>
     
             <div class="docstring"><p>WriteBatch class. Use db.write() to ingest WriteBatch.</p>
 
-<h6 id="notes">Notes:</h6>
+<h6 id="notes">Notes</h6>
 
 <blockquote>
   <p>A WriteBatch instance can only be ingested once,
   otherwise an Exception will be raised.</p>
 </blockquote>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>raw_mode (bool):</strong>  make sure that this is consistent with the Rdict.</li>
@@ -2272,7 +2272,7 @@ log files.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">set_default_column_family</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">column_family</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">set_default_column_family</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">column_family</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -2282,7 +2282,7 @@ log files.</p>
 
 <p>You can also use <code>put(key, value, column_family)</code> to explicitly choose column family.</p>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>- column_family (ColumnFamily | None):</strong>  column family descriptor or None (for default family).</li>
@@ -2340,7 +2340,7 @@ log files.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">put</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">value</span>, </span><span class="param"><span class="n">column_family</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">put</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">value</span>, </span><span class="param"><span class="n">column_family</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -2348,7 +2348,7 @@ log files.</p>
     
             <div class="docstring"><p>Insert a value into the database under the given key.</p>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>column_family:</strong>  override the default column family set by set_default_column_family</li>
@@ -2361,7 +2361,7 @@ log files.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">delete</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">column_family</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">delete</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">column_family</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -2369,7 +2369,7 @@ log files.</p>
     
             <div class="docstring"><p>Removes the database entry for key. Does nothing if the key was not found.</p>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>column_family:</strong>  override the default column family set by set_default_column_family</li>
@@ -2382,7 +2382,7 @@ log files.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">delete_range</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">begin</span>, </span><span class="param"><span class="n">end</span>, </span><span class="param"><span class="n">column_family</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">delete_range</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">begin</span>, </span><span class="param"><span class="n">end</span>, </span><span class="param"><span class="n">column_family</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -2390,7 +2390,7 @@ log files.</p>
     
             <div class="docstring"><p>Remove database entries in column family from start key to end key.</p>
 
-<h6 id="notes">Notes:</h6>
+<h6 id="notes">Notes</h6>
 
 <blockquote>
   <p>Removes the database entries in the range ["begin_key", "end_key"), i.e.,
@@ -2398,7 +2398,7 @@ log files.</p>
   keys exist in the range ["begin_key", "end_key").</p>
 </blockquote>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>begin:</strong>  begin key</li>
@@ -2438,7 +2438,7 @@ log files.</p>
             <div class="docstring"><p>SstFileWriter is used to create sst files that can be added to database later
 All keys in files generated by SstFileWriter will have sequence number = 0.</p>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>options:</strong>  this options must have the same <code>raw_mode</code> as the Rdict DB.</li>
@@ -2531,7 +2531,7 @@ All keys in files generated by SstFileWriter will have sequence number = 0.</p>
     
             <div class="docstring"><p>Define DB Access Types.</p>
 
-<h6 id="notes">Notes:</h6>
+<h6 id="notes">Notes</h6>
 
 <blockquote>
   <p>There are four access types:</p>
@@ -2544,7 +2544,7 @@ All keys in files generated by SstFileWriter will have sequence number = 0.</p>
   </ul>
 </blockquote>
 
-<h6 id="examples">Examples:</h6>
+<h6 id="examples">Examples</h6>
 
 <blockquote>
   <p>::</p>
@@ -2588,7 +2588,7 @@ db = Rdict("./main_path", access_type = <a href="#AccessType.secondary">AccessTy
     
             <div class="docstring"><p>Define DB Access Types.</p>
 
-<h6 id="notes">Notes:</h6>
+<h6 id="notes">Notes</h6>
 
 <blockquote>
   <p>There are four access types:</p>
@@ -2601,7 +2601,7 @@ db = Rdict("./main_path", access_type = <a href="#AccessType.secondary">AccessTy
   </ul>
 </blockquote>
 
-<h6 id="examples">Examples:</h6>
+<h6 id="examples">Examples</h6>
 
 <blockquote>
   <p>::</p>
@@ -2626,7 +2626,7 @@ db = Rdict("./main_path", access_type = <a href="#AccessType.secondary">AccessTy
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">read_only</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">error_if_log_file_exist</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">read_only</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">error_if_log_file_exist</span><span class="o">=</span><span class="kc">False</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -2634,7 +2634,7 @@ db = Rdict("./main_path", access_type = <a href="#AccessType.secondary">AccessTy
     
             <div class="docstring"><p>Define DB Access Types.</p>
 
-<h6 id="notes">Notes:</h6>
+<h6 id="notes">Notes</h6>
 
 <blockquote>
   <p>There are four access types:</p>
@@ -2647,7 +2647,7 @@ db = Rdict("./main_path", access_type = <a href="#AccessType.secondary">AccessTy
   </ul>
 </blockquote>
 
-<h6 id="examples">Examples:</h6>
+<h6 id="examples">Examples</h6>
 
 <blockquote>
   <p>::</p>
@@ -2680,7 +2680,7 @@ db = Rdict("./main_path", access_type = <a href="#AccessType.secondary">AccessTy
     
             <div class="docstring"><p>Define DB Access Types.</p>
 
-<h6 id="notes">Notes:</h6>
+<h6 id="notes">Notes</h6>
 
 <blockquote>
   <p>There are four access types:</p>
@@ -2693,7 +2693,7 @@ db = Rdict("./main_path", access_type = <a href="#AccessType.secondary">AccessTy
   </ul>
 </blockquote>
 
-<h6 id="examples">Examples:</h6>
+<h6 id="examples">Examples</h6>
 
 <blockquote>
   <p>::</p>
@@ -2726,7 +2726,7 @@ db = Rdict("./main_path", access_type = <a href="#AccessType.secondary">AccessTy
     
             <div class="docstring"><p>Define DB Access Types.</p>
 
-<h6 id="notes">Notes:</h6>
+<h6 id="notes">Notes</h6>
 
 <blockquote>
   <p>There are four access types:</p>
@@ -2739,7 +2739,7 @@ db = Rdict("./main_path", access_type = <a href="#AccessType.secondary">AccessTy
   </ul>
 </blockquote>
 
-<h6 id="examples">Examples:</h6>
+<h6 id="examples">Examples</h6>
 
 <blockquote>
   <p>::</p>
@@ -2773,7 +2773,7 @@ db = Rdict("./main_path", access_type = <a href="#AccessType.secondary">AccessTy
     
             <div class="docstring"><p>Optionally disable WAL or sync for this write.</p>
 
-<h6 id="example">Example:</h6>
+<h6 id="example">Example</h6>
 
 <blockquote>
   <p>::</p>
@@ -2814,6 +2814,42 @@ del db
     
 
                             </div>
+                            <div id="WriteOptions.low_pri" class="classattr">
+                                <div class="attr variable">
+            <span class="name">low_pri</span>
+
+        
+    </div>
+    <a class="headerlink" href="#WriteOptions.low_pri"></a>
+    
+            <div class="docstring"><p>If true, this write request is of lower priority if compaction is
+behind. In this case, no_slowdown = true, the request will be cancelled
+immediately with Status::Incomplete() returned. Otherwise, it will be
+slowed down. The slowdown value is determined by RocksDB to guarantee
+it introduces minimum impacts to high priority writes.</p>
+
+<p>Default: false</p>
+</div>
+
+
+                            </div>
+                            <div id="WriteOptions.disable_wal" class="classattr">
+                                <div class="attr variable">
+            <span class="name">disable_wal</span>
+
+        
+    </div>
+    <a class="headerlink" href="#WriteOptions.disable_wal"></a>
+    
+            <div class="docstring"><p>Sets whether WAL should be active or not.
+If true, writes will not first go to the write ahead log,
+and the write may got lost after a crash.</p>
+
+<p>Default: false</p>
+</div>
+
+
+                            </div>
                             <div id="WriteOptions.ignore_missing_column_families" class="classattr">
                                 <div class="attr variable">
             <span class="name">ignore_missing_column_families</span>
@@ -2825,6 +2861,23 @@ del db
             <div class="docstring"><p>If true and if user is trying to write to column families that don't exist (they were dropped),
 ignore the write (don't return an error). If there are multiple writes in a WriteBatch,
 other writes will succeed.</p>
+
+<p>Default: false</p>
+</div>
+
+
+                            </div>
+                            <div id="WriteOptions.sync" class="classattr">
+                                <div class="attr variable">
+            <span class="name">sync</span>
+
+        
+    </div>
+    <a class="headerlink" href="#WriteOptions.sync"></a>
+    
+            <div class="docstring"><p>Sets the sync mode. If true, the write will be flushed
+from the operating system buffer cache before the write is considered complete.
+If this flag is true, writes will be slower.</p>
 
 <p>Default: false</p>
 </div>
@@ -2866,59 +2919,6 @@ immediately with Status::Incomplete().</p>
 
 
                             </div>
-                            <div id="WriteOptions.sync" class="classattr">
-                                <div class="attr variable">
-            <span class="name">sync</span>
-
-        
-    </div>
-    <a class="headerlink" href="#WriteOptions.sync"></a>
-    
-            <div class="docstring"><p>Sets the sync mode. If true, the write will be flushed
-from the operating system buffer cache before the write is considered complete.
-If this flag is true, writes will be slower.</p>
-
-<p>Default: false</p>
-</div>
-
-
-                            </div>
-                            <div id="WriteOptions.disable_wal" class="classattr">
-                                <div class="attr variable">
-            <span class="name">disable_wal</span>
-
-        
-    </div>
-    <a class="headerlink" href="#WriteOptions.disable_wal"></a>
-    
-            <div class="docstring"><p>Sets whether WAL should be active or not.
-If true, writes will not first go to the write ahead log,
-and the write may got lost after a crash.</p>
-
-<p>Default: false</p>
-</div>
-
-
-                            </div>
-                            <div id="WriteOptions.low_pri" class="classattr">
-                                <div class="attr variable">
-            <span class="name">low_pri</span>
-
-        
-    </div>
-    <a class="headerlink" href="#WriteOptions.low_pri"></a>
-    
-            <div class="docstring"><p>If true, this write request is of lower priority if compaction is
-behind. In this case, no_slowdown = true, the request will be cancelled
-immediately with Status::Incomplete() returned. Otherwise, it will be
-slowed down. The slowdown value is determined by RocksDB to guarantee
-it introduces minimum impacts to high priority writes.</p>
-
-<p>Default: false</p>
-</div>
-
-
-                            </div>
                 </section>
                 <section id="Snapshot">
                     <div class="attr class">
@@ -2932,7 +2932,7 @@ it introduces minimum impacts to high priority writes.</p>
     
             <div class="docstring"><p>A consistent view of the database at the point of creation.</p>
 
-<h6 id="examples">Examples:</h6>
+<h6 id="examples">Examples</h6>
 
 <blockquote>
   <p>::</p>
@@ -2982,7 +2982,7 @@ del snapshot, db
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">iter</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">iter</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -2991,7 +2991,7 @@ del snapshot, db
             <div class="docstring"><p>Creates an iterator over the data in this snapshot under the given column family, using
 the default read options.</p>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>read_opt:</strong>  ReadOptions, must have the same <code>raw_mode</code> argument.</li>
@@ -3004,7 +3004,7 @@ the default read options.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">items</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">items</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="kc">None</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -3012,7 +3012,7 @@ the default read options.</p>
     
             <div class="docstring"><p>Iterate through all keys and values pairs.</p>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>backwards:</strong>  iteration direction, forward if <code>False</code>.</li>
@@ -3029,7 +3029,7 @@ or the nearest next key for iteration
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">keys</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">keys</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="kc">None</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -3037,7 +3037,7 @@ or the nearest next key for iteration
     
             <div class="docstring"><p>Iterate through all keys.</p>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>backwards:</strong>  iteration direction, forward if <code>False</code>.</li>
@@ -3054,7 +3054,7 @@ or the nearest next key for iteration
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">values</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">values</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="kc">None</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -3062,7 +3062,7 @@ or the nearest next key for iteration
     
             <div class="docstring"><p>Iterate through all values.</p>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>backwards:</strong>  iteration direction, forward if <code>False</code>.</li>
@@ -3151,7 +3151,7 @@ invalidated and <a href="DBRawIteratorWithThreadMode::valid"><code>valid</code><
     
             <div class="docstring"><p>Seeks to the first key in the database.</p>
 
-<h6 id="example">Example:</h6>
+<h6 id="example">Example</h6>
 
 <blockquote>
   <p>::</p>
@@ -3193,7 +3193,7 @@ del iter, db
     
             <div class="docstring"><p>Seeks to the last key in the database.</p>
 
-<h6 id="example">Example:</h6>
+<h6 id="example">Example</h6>
 
 <blockquote>
   <p>::</p>
@@ -3238,7 +3238,7 @@ del iter, db
 <p>This method will attempt to seek to the specified key. If that key does not exist, it will
 find and seek to the key that lexicographically follows it instead.</p>
 
-<h6 id="example">Example:</h6>
+<h6 id="example">Example</h6>
 
 <blockquote>
   <p>::</p>
@@ -3277,7 +3277,7 @@ del iter, db
 The difference with <code>.seek()</code> is that if the specified key do not exist, this method will
 seek to key that lexicographically precedes it instead.</p>
 
-<h6 id="example">Example:</h6>
+<h6 id="example">Example</h6>
 
 <blockquote>
   <p>::</p>
@@ -3376,7 +3376,7 @@ del iter, db
 <p>Please read the official tuning <a href="https://github.com/facebook/rocksdb/wiki/RocksDB-Tuning-Guide">guide</a>
 and most importantly, measure performance under realistic workloads with realistic hardware.</p>
 
-<h6 id="example">Example:</h6>
+<h6 id="example">Example</h6>
 
 <blockquote>
   <p>::</p>
@@ -3407,7 +3407,7 @@ def badly_tuned_for_somebody_elses_disk():
 </code></pre>
 </blockquote>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>raw_mode (bool):</strong>  set this to True to operate in raw mode (i.e.
@@ -3433,7 +3433,7 @@ with other RockDB database).</li>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">load_latest</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">path</span>, </span><span class="param"><span class="n">env</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">ignore_unknown_options</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">cache</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">load_latest</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">path</span>, </span><span class="param"><span class="n">env</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">ignore_unknown_options</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">cache</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -3685,7 +3685,7 @@ through env will be deprecated in favor of file_system.</p>
 <p>Default: <code>DBCompressionType::Snappy</code> (<code>DBCompressionType::None</code> if
 snappy feature is not enabled).</p>
 
-<h6 id="example">Example:</h6>
+<h6 id="example">Example</h6>
 
 <blockquote>
   <p>::</p>
@@ -3718,7 +3718,7 @@ be slower. This array, if non-empty, should have an entry for
 each level of the database; these override the value specified in
 the previous field 'compression'.</p>
 
-<h6 id="example">Example:</h6>
+<h6 id="example">Example</h6>
 
 <blockquote>
   <p>::</p>
@@ -4878,7 +4878,7 @@ commit.</p>
 See official <a href="https://github.com/facebook/rocksdb/wiki/MemTable">wiki</a> for more information.
 Defaults to using a skiplist.</p>
 
-<h6 id="example">Example:</h6>
+<h6 id="example">Example</h6>
 
 <blockquote>
   <p>::</p>
@@ -4926,7 +4926,7 @@ implementation of TableBuilder and TableReader with default
 BlockBasedTableOptions).
 See official <a href="https://github.com/facebook/rocksdb/wiki/CuckooTable-Format">wiki</a> for more information on this table format.</p>
 
-<h6 id="example">Example:</h6>
+<h6 id="example">Example</h6>
 
 <blockquote>
   <p>::</p>
@@ -4966,7 +4966,7 @@ Sets the factory as plain table.
 See official <a href="https://github.com/facebook/rocksdb/wiki/PlainTable-Format">wiki</a> for more
 information.</p>
 
-<h6 id="example">Example:</h6>
+<h6 id="example">Example</h6>
 
 <blockquote>
   <p>::</p>
@@ -5447,7 +5447,7 @@ be written to one log file.</p>
 
 <p>Default: 0</p>
 
-<h6 id="example">Example:</h6>
+<h6 id="example">Example</h6>
 
 <blockquote>
   <p>::</p>
@@ -5501,7 +5501,7 @@ update the inode after each write.</p>
 
 <p>Default: 0</p>
 
-<h6 id="example">Example:</h6>
+<h6 id="example">Example</h6>
 
 <blockquote>
   <p>::</p>
@@ -5623,7 +5623,7 @@ can potentially reduce CPU usage for point-look-ups.</p>
     
             <div class="docstring"><p>ReadOptions allows setting iterator bounds and so on.</p>
 
-<h6 id="arguments">Arguments:</h6>
+<h6 id="args">Args</h6>
 
 <ul>
 <li><strong>raw_mode (bool):</strong>  this must be the same as <code><a href="#Options">Options</a></code> raw_mode
@@ -6279,7 +6279,7 @@ By default, rocksdb will automatically create and use an 8MB internal cache.</p>
     
             <div class="docstring"><p>Defines the index type to be used for SS-table lookups.</p>
 
-<h6 id="example">Example:</h6>
+<h6 id="example">Example</h6>
 
 <blockquote>
   <p>::</p>
@@ -6407,7 +6407,7 @@ probably set the <code>format_version</code> to &gt;= 4 as it would reduce the i
     </div>
     <a class="headerlink" href="#BlockBasedOptions.set_data_block_index_type"></a>
     
-            <div class="docstring"><h6 id="set-the-data-block-index-type-for-point-lookups">Set the data block index type for point lookups:</h6>
+            <div class="docstring"><h6 id="set-the-data-block-index-type-for-point-lookups">Set the data block index type for point lookups</h6>
 
 <blockquote>
   <p><code>DataBlockIndexType::BinarySearch</code> to use binary search within the data block.
@@ -6420,7 +6420,7 @@ valid only when using <code>DataBlockIndexType::BinaryAndHash</code>.</p>
 
 <p>Default: <code>BinarySearch</code></p>
 
-<h6 id="example">Example:</h6>
+<h6 id="example">Example</h6>
 
 <blockquote>
   <p>::</p>
@@ -6491,7 +6491,7 @@ Old table files will still be readable, even though they have different checksum
 See official <a href="https://github.com/facebook/rocksdb/wiki/PlainTable-Format">wiki</a> for more
 information.</p>
 
-<h6 id="defaults">Defaults:</h6>
+<h6 id="defaults">Defaults</h6>
 
 <blockquote>
   <p>user_key_length: 0 (variable length)
@@ -6661,48 +6661,17 @@ Default: true</p>
     
 
                             </div>
-                            <div id="UniversalCompactOptions.max_merge_width" class="classattr">
+                            <div id="UniversalCompactOptions.min_merge_width" class="classattr">
                                 <div class="attr variable">
-            <span class="name">max_merge_width</span>
+            <span class="name">min_merge_width</span>
 
         
     </div>
-    <a class="headerlink" href="#UniversalCompactOptions.max_merge_width"></a>
+    <a class="headerlink" href="#UniversalCompactOptions.min_merge_width"></a>
     
-            <div class="docstring"><p>Sets the maximum number of files in a single compaction run.</p>
+            <div class="docstring"><p>Sets the minimum number of files in a single compaction run.</p>
 
-<p>Default: UINT_MAX</p>
-</div>
-
-
-                            </div>
-                            <div id="UniversalCompactOptions.compression_size_percent" class="classattr">
-                                <div class="attr variable">
-            <span class="name">compression_size_percent</span>
-
-        
-    </div>
-    <a class="headerlink" href="#UniversalCompactOptions.compression_size_percent"></a>
-    
-            <div class="docstring"><p>Sets the percentage of compression size.</p>
-
-<p>If this option is set to be -1, all the output files
-will follow compression type specified.</p>
-
-<p>If this option is not negative, we will try to make sure compressed
-size is just above this value. In normal cases, at least this percentage
-of data will be compressed.
-When we are compacting to a new file, here is the criteria whether
-it needs to be compressed: assuming here are the list of files sorted
-by generation time:
-   A1...An B1...Bm C1...Ct
-where A1 is the newest and Ct is the oldest, and we are going to compact
-B1...Bm, we calculate the total size of all the files as total_size, as
-well as  the total size of C1...Ct as total_C, the compaction output file
-will be compressed iff
-  total_C / total_size &lt; this percentage</p>
-
-<p>Default: -1</p>
+<p>Default: 2</p>
 </div>
 
 
@@ -6748,17 +6717,33 @@ the earliest file contribute to the size amplification.</p>
 
 
                             </div>
-                            <div id="UniversalCompactOptions.min_merge_width" class="classattr">
+                            <div id="UniversalCompactOptions.compression_size_percent" class="classattr">
                                 <div class="attr variable">
-            <span class="name">min_merge_width</span>
+            <span class="name">compression_size_percent</span>
 
         
     </div>
-    <a class="headerlink" href="#UniversalCompactOptions.min_merge_width"></a>
+    <a class="headerlink" href="#UniversalCompactOptions.compression_size_percent"></a>
     
-            <div class="docstring"><p>Sets the minimum number of files in a single compaction run.</p>
+            <div class="docstring"><p>Sets the percentage of compression size.</p>
 
-<p>Default: 2</p>
+<p>If this option is set to be -1, all the output files
+will follow compression type specified.</p>
+
+<p>If this option is not negative, we will try to make sure compressed
+size is just above this value. In normal cases, at least this percentage
+of data will be compressed.
+When we are compacting to a new file, here is the criteria whether
+it needs to be compressed: assuming here are the list of files sorted
+by generation time:
+   A1...An B1...Bm C1...Ct
+where A1 is the newest and Ct is the oldest, and we are going to compact
+B1...Bm, we calculate the total size of all the files as total_size, as
+well as  the total size of C1...Ct as total_C, the compaction output file
+will be compressed iff
+  total_C / total_size &lt; this percentage</p>
+
+<p>Default: -1</p>
 </div>
 
 
@@ -6774,6 +6759,21 @@ the earliest file contribute to the size amplification.</p>
             <div class="docstring"><p>Sets the algorithm used to stop picking files into a single compaction run.</p>
 
 <p>Default: ::Total</p>
+</div>
+
+
+                            </div>
+                            <div id="UniversalCompactOptions.max_merge_width" class="classattr">
+                                <div class="attr variable">
+            <span class="name">max_merge_width</span>
+
+        
+    </div>
+    <a class="headerlink" href="#UniversalCompactOptions.max_merge_width"></a>
+    
+            <div class="docstring"><p>Sets the maximum number of files in a single compaction run.</p>
+
+<p>Default: UINT_MAX</p>
 </div>
 
 
@@ -7260,7 +7260,7 @@ to get one of the following.</p>
 
 <p>Below is an example to set compaction style to Fifo.</p>
 
-<h6 id="example">Example:</h6>
+<h6 id="example">Example</h6>
 
 <blockquote>
   <p>::</p>
@@ -7351,7 +7351,7 @@ to get one of the following.</p>
 
 <p>Below is an example to set compression type to Snappy.</p>
 
-<h6 id="example">Example:</h6>
+<h6 id="example">Example</h6>
 
 <blockquote>
   <p>::</p>
@@ -7491,7 +7491,7 @@ to get one of the following.</p>
 
 <p>Below is an example to set recovery mode to PointInTime.</p>
 
-<h6 id="example">Example:</h6>
+<h6 id="example">Example</h6>
 
 <blockquote>
   <p>::</p>
