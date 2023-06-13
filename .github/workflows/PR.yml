@@ -2,7 +2,7 @@ name: PR check
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ main, speedict ]
 
 jobs:
   macos:
@@ -30,7 +30,8 @@ jobs:
           maturin build --release --target universal2-apple-darwin --out dist
       - name: Install built wheel - universal2
         run: |
-          pip install rocksdict --no-index --find-links dist --force-reinstall
+          pip install rocksdict --no-index --find-links dist --force-reinstall || true
+          pip install speedict --no-index --find-links dist --force-reinstall || true
       - name: Python UnitTest
         run: |
           python -m unittest discover -v test
@@ -72,7 +73,8 @@ jobs:
           LIBCLANG_PATH: ${{ runner.temp }}/llvm-11.0/lib
       - name: Install built wheel and test
         run: |
-          pip install rocksdict --no-index --find-links dist --force-reinstall
+          pip install rocksdict --no-index --find-links dist --force-reinstall || true
+          pip install speedict --no-index --find-links dist --force-reinstall || true
           python -m unittest discover -v test
       - name: Upload wheels
         uses: actions/upload-artifact@v2
@@ -104,7 +106,8 @@ jobs:
       - name: Install built wheel and test
         if: matrix.target == 'x86_64'
         run: |
-          pip install rocksdict --no-index --find-links dist --force-reinstall
+          pip install rocksdict --no-index --find-links dist --force-reinstall || true
+          pip install speedict --no-index --find-links dist --force-reinstall || true
           python -m unittest discover -v test
       - name: Upload wheels
         uses: actions/upload-artifact@v2
@@ -136,7 +139,8 @@ jobs:
       - name: Install built wheel and test
         if: matrix.target == 'x86_64'
         run: |
-          pip install rocksdict --no-index --find-links dist --force-reinstall
+          pip install rocksdict --no-index --find-links dist --force-reinstall || true
+          pip install speedict --no-index --find-links dist --force-reinstall || true
           python -m unittest discover -v test
       - name: Upload wheels
         uses: actions/upload-artifact@v2
@@ -176,7 +180,8 @@ jobs:
             apt-get install -y --no-install-recommends python3 python3-pip
             pip3 install -U pip
           run: |
-            pip3 install rocksdict --no-index --find-links dist --force-reinstall
+            pip3 install rocksdict --no-index --find-links dist --force-reinstall || true
+            pip3 install speedict --no-index --find-links dist --force-reinstall || true
             python3 -m unittest discover -v test
       - name: Upload wheels
         uses: actions/upload-artifact@v2
