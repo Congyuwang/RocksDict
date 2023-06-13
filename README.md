@@ -168,4 +168,3 @@ Currently, do not support merge operation and custom comparator.
 ## Full Documentation
 
 See [rocksdict documentation](https://congyuwang.github.io/RocksDict/rocksdict.html).
-
