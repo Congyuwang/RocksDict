@@ -1,18 +1,24 @@
-# RocksDict
+# RocksDict / SpeeDict
 
-**Key-value storage supporting any python object**
+**Key-value storage for Python & Wrapper of Rocksdb and Speedb**
 
 ![CI](https://github.com/Congyuwang/RocksDict/actions/workflows/CI.yml/badge.svg)
 ![PyPI](https://img.shields.io/pypi/dm/rocksdict)
 ![PyPI](https://img.shields.io/pypi/wheel/rocksdict)
 [![Support python versions](https://img.shields.io/pypi/pyversions/rocksdict.svg)](https://pypi.org/project/rocksdict/)
 
+## Installation
+
+Wheels available, just 
+- `pip install rocksdict` for rocksdb backend, then `from rocksdict import Rdict`
+- `pip install speedict` for speedb backend, then `from speedict import Rdict`
+
 ## Introduction
 
 This library has two purposes.
 
 1. As an on-disk key-value storage solution for Python.
-2. As a RocksDB interface.
+2. As a RocksDB / Speedict interface.
 
 These two purposes operate in different modes:
 
@@ -21,10 +27,6 @@ These two purposes operate in different modes:
 
 - **Raw mode** (`options=Options(raw_mode=True)`),
 which allows storing only `bytes`.
-
-## Installation
-
-Wheels available, just `pip install rocksdict`.
 
 ## Examples
 
