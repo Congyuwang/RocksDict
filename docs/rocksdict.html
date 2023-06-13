@@ -228,22 +228,22 @@
                                 <a class="function" href="#WriteOptions.__init__">WriteOptions</a>
                         </li>
                         <li>
+                                <a class="variable" href="#WriteOptions.low_pri">low_pri</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#WriteOptions.disable_wal">disable_wal</a>
+                        </li>
+                        <li>
                                 <a class="variable" href="#WriteOptions.ignore_missing_column_families">ignore_missing_column_families</a>
                         </li>
                         <li>
                                 <a class="variable" href="#WriteOptions.sync">sync</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.no_slowdown">no_slowdown</a>
-                        </li>
-                        <li>
                                 <a class="variable" href="#WriteOptions.memtable_insert_hint_per_batch">memtable_insert_hint_per_batch</a>
                         </li>
                         <li>
-                                <a class="variable" href="#WriteOptions.disable_wal">disable_wal</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#WriteOptions.low_pri">low_pri</a>
+                                <a class="variable" href="#WriteOptions.no_slowdown">no_slowdown</a>
                         </li>
                 </ul>
 
@@ -659,6 +659,9 @@
                         <li>
                                 <a class="function" href="#ReadOptions.set_pin_data">set_pin_data</a>
                         </li>
+                        <li>
+                                <a class="function" href="#ReadOptions.set_async_io">set_async_io</a>
+                        </li>
                 </ul>
 
             </li>
@@ -819,22 +822,22 @@
                                 <a class="function" href="#UniversalCompactOptions.__init__">UniversalCompactOptions</a>
                         </li>
                         <li>
+                                <a class="variable" href="#UniversalCompactOptions.min_merge_width">min_merge_width</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
+                        </li>
+                        <li>
                                 <a class="variable" href="#UniversalCompactOptions.max_size_amplification_percent">max_size_amplification_percent</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.compression_size_percent">compression_size_percent</a>
                         </li>
                         <li>
-                                <a class="variable" href="#UniversalCompactOptions.size_ratio">size_ratio</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#UniversalCompactOptions.min_merge_width">min_merge_width</a>
+                                <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
                         </li>
                         <li>
                                 <a class="variable" href="#UniversalCompactOptions.max_merge_width">max_merge_width</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#UniversalCompactOptions.stop_style">stop_style</a>
                         </li>
                 </ul>
 
@@ -910,6 +913,9 @@
                             <ul class="memberlist">
                         <li>
                                 <a class="function" href="#Cache.__init__">Cache</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Cache.new_hyper_clock_cache">new_hyper_clock_cache</a>
                         </li>
                         <li>
                                 <a class="function" href="#Cache.get_usage">get_usage</a>
@@ -1412,7 +1418,7 @@ del db
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">get</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">default</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">get</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">default</span><span class="o">=</span><span class="kc">None</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1442,7 +1448,7 @@ del db
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">put</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">value</span>, </span><span class="param"><span class="n">write_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">put</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">value</span>, </span><span class="param"><span class="n">write_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1466,7 +1472,7 @@ del db
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">key_may_exist</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">fetch</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">key_may_exist</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">fetch</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1526,7 +1532,7 @@ del db
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">delete</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">write_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">delete</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">write_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1549,7 +1555,7 @@ del db
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">iter</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">iter</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1612,7 +1618,7 @@ del iter, db
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">items</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">items</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="kc">None</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1647,7 +1653,7 @@ or the nearest next key for iteration
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">keys</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">keys</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="kc">None</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1681,7 +1687,7 @@ or the nearest next key for iteration
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">values</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">values</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="kc">None</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1715,7 +1721,7 @@ or the nearest next key for iteration
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">flush</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">wait</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">flush</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">wait</span><span class="o">=</span><span class="kc">True</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1745,7 +1751,7 @@ or the nearest next key for iteration
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">flush_wal</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">sync</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">flush_wal</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">sync</span><span class="o">=</span><span class="kc">True</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1966,7 +1972,7 @@ log files.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">write</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">write_batch</span>, </span><span class="param"><span class="n">write_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">write</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">write_batch</span>, </span><span class="param"><span class="n">write_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -1994,7 +2000,7 @@ log files.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">delete_range</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">begin</span>, </span><span class="param"><span class="n">end</span>, </span><span class="param"><span class="n">write_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">delete_range</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">begin</span>, </span><span class="param"><span class="n">end</span>, </span><span class="param"><span class="n">write_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -2266,7 +2272,7 @@ log files.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">set_default_column_family</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">column_family</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">set_default_column_family</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">column_family</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -2334,7 +2340,7 @@ log files.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">put</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">value</span>, </span><span class="param"><span class="n">column_family</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">put</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">value</span>, </span><span class="param"><span class="n">column_family</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -2355,7 +2361,7 @@ log files.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">delete</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">column_family</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">delete</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">key</span>, </span><span class="param"><span class="n">column_family</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -2376,7 +2382,7 @@ log files.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">delete_range</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">begin</span>, </span><span class="param"><span class="n">end</span>, </span><span class="param"><span class="n">column_family</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">delete_range</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">begin</span>, </span><span class="param"><span class="n">end</span>, </span><span class="param"><span class="n">column_family</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -2620,7 +2626,7 @@ db = Rdict("./main_path", access_type = <a href="#AccessType.secondary">AccessTy
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">read_only</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">error_if_log_file_exist</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">read_only</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">error_if_log_file_exist</span><span class="o">=</span><span class="kc">False</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -2808,6 +2814,42 @@ del db
     
 
                             </div>
+                            <div id="WriteOptions.low_pri" class="classattr">
+                                <div class="attr variable">
+            <span class="name">low_pri</span>
+
+        
+    </div>
+    <a class="headerlink" href="#WriteOptions.low_pri"></a>
+    
+            <div class="docstring"><p>If true, this write request is of lower priority if compaction is
+behind. In this case, no_slowdown = true, the request will be cancelled
+immediately with Status::Incomplete() returned. Otherwise, it will be
+slowed down. The slowdown value is determined by RocksDB to guarantee
+it introduces minimum impacts to high priority writes.</p>
+
+<p>Default: false</p>
+</div>
+
+
+                            </div>
+                            <div id="WriteOptions.disable_wal" class="classattr">
+                                <div class="attr variable">
+            <span class="name">disable_wal</span>
+
+        
+    </div>
+    <a class="headerlink" href="#WriteOptions.disable_wal"></a>
+    
+            <div class="docstring"><p>Sets whether WAL should be active or not.
+If true, writes will not first go to the write ahead log,
+and the write may got lost after a crash.</p>
+
+<p>Default: false</p>
+</div>
+
+
+                            </div>
                             <div id="WriteOptions.ignore_missing_column_families" class="classattr">
                                 <div class="attr variable">
             <span class="name">ignore_missing_column_families</span>
@@ -2842,22 +2884,6 @@ If this flag is true, writes will be slower.</p>
 
 
                             </div>
-                            <div id="WriteOptions.no_slowdown" class="classattr">
-                                <div class="attr variable">
-            <span class="name">no_slowdown</span>
-
-        
-    </div>
-    <a class="headerlink" href="#WriteOptions.no_slowdown"></a>
-    
-            <div class="docstring"><p>If true and we need to wait or sleep for the write request, fails
-immediately with Status::Incomplete().</p>
-
-<p>Default: false</p>
-</div>
-
-
-                            </div>
                             <div id="WriteOptions.memtable_insert_hint_per_batch" class="classattr">
                                 <div class="attr variable">
             <span class="name">memtable_insert_hint_per_batch</span>
@@ -2877,36 +2903,16 @@ option will be ignored.</p>
 
 
                             </div>
-                            <div id="WriteOptions.disable_wal" class="classattr">
+                            <div id="WriteOptions.no_slowdown" class="classattr">
                                 <div class="attr variable">
-            <span class="name">disable_wal</span>
+            <span class="name">no_slowdown</span>
 
         
     </div>
-    <a class="headerlink" href="#WriteOptions.disable_wal"></a>
+    <a class="headerlink" href="#WriteOptions.no_slowdown"></a>
     
-            <div class="docstring"><p>Sets whether WAL should be active or not.
-If true, writes will not first go to the write ahead log,
-and the write may got lost after a crash.</p>
-
-<p>Default: false</p>
-</div>
-
-
-                            </div>
-                            <div id="WriteOptions.low_pri" class="classattr">
-                                <div class="attr variable">
-            <span class="name">low_pri</span>
-
-        
-    </div>
-    <a class="headerlink" href="#WriteOptions.low_pri"></a>
-    
-            <div class="docstring"><p>If true, this write request is of lower priority if compaction is
-behind. In this case, no_slowdown = true, the request will be cancelled
-immediately with Status::Incomplete() returned. Otherwise, it will be
-slowed down. The slowdown value is determined by RocksDB to guarantee
-it introduces minimum impacts to high priority writes.</p>
+            <div class="docstring"><p>If true and we need to wait or sleep for the write request, fails
+immediately with Status::Incomplete().</p>
 
 <p>Default: false</p>
 </div>
@@ -2976,7 +2982,7 @@ del snapshot, db
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">iter</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">iter</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -2998,7 +3004,7 @@ the default read options.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">items</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">items</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="kc">None</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -3023,7 +3029,7 @@ or the nearest next key for iteration
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">keys</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">keys</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="kc">None</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -3048,7 +3054,7 @@ or the nearest next key for iteration
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">values</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">values</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">backwards</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">from_key</span><span class="o">=</span><span class="kc">None</span>, </span><span class="param"><span class="n">read_opt</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -3427,7 +3433,7 @@ with other RockDB database).</li>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">load_latest</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">path</span>, </span><span class="param"><span class="n">env</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">ignore_unknown_options</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">cache</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
+        <span class="name">load_latest</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">path</span>, </span><span class="param"><span class="n">env</span><span class="o">=</span><span class="bp">Ellipsis</span>, </span><span class="param"><span class="n">ignore_unknown_options</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">cache</span><span class="o">=</span><span class="bp">Ellipsis</span></span><span class="return-annotation">):</span></span>
 
         
     </div>
@@ -5866,6 +5872,25 @@ return 1.</p>
 
 
                             </div>
+                            <div id="ReadOptions.set_async_io" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">set_async_io</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">/</span>, </span><span class="param"><span class="n">v</span></span><span class="return-annotation">):</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#ReadOptions.set_async_io"></a>
+    
+            <div class="docstring"><p>Asynchronously prefetch some data.</p>
+
+<p>Used for sequential reads and internal automatic prefetching.</p>
+
+<p>Default: <code>false</code></p>
+</div>
+
+
+                            </div>
                 </section>
                 <section id="ColumnFamily">
                     <div class="attr class">
@@ -6636,6 +6661,38 @@ Default: true</p>
     
 
                             </div>
+                            <div id="UniversalCompactOptions.min_merge_width" class="classattr">
+                                <div class="attr variable">
+            <span class="name">min_merge_width</span>
+
+        
+    </div>
+    <a class="headerlink" href="#UniversalCompactOptions.min_merge_width"></a>
+    
+            <div class="docstring"><p>Sets the minimum number of files in a single compaction run.</p>
+
+<p>Default: 2</p>
+</div>
+
+
+                            </div>
+                            <div id="UniversalCompactOptions.size_ratio" class="classattr">
+                                <div class="attr variable">
+            <span class="name">size_ratio</span>
+
+        
+    </div>
+    <a class="headerlink" href="#UniversalCompactOptions.size_ratio"></a>
+    
+            <div class="docstring"><p>Sets the percentage flexibility while comparing file size.
+If the candidate file(s) size is 1% smaller than the next file's size,
+then include next file into this candidate set.</p>
+
+<p>Default: 1</p>
+</div>
+
+
+                            </div>
                             <div id="UniversalCompactOptions.max_size_amplification_percent" class="classattr">
                                 <div class="attr variable">
             <span class="name">max_size_amplification_percent</span>
@@ -6691,34 +6748,17 @@ will be compressed iff
 
 
                             </div>
-                            <div id="UniversalCompactOptions.size_ratio" class="classattr">
+                            <div id="UniversalCompactOptions.stop_style" class="classattr">
                                 <div class="attr variable">
-            <span class="name">size_ratio</span>
+            <span class="name">stop_style</span>
 
         
     </div>
-    <a class="headerlink" href="#UniversalCompactOptions.size_ratio"></a>
+    <a class="headerlink" href="#UniversalCompactOptions.stop_style"></a>
     
-            <div class="docstring"><p>Sets the percentage flexibility while comparing file size.
-If the candidate file(s) size is 1% smaller than the next file's size,
-then include next file into this candidate set.</p>
+            <div class="docstring"><p>Sets the algorithm used to stop picking files into a single compaction run.</p>
 
-<p>Default: 1</p>
-</div>
-
-
-                            </div>
-                            <div id="UniversalCompactOptions.min_merge_width" class="classattr">
-                                <div class="attr variable">
-            <span class="name">min_merge_width</span>
-
-        
-    </div>
-    <a class="headerlink" href="#UniversalCompactOptions.min_merge_width"></a>
-    
-            <div class="docstring"><p>Sets the minimum number of files in a single compaction run.</p>
-
-<p>Default: 2</p>
+<p>Default: ::Total</p>
 </div>
 
 
@@ -6734,21 +6774,6 @@ then include next file into this candidate set.</p>
             <div class="docstring"><p>Sets the maximum number of files in a single compaction run.</p>
 
 <p>Default: UINT_MAX</p>
-</div>
-
-
-                            </div>
-                            <div id="UniversalCompactOptions.stop_style" class="classattr">
-                                <div class="attr variable">
-            <span class="name">stop_style</span>
-
-        
-    </div>
-    <a class="headerlink" href="#UniversalCompactOptions.stop_style"></a>
-    
-            <div class="docstring"><p>Sets the algorithm used to stop picking files into a single compaction run.</p>
-
-<p>Default: ::Total</p>
 </div>
 
 
@@ -7025,6 +7050,42 @@ a prefix extractor has been provided through Options::set_prefix_extractor.</p>
     <a class="headerlink" href="#Cache.__init__"></a>
     
     
+
+                            </div>
+                            <div id="Cache.new_hyper_clock_cache" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">new_hyper_clock_cache</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">capacity</span>, </span><span class="param"><span class="n">estimated_entry_charge</span></span><span class="return-annotation">):</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#Cache.new_hyper_clock_cache"></a>
+    
+            <div class="docstring"><p>Creates a HyperClockCache with capacity in bytes.</p>
+
+<p><code>estimated_entry_charge</code> is an important tuning parameter. The optimal
+choice at any given time is
+<code>(cache.get_usage() - 64 * cache.get_table_address_count()) /
+cache.get_occupancy_count()</code>, or approximately <code>cache.get_usage() /
+cache.get_occupancy_count()</code>.</p>
+
+<p>However, the value cannot be changed dynamically, so as the cache
+composition changes at runtime, the following tradeoffs apply:</p>
+
+<ul>
+<li>If the estimate is substantially too high (e.g., 25% higher),
+the cache may have to evict entries to prevent load factors that
+would dramatically affect lookup times.</li>
+<li>If the estimate is substantially too low (e.g., less than half),
+then meta data space overhead is substantially higher.</li>
+</ul>
+
+<p>The latter is generally preferable, and picking the larger of
+block size and meta data block size is a reasonable choice that
+errs towards this side.</p>
+</div>
+
 
                             </div>
                             <div id="Cache.get_usage" class="classattr">

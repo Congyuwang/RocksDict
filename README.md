@@ -3,9 +3,9 @@
 **Key-value storage supporting any python object**
 
 ![CI](https://github.com/Congyuwang/RocksDict/actions/workflows/CI.yml/badge.svg)
-![PyPI](https://img.shields.io/pypi/dm/speedict)
-![PyPI](https://img.shields.io/pypi/wheel/speedict)
-[![Support python versions](https://img.shields.io/pypi/pyversions/speedict.svg)](https://pypi.org/project/speedict/)
+![PyPI](https://img.shields.io/pypi/dm/rocksdict)
+![PyPI](https://img.shields.io/pypi/wheel/rocksdict)
+[![Support python versions](https://img.shields.io/pypi/pyversions/rocksdict.svg)](https://pypi.org/project/rocksdict/)
 
 ## Introduction
 
@@ -167,4 +167,4 @@ Currently, do not support merge operation and custom comparator.
 
 ## Full Documentation
 
-See [speedict documentation](https://congyuwang.github.io/RocksDict/speedict.html).
+See [rocksdict documentation](https://congyuwang.github.io/RocksDict/rocksdict.html).
