@@ -1,4 +1,4 @@
-# RocksDict
+# SpeeDict
 
 **Key-value storage supporting any python object**
 
@@ -12,7 +12,7 @@
 This library has two purposes.
 
 1. As an on-disk key-value storage solution for Python.
-2. As a RocksDB interface.
+2. As a SpeeDB interface.
 
 These two purposes operate in different modes:
 
