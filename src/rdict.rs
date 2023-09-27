@@ -1313,7 +1313,7 @@ fn get_batch_inner<'a>(
         for key in key_list {
             keys.push(encode_key(key, raw_mode)?);
         }
-        db.batched_multi_get_cf_opt(cf.deref(), keys, false, read_opt)
+        db.batched_multi_get_cf_opt(cf.deref(), &keys, false, read_opt)
     };
     let result = PyList::empty(py);
     for v in values {

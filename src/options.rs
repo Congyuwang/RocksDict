@@ -208,6 +208,26 @@ pub(crate) struct BlockBasedOptionsPy(BlockBasedOptions);
 #[pyclass(name = "CuckooTableOptions")]
 pub(crate) struct CuckooTableOptionsPy(CuckooTableOptions);
 
+/// Used in `PlainTableFactoryOptions`.
+#[derive(Clone)]
+#[pyclass(name = "KeyEncodingType")]
+pub(crate) struct KeyEncodingTypePy(KeyEncodingType);
+
+#[pymethods]
+impl KeyEncodingTypePy {
+    /// Always write full keys.
+    #[staticmethod]
+    pub fn plain() -> Self {
+        KeyEncodingTypePy(KeyEncodingType::Plain)
+    }
+
+    /// Find opportunities to write the same prefix for multiple rows.
+    #[staticmethod]
+    pub fn prefix() -> Self {
+        KeyEncodingTypePy(KeyEncodingType::Prefix)
+    }
+}
+
 ///
 /// Used with DBOptions::set_plain_table_factory.
 /// See official [wiki](https://github.com/facebook/rocksdb/wiki/PlainTable-Format) for more
@@ -232,6 +252,18 @@ pub(crate) struct PlainTableFactoryOptionsPy {
 
     #[pyo3(get, set)]
     index_sparseness: usize,
+
+    #[pyo3(get, set)]
+    huge_page_tlb_size: usize,
+
+    #[pyo3(get, set)]
+    encoding_type: KeyEncodingTypePy,
+
+    #[pyo3(get, set)]
+    full_scan_mode: bool,
+
+    #[pyo3(get, set)]
+    store_index_in_file: bool,
 }
 
 #[pyclass(name = "Cache")]
@@ -2391,6 +2423,10 @@ impl PlainTableFactoryOptionsPy {
             bloom_bits_per_key: 10,
             hash_table_ratio: 0.75,
             index_sparseness: 16,
+            huge_page_tlb_size: 0,
+            encoding_type: KeyEncodingTypePy(KeyEncodingType::Plain),
+            full_scan_mode: false,
+            store_index_in_file: false,
         }
     }
 }
@@ -2409,6 +2445,10 @@ impl PlainTableFactoryOptionsPy {
             bloom_bits_per_key: self.bloom_bits_per_key,
             hash_table_ratio: self.hash_table_ratio,
             index_sparseness: self.index_sparseness,
+            huge_page_tlb_size: self.huge_page_tlb_size,
+            encoding_type: self.encoding_type.0,
+            full_scan_mode: self.full_scan_mode,
+            store_index_in_file: self.store_index_in_file,
         }
     }
 }

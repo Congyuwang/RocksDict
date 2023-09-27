@@ -1,6 +1,6 @@
 [package]
 name = "RocksDict"
-version = "0.3.3"
+version = "0.3.14"
 edition = "2021"
 description = "Rocksdb Python Binding"
 
@@ -11,8 +11,8 @@ name = "rocksdict"
 crate-type = ["cdylib"]
 
 [dependencies]
-rocksdb = { git = "https://github.com/Congyuwang/rust-rocksdb", tag = "v0.21.0+8.1.1" }
-librocksdb-sys = { git = "https://github.com/Congyuwang/rust-rocksdb", tag = "v0.21.0+8.1.1" }
+rocksdb = { git = "https://github.com/Congyuwang/rust-rocksdb", tag = "v0.21.0+8.5.3" }
+librocksdb-sys = { git = "https://github.com/Congyuwang/rust-rocksdb", tag = "v0.21.0+8.5.3" }
 pyo3-log = "0.8"
 log = "0.4"
 serde = { version = "1", features = ["derive"] }

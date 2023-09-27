@@ -29,7 +29,8 @@ __all__ = ["Rdict",
            "AccessType",
            "Snapshot",
            "CompactOptions",
-           "BottommostLevelCompaction"]
+           "BottommostLevelCompaction",
+           "KeyEncodingType"]
 
 class DataBlockIndexType:
     @staticmethod
@@ -538,3 +539,9 @@ class CompactOptions:
     def set_bottommost_level_compaction(self, lvl: BottommostLevelCompaction) -> None: ...
     def set_change_level(self, v: bool) -> None: ...
     def set_target_level(self, lvl: int) -> None: ...
+
+class KeyEncodingType:
+    @staticmethod
+    def none() -> KeyEncodingType: ...
+    @staticmethod
+    def prefix() -> KeyEncodingType: ...
