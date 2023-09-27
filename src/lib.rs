@@ -139,6 +139,7 @@ fn rocksdict(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<CompactOptionsPy>()?;
     m.add_class::<BottommostLevelCompactionPy>()?;
     m.add_class::<ChecksumTypePy>()?;
+    m.add_class::<KeyEncodingTypePy>()?;
     pyo3_log::init();
     Ok(())
 }
