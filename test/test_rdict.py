@@ -243,7 +243,7 @@ class TestInt(unittest.TestCase):
     def test_reopen(self):
         self.test_dict.close()
 
-        self.assertRaises(DbClosedError, self.test_dict.get("b"))
+        self.assertRaises(DbClosedError, lambda: self.test_dict.get(1))
 
         test_dict = Rdict(self.path, self.opt)
         compare_dicts(self, self.ref_dict, test_dict)
