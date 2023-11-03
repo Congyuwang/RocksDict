@@ -639,14 +639,14 @@ impl Rdict {
             Some(opt) => opt.clone(),
         };
 
-        Ok(RdictIter::new(
+        RdictIter::new(
             self.get_db()?,
             &self.column_family,
             read_opt,
             &self.loads,
             self.opt_py.raw_mode,
             py,
-        )?)
+        )
     }
 
     /// Iterate through all keys and values pairs.
