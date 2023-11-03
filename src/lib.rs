@@ -1,5 +1,6 @@
 // #![feature(core_intrinsics)]
 mod encoder;
+mod exceptions;
 mod iter;
 mod options;
 mod rdict;
@@ -8,6 +9,7 @@ mod sst_file_writer;
 mod util;
 mod write_batch;
 
+use crate::exceptions::*;
 use crate::iter::*;
 use crate::options::*;
 use crate::rdict::*;
@@ -104,7 +106,7 @@ use pyo3::prelude::*;
 ///     supports `pickle`.
 ///
 #[pymodule]
-fn rocksdict(_py: Python, m: &PyModule) -> PyResult<()> {
+fn rocksdict(py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<Rdict>()?;
     m.add_class::<OptionsPy>()?;
     m.add_class::<MemtableFactoryPy>()?;
@@ -140,6 +142,9 @@ fn rocksdict(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<BottommostLevelCompactionPy>()?;
     m.add_class::<ChecksumTypePy>()?;
     m.add_class::<KeyEncodingTypePy>()?;
+
+    m.add("DbClosedError", py.get_type::<DbClosedError>())?;
+
     pyo3_log::init();
     Ok(())
 }
