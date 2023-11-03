@@ -1,4 +1,5 @@
 use crate::encoder::{decode_value, encode_key, encode_value};
+use crate::exceptions::DbClosedError;
 use crate::iter::{RdictItems, RdictKeys, RdictValues};
 use crate::options::{CachePy, EnvPy, SliceTransformType};
 use crate::{
@@ -133,6 +134,12 @@ impl Rdict {
             prefix_extractors: self.slice_transforms.read().unwrap().clone(),
         }
         .save(config_path)
+    }
+
+    fn get_db(&self) -> PyResult<&Arc<RefCell<DB>>> {
+        self.db
+            .as_ref()
+            .ok_or_else(|| DbClosedError::new_err("DB instance already closed"))
     }
 }
 
@@ -368,49 +375,48 @@ impl Rdict {
             }
             Some(cf) => cf.clone(),
         };
-        if let Some(db) = &self.db {
-            // batch_get
-            if let Ok(keys) = PyTryFrom::try_from(key) {
-                return Ok(Some(
-                    get_batch_inner(
-                        db,
-                        keys,
-                        py,
-                        read_opt,
-                        &self.loads,
-                        &cf,
-                        self.opt_py.raw_mode,
-                    )?
-                    .to_object(py),
-                ));
-            }
 
-            // single get
-            let key_bytes = encode_key(key, self.opt_py.raw_mode)?;
-            let db = db.borrow();
-            let value_result = db.get_pinned_cf_opt(cf.deref(), key_bytes, read_opt);
+        let db = self.get_db()?;
 
-            match value_result {
-                Ok(value) => match value {
-                    None => {
-                        // try to return default value
-                        if let Some(default) = default {
-                            Ok(Some(default.to_object(py)))
-                        } else {
-                            Ok(None)
-                        }
+        // batch_get
+        if let Ok(keys) = PyTryFrom::try_from(key) {
+            return Ok(Some(
+                get_batch_inner(
+                    db,
+                    keys,
+                    py,
+                    read_opt,
+                    &self.loads,
+                    &cf,
+                    self.opt_py.raw_mode,
+                )?
+                .to_object(py),
+            ));
+        }
+
+        // single get
+        let key_bytes = encode_key(key, self.opt_py.raw_mode)?;
+        let db = db.borrow();
+        let value_result = db.get_pinned_cf_opt(cf.deref(), key_bytes, read_opt);
+
+        match value_result {
+            Ok(value) => match value {
+                None => {
+                    // try to return default value
+                    if let Some(default) = default {
+                        Ok(Some(default.to_object(py)))
+                    } else {
+                        Ok(None)
                     }
-                    Some(slice) => Ok(Some(decode_value(
-                        py,
-                        slice.as_ref(),
-                        &self.loads,
-                        self.opt_py.raw_mode,
-                    )?)),
-                },
-                Err(e) => Err(PyException::new_err(e.to_string())),
-            }
-        } else {
-            Err(PyException::new_err("DB already closed"))
+                }
+                Some(slice) => Ok(Some(decode_value(
+                    py,
+                    slice.as_ref(),
+                    &self.loads,
+                    self.opt_py.raw_mode,
+                )?)),
+            },
+            Err(e) => Err(PyException::new_err(e.to_string())),
         }
     }
 
@@ -439,51 +445,44 @@ impl Rdict {
             None => &self.write_opt,
             Some(opt) => opt,
         };
-        if let Some(db) = &self.db {
-            let db = db.borrow();
-            let key = encode_key(key, self.opt_py.raw_mode)?;
-            let value = encode_value(value, &self.dumps, self.opt_py.raw_mode, py)?;
-            let put_result = if let Some(cf) = &self.column_family {
-                db.put_cf_opt(cf.deref(), key, value, write_opt)
-            } else {
-                db.put_opt(key, value, write_opt)
-            };
-            match put_result {
-                Ok(_) => Ok(()),
-                Err(e) => Err(PyException::new_err(e.to_string())),
-            }
+
+        let db = self.get_db()?.borrow();
+        let key = encode_key(key, self.opt_py.raw_mode)?;
+        let value = encode_value(value, &self.dumps, self.opt_py.raw_mode, py)?;
+        let put_result = if let Some(cf) = &self.column_family {
+            db.put_cf_opt(cf.deref(), key, value, write_opt)
         } else {
-            Err(PyException::new_err("DB already closed"))
+            db.put_opt(key, value, write_opt)
+        };
+        match put_result {
+            Ok(_) => Ok(()),
+            Err(e) => Err(PyException::new_err(e.to_string())),
         }
     }
 
     fn __contains__(&self, key: &PyAny) -> PyResult<bool> {
-        if let Some(db) = &self.db {
-            let db = db.borrow();
-            let key = encode_key(key, self.opt_py.raw_mode)?;
-            let may_exist = if let Some(cf) = &self.column_family {
-                db.key_may_exist_cf_opt(cf.deref(), &key[..], &self.read_opt)
+        let db = self.get_db()?.borrow();
+        let key = encode_key(key, self.opt_py.raw_mode)?;
+        let may_exist = if let Some(cf) = &self.column_family {
+            db.key_may_exist_cf_opt(cf.deref(), &key[..], &self.read_opt)
+        } else {
+            db.key_may_exist_opt(&key[..], &self.read_opt)
+        };
+        if may_exist {
+            let value_result = if let Some(cf) = &self.column_family {
+                db.get_pinned_cf_opt(cf.deref(), key, &self.read_opt)
             } else {
-                db.key_may_exist_opt(&key[..], &self.read_opt)
+                db.get_pinned_opt(key, &self.read_opt)
             };
-            if may_exist {
-                let value_result = if let Some(cf) = &self.column_family {
-                    db.get_pinned_cf_opt(cf.deref(), key, &self.read_opt)
-                } else {
-                    db.get_pinned_opt(key, &self.read_opt)
-                };
-                match value_result {
-                    Ok(value) => match value {
-                        None => Ok(false),
-                        Some(_) => Ok(true),
-                    },
-                    Err(e) => Err(PyException::new_err(e.to_string())),
-                }
-            } else {
-                Ok(false)
+            match value_result {
+                Ok(value) => match value {
+                    None => Ok(false),
+                    Some(_) => Ok(true),
+                },
+                Err(e) => Err(PyException::new_err(e.to_string())),
             }
         } else {
-            Err(PyException::new_err("DB already closed"))
+            Ok(false)
         }
     }
 
@@ -526,41 +525,36 @@ impl Rdict {
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<PyObject> {
-        if let Some(db) = &self.db {
-            let db = db.borrow();
-            let key = encode_key(key, self.opt_py.raw_mode)?;
-            let read_opt_option = match read_opt {
-                None => None,
-                Some(opt) => Some(opt.to_read_options(self.opt_py.raw_mode, py)?),
-            };
-            let read_opt = match &read_opt_option {
-                None => &self.read_opt,
-                Some(opt) => opt,
-            };
-            let cf = match &self.column_family {
-                None => {
-                    self.get_column_family_handle(DEFAULT_COLUMN_FAMILY_NAME)?
-                        .cf
-                }
-                Some(cf) => cf.clone(),
-            };
-            if !fetch {
-                let may_exist = db.key_may_exist_cf_opt(cf.deref(), &key[..], read_opt);
-                Ok(may_exist.to_object(py))
-            } else {
-                let (may_exist, value) =
-                    db.key_may_exist_cf_opt_value(cf.deref(), &key[..], read_opt);
-                match value {
-                    None => Ok((may_exist, py.None()).to_object(py)),
-                    Some(dat) => Ok((
-                        may_exist,
-                        decode_value(py, dat.as_ref(), &self.loads, self.opt_py.raw_mode)?,
-                    )
-                        .to_object(py)),
-                }
+        let db = self.get_db()?.borrow();
+        let key = encode_key(key, self.opt_py.raw_mode)?;
+        let read_opt_option = match read_opt {
+            None => None,
+            Some(opt) => Some(opt.to_read_options(self.opt_py.raw_mode, py)?),
+        };
+        let read_opt = match &read_opt_option {
+            None => &self.read_opt,
+            Some(opt) => opt,
+        };
+        let cf = match &self.column_family {
+            None => {
+                self.get_column_family_handle(DEFAULT_COLUMN_FAMILY_NAME)?
+                    .cf
             }
+            Some(cf) => cf.clone(),
+        };
+        if !fetch {
+            let may_exist = db.key_may_exist_cf_opt(cf.deref(), &key[..], read_opt);
+            Ok(may_exist.to_object(py))
         } else {
-            Err(PyException::new_err("DB already closed"))
+            let (may_exist, value) = db.key_may_exist_cf_opt_value(cf.deref(), &key[..], read_opt);
+            match value {
+                None => Ok((may_exist, py.None()).to_object(py)),
+                Some(dat) => Ok((
+                    may_exist,
+                    decode_value(py, dat.as_ref(), &self.loads, self.opt_py.raw_mode)?,
+                )
+                    .to_object(py)),
+            }
         }
     }
 
@@ -582,20 +576,17 @@ impl Rdict {
             None => &self.write_opt,
             Some(opt) => opt,
         };
-        if let Some(db) = &self.db {
-            let db = db.borrow();
-            let key = encode_key(key, self.opt_py.raw_mode)?;
-            let del_result = if let Some(cf) = &self.column_family {
-                db.delete_cf_opt(cf.deref(), key, write_opt)
-            } else {
-                db.delete_opt(key, write_opt)
-            };
-            match del_result {
-                Ok(_) => Ok(()),
-                Err(e) => Err(PyException::new_err(e.to_string())),
-            }
+
+        let db = self.get_db()?.borrow();
+        let key = encode_key(key, self.opt_py.raw_mode)?;
+        let del_result = if let Some(cf) = &self.column_family {
+            db.delete_cf_opt(cf.deref(), key, write_opt)
         } else {
-            Err(PyException::new_err("DB already closed"))
+            db.delete_opt(key, write_opt)
+        };
+        match del_result {
+            Ok(_) => Ok(()),
+            Err(e) => Err(PyException::new_err(e.to_string())),
         }
     }
 
@@ -647,18 +638,15 @@ impl Rdict {
             None => ReadOptionsPy::default(py)?,
             Some(opt) => opt.clone(),
         };
-        if let Some(db) = &self.db {
-            Ok(RdictIter::new(
-                db,
-                &self.column_family,
-                read_opt,
-                &self.loads,
-                self.opt_py.raw_mode,
-                py,
-            )?)
-        } else {
-            Err(PyException::new_err("DB already closed"))
-        }
+
+        Ok(RdictIter::new(
+            self.get_db()?,
+            &self.column_family,
+            read_opt,
+            &self.loads,
+            self.opt_py.raw_mode,
+            py,
+        )?)
     }
 
     /// Iterate through all keys and values pairs.
@@ -746,21 +734,18 @@ impl Rdict {
     ///     wait (bool): whether to wait for the flush to finish.
     #[pyo3(signature = (wait = true))]
     fn flush(&self, wait: bool) -> PyResult<()> {
-        if let Some(db) = &self.db {
-            let mut f_opt = FlushOptions::new();
-            f_opt.set_wait(wait);
-            let db = db.borrow();
-            let flush_result = if let Some(cf) = &self.column_family {
-                db.flush_cf_opt(cf.deref(), &f_opt)
-            } else {
-                db.flush_opt(&f_opt)
-            };
-            match flush_result {
-                Ok(_) => Ok(()),
-                Err(e) => Err(PyException::new_err(e.into_string())),
-            }
+        let db = self.get_db()?;
+        let mut f_opt = FlushOptions::new();
+        f_opt.set_wait(wait);
+        let db = db.borrow();
+        let flush_result = if let Some(cf) = &self.column_family {
+            db.flush_cf_opt(cf.deref(), &f_opt)
         } else {
-            Err(PyException::new_err("DB already closed"))
+            db.flush_opt(&f_opt)
+        };
+        match flush_result {
+            Ok(_) => Ok(()),
+            Err(e) => Err(PyException::new_err(e.into_string())),
         }
     }
 
@@ -768,15 +753,11 @@ impl Rdict {
     /// the data to disk.
     #[pyo3(signature = (sync = true))]
     fn flush_wal(&self, sync: bool) -> PyResult<()> {
-        if let Some(db) = &self.db {
-            let db = db.borrow();
-            let flush_result = db.flush_wal(sync);
-            match flush_result {
-                Ok(_) => Ok(()),
-                Err(e) => Err(PyException::new_err(e.into_string())),
-            }
-        } else {
-            Err(PyException::new_err("DB already closed"))
+        let db = self.get_db()?.borrow();
+        let flush_result = db.flush_wal(sync);
+        match flush_result {
+            Ok(_) => Ok(()),
+            Err(e) => Err(PyException::new_err(e.into_string())),
         }
     }
 
@@ -804,26 +785,21 @@ impl Rdict {
                 .insert(name.to_string(), slice_transform);
         }
         self.dump_config()?;
-        if let Some(db) = &self.db {
-            let create_result = db.borrow_mut().create_cf(name, &options.inner_opt);
-            match create_result {
-                Ok(_) => Ok(self.get_column_family(name, py)?),
-                Err(e) => Err(PyException::new_err(e.to_string())),
-            }
-        } else {
-            Err(PyException::new_err("DB already closed"))
+        let create_result = self
+            .get_db()?
+            .borrow_mut()
+            .create_cf(name, &options.inner_opt);
+        match create_result {
+            Ok(_) => Ok(self.get_column_family(name, py)?),
+            Err(e) => Err(PyException::new_err(e.to_string())),
         }
     }
 
     /// Drops the column family with the given name
     fn drop_column_family(&self, name: &str) -> PyResult<()> {
-        if let Some(db) = &self.db {
-            match db.borrow_mut().drop_cf(name) {
-                Ok(_) => Ok(()),
-                Err(e) => Err(PyException::new_err(e.to_string())),
-            }
-        } else {
-            Err(PyException::new_err("DB already closed"))
+        match self.get_db()?.borrow_mut().drop_cf(name) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(PyException::new_err(e.to_string())),
         }
     }
 
@@ -836,28 +812,25 @@ impl Rdict {
     /// Return:
     ///     the column family Rdict of this name
     pub fn get_column_family(&self, name: &str, py: Python) -> PyResult<Self> {
-        if let Some(db) = &self.db {
-            match db.borrow().cf_handle(name) {
-                None => Err(PyException::new_err(format!(
-                    "column name `{name}` does not exist, use `create_cf` to creat it",
-                ))),
-                Some(cf) => Ok(Self {
-                    db: Some(db.clone()),
-                    write_opt: (&self.write_opt_py).into(),
-                    flush_opt: self.flush_opt,
-                    read_opt: self.read_opt_py.to_read_options(self.opt_py.raw_mode, py)?,
-                    loads: self.loads.clone(),
-                    dumps: self.dumps.clone(),
-                    column_family: Some(cf),
-                    write_opt_py: self.write_opt_py.clone(),
-                    read_opt_py: self.read_opt_py.clone(),
-                    opt_py: self.opt_py.clone(),
-                    access_type: self.access_type.clone(),
-                    slice_transforms: self.slice_transforms.clone(),
-                }),
-            }
-        } else {
-            Err(PyException::new_err("DB already closed"))
+        let db = self.get_db()?;
+        match db.borrow().cf_handle(name) {
+            None => Err(PyException::new_err(format!(
+                "column name `{name}` does not exist, use `create_cf` to creat it",
+            ))),
+            Some(cf) => Ok(Self {
+                db: Some(db.clone()),
+                write_opt: (&self.write_opt_py).into(),
+                flush_opt: self.flush_opt,
+                read_opt: self.read_opt_py.to_read_options(self.opt_py.raw_mode, py)?,
+                loads: self.loads.clone(),
+                dumps: self.dumps.clone(),
+                column_family: Some(cf),
+                write_opt_py: self.write_opt_py.clone(),
+                read_opt_py: self.read_opt_py.clone(),
+                opt_py: self.opt_py.clone(),
+                access_type: self.access_type.clone(),
+                slice_transforms: self.slice_transforms.clone(),
+            }),
         }
     }
 
@@ -877,15 +850,12 @@ impl Rdict {
     ///             wb[i] = i**2
     ///         db.write(wb)
     pub fn get_column_family_handle(&self, name: &str) -> PyResult<ColumnFamilyPy> {
-        if let Some(db) = &self.db {
-            match db.borrow().cf_handle(name) {
-                None => Err(PyException::new_err(format!(
-                    "column name `{name}` does not exist, use `create_cf` to creat it",
-                ))),
-                Some(cf) => Ok(ColumnFamilyPy { cf, db: db.clone() }),
-            }
-        } else {
-            Err(PyException::new_err("DB already closed"))
+        let db = self.get_db()?;
+        match db.borrow().cf_handle(name) {
+            None => Err(PyException::new_err(format!(
+                "column name `{name}` does not exist, use `create_cf` to creat it",
+            ))),
+            Some(cf) => Ok(ColumnFamilyPy { cf, db: db.clone() }),
         }
     }
 
@@ -938,44 +908,32 @@ impl Rdict {
         opts: Py<IngestExternalFileOptionsPy>,
         py: Python,
     ) -> PyResult<()> {
-        if let Some(db) = &self.db {
-            let db = db.borrow();
-            let ingest_result = if let Some(cf) = &self.column_family {
-                db.ingest_external_file_cf_opts(cf.deref(), &opts.borrow(py).0, paths)
-            } else {
-                db.ingest_external_file_opts(&opts.borrow(py).0, paths)
-            };
-            match ingest_result {
-                Ok(_) => Ok(()),
-                Err(e) => Err(PyException::new_err(e.to_string())),
-            }
+        let db = self.get_db()?.borrow();
+        let ingest_result = if let Some(cf) = &self.column_family {
+            db.ingest_external_file_cf_opts(cf.deref(), &opts.borrow(py).0, paths)
         } else {
-            Err(PyException::new_err("DB already closed"))
+            db.ingest_external_file_opts(&opts.borrow(py).0, paths)
+        };
+        match ingest_result {
+            Ok(_) => Ok(()),
+            Err(e) => Err(PyException::new_err(e.to_string())),
         }
     }
 
     /// Tries to catch up with the primary by reading as much as possible from the
     /// log files.
     pub fn try_catch_up_with_primary(&self) -> PyResult<()> {
-        if let Some(db) = &self.db {
-            let db = db.borrow();
-            match db.try_catch_up_with_primary() {
-                Ok(_) => Ok(()),
-                Err(e) => Err(PyException::new_err(e.to_string())),
-            }
-        } else {
-            Err(PyException::new_err("DB already closed"))
+        let db = self.get_db()?.borrow();
+        match db.try_catch_up_with_primary() {
+            Ok(_) => Ok(()),
+            Err(e) => Err(PyException::new_err(e.to_string())),
         }
     }
 
     /// Request stopping background work, if wait is true wait until it's done.
     pub fn cancel_all_background(&self, wait: bool) -> PyResult<()> {
-        if let Some(db) = &self.db {
-            db.borrow().cancel_all_background_work(wait);
-            Ok(())
-        } else {
-            Err(PyException::new_err("DB already closed"))
-        }
+        self.get_db()?.borrow().cancel_all_background_work(wait);
+        Ok(())
     }
 
     /// WriteBatch
@@ -992,30 +950,27 @@ impl Rdict {
         write_batch: &mut WriteBatchPy,
         write_opt: Option<&WriteOptionsPy>,
     ) -> PyResult<()> {
-        if let Some(db) = &self.db {
-            if self.opt_py.raw_mode != write_batch.raw_mode {
-                return if self.opt_py.raw_mode {
-                    Err(PyException::new_err(
-                        "must set raw_mode=True for WriteBatch",
-                    ))
-                } else {
-                    Err(PyException::new_err(
-                        "must set raw_mode=False for WriteBatch",
-                    ))
-                };
-            }
-            let write_opt_option = write_opt.map(WriteOptions::from);
-            let write_opt = match &write_opt_option {
-                None => &self.write_opt,
-                Some(opt) => opt,
+        let db = self.get_db()?;
+        if self.opt_py.raw_mode != write_batch.raw_mode {
+            return if self.opt_py.raw_mode {
+                Err(PyException::new_err(
+                    "must set raw_mode=True for WriteBatch",
+                ))
+            } else {
+                Err(PyException::new_err(
+                    "must set raw_mode=False for WriteBatch",
+                ))
             };
-            let db = db.borrow();
-            match db.write_opt(write_batch.consume()?, write_opt) {
-                Ok(_) => Ok(()),
-                Err(e) => Err(PyException::new_err(e.to_string())),
-            }
-        } else {
-            Err(PyException::new_err("DB already closed"))
+        }
+        let write_opt_option = write_opt.map(WriteOptions::from);
+        let write_opt = match &write_opt_option {
+            None => &self.write_opt,
+            Some(opt) => opt,
+        };
+        let db = db.borrow();
+        match db.write_opt(write_batch.consume()?, write_opt) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(PyException::new_err(e.to_string())),
         }
     }
 
@@ -1031,27 +986,23 @@ impl Rdict {
         end: &PyAny,
         write_opt: Option<&WriteOptionsPy>,
     ) -> PyResult<()> {
-        if let Some(db) = &self.db {
-            let db = db.borrow();
-            let from = encode_key(begin, self.opt_py.raw_mode)?;
-            let to = encode_key(end, self.opt_py.raw_mode)?;
-            let cf = match &self.column_family {
-                None => {
-                    self.get_column_family_handle(DEFAULT_COLUMN_FAMILY_NAME)?
-                        .cf
-                }
-                Some(cf) => cf.clone(),
-            };
-            let write_opt_option = write_opt.map(WriteOptions::from);
-            let write_opt = match &write_opt_option {
-                None => &self.write_opt,
-                Some(opt) => opt,
-            };
-            db.delete_range_cf_opt(cf.deref(), from, to, write_opt)
-                .map_err(|e| PyException::new_err(e.to_string()))
-        } else {
-            Err(PyException::new_err("DB already closed"))
-        }
+        let db = self.get_db()?.borrow();
+        let from = encode_key(begin, self.opt_py.raw_mode)?;
+        let to = encode_key(end, self.opt_py.raw_mode)?;
+        let cf = match &self.column_family {
+            None => {
+                self.get_column_family_handle(DEFAULT_COLUMN_FAMILY_NAME)?
+                    .cf
+            }
+            Some(cf) => cf.clone(),
+        };
+        let write_opt_option = write_opt.map(WriteOptions::from);
+        let write_opt = match &write_opt_option {
+            None => &self.write_opt,
+            Some(opt) => opt,
+        };
+        db.delete_range_cf_opt(cf.deref(), from, to, write_opt)
+            .map_err(|e| PyException::new_err(e.to_string()))
     }
 
     /// Flush memory to disk, and drop the current column family.
@@ -1067,43 +1018,40 @@ impl Rdict {
     ///     to actually shut down RocksDB.
     ///
     fn close(&mut self) -> PyResult<()> {
-        if let Some(db) = &self.db {
-            let f_opt = &self.flush_opt;
-            let db = db.borrow();
-            if let AccessTypeInner::ReadOnly { .. } = self.access_type.0 {
-                drop(db);
-                drop(self.column_family.take());
-                drop(self.db.take());
-                return Ok(());
-            };
-            let flush_wal_result = db.flush_wal(true);
-            let flush_result = if let Some(cf) = &self.column_family {
-                db.flush_cf_opt(cf.deref(), &f_opt.into())
-            } else {
-                db.flush_opt(&f_opt.into())
-            };
+        let f_opt = &self.flush_opt;
+        let db = self.get_db()?.borrow();
+        if let AccessTypeInner::ReadOnly { .. } = self.access_type.0 {
             drop(db);
             drop(self.column_family.take());
             drop(self.db.take());
-            match (flush_result, flush_wal_result) {
-                (Ok(_), Ok(_)) => Ok(()),
-                (Err(e), Ok(_)) => Err(PyException::new_err(e.to_string())),
-                (Ok(_), Err(e)) => Err(PyException::new_err(e.to_string())),
-                (Err(e), Err(wal_e)) => Err(PyException::new_err(format!("{e}; {wal_e}"))),
-            }
+            return Ok(());
+        };
+        let flush_wal_result = db.flush_wal(true);
+        let flush_result = if let Some(cf) = &self.column_family {
+            db.flush_cf_opt(cf.deref(), &f_opt.into())
         } else {
-            Err(PyException::new_err("DB already closed"))
+            db.flush_opt(&f_opt.into())
+        };
+        drop(db);
+        drop(self.column_family.take());
+        drop(self.db.take());
+        match (flush_result, flush_wal_result) {
+            (Ok(_), Ok(_)) => Ok(()),
+            (Err(e), Ok(_)) => Err(PyException::new_err(e.to_string())),
+            (Ok(_), Err(e)) => Err(PyException::new_err(e.to_string())),
+            (Err(e), Err(wal_e)) => Err(PyException::new_err(format!("{e}; {wal_e}"))),
         }
     }
 
     /// Return current database path.
     fn path(&self) -> PyResult<String> {
-        if let Some(db) = &self.db {
-            let db = db.borrow();
-            Ok(db.path().as_os_str().to_string_lossy().to_string())
-        } else {
-            Err(PyException::new_err("DB already closed"))
-        }
+        Ok(self
+            .get_db()?
+            .borrow()
+            .path()
+            .as_os_str()
+            .to_string_lossy()
+            .to_string())
     }
 
     /// Runs a manual compaction on the Range of keys given for the current Column Family.
@@ -1115,65 +1063,53 @@ impl Rdict {
         compact_opt: Py<CompactOptionsPy>,
         py: Python,
     ) -> PyResult<()> {
-        if let Some(db) = &self.db {
-            let db = db.borrow();
-            let from = if begin.is_none() {
-                None
-            } else {
-                Some(encode_key(begin, self.opt_py.raw_mode)?)
-            };
-            let to = if end.is_none() {
-                None
-            } else {
-                Some(encode_key(end, self.opt_py.raw_mode)?)
-            };
-            let opt = compact_opt.borrow(py);
-            if let Some(cf) = &self.column_family {
-                db.compact_range_cf_opt(cf.deref(), from, to, &opt.deref().0)
-            } else {
-                db.compact_range_opt(from, to, &opt.deref().0)
-            };
-            Ok(())
+        let db = self.get_db()?.borrow();
+        let from = if begin.is_none() {
+            None
         } else {
-            Err(PyException::new_err("DB already closed"))
-        }
+            Some(encode_key(begin, self.opt_py.raw_mode)?)
+        };
+        let to = if end.is_none() {
+            None
+        } else {
+            Some(encode_key(end, self.opt_py.raw_mode)?)
+        };
+        let opt = compact_opt.borrow(py);
+        if let Some(cf) = &self.column_family {
+            db.compact_range_cf_opt(cf.deref(), from, to, &opt.deref().0)
+        } else {
+            db.compact_range_opt(from, to, &opt.deref().0)
+        };
+        Ok(())
     }
 
     /// Set options for the current column family.
     fn set_options(&self, options: HashMap<String, String>) -> PyResult<()> {
-        if let Some(db) = &self.db {
-            let db = db.borrow();
-            let options: Vec<(&str, &str)> = options
-                .iter()
-                .map(|(opt, v)| (opt.as_str(), v.as_str()))
-                .collect();
-            let set_opt_result = match &self.column_family {
-                None => db.set_options(&options),
-                Some(cf) => db.set_options_cf(cf.deref(), &options),
-            };
-            match set_opt_result {
-                Ok(_) => Ok(()),
-                Err(e) => Err(PyException::new_err(e.to_string())),
-            }
-        } else {
-            Err(PyException::new_err("DB already closed"))
+        let db = self.get_db()?.borrow();
+        let options: Vec<(&str, &str)> = options
+            .iter()
+            .map(|(opt, v)| (opt.as_str(), v.as_str()))
+            .collect();
+        let set_opt_result = match &self.column_family {
+            None => db.set_options(&options),
+            Some(cf) => db.set_options_cf(cf.deref(), &options),
+        };
+        match set_opt_result {
+            Ok(_) => Ok(()),
+            Err(e) => Err(PyException::new_err(e.to_string())),
         }
     }
 
     /// Retrieves a RocksDB property by name, for the current column family.
     fn property_value(&self, name: &str) -> PyResult<Option<String>> {
-        if let Some(db) = &self.db {
-            let db = db.borrow();
-            let result = match &self.column_family {
-                None => db.property_value(name),
-                Some(cf) => db.property_value_cf(cf.deref(), name),
-            };
-            match result {
-                Ok(v) => Ok(v),
-                Err(e) => Err(PyException::new_err(e.to_string())),
-            }
-        } else {
-            Err(PyException::new_err("DB already closed"))
+        let db = self.get_db()?.borrow();
+        let result = match &self.column_family {
+            None => db.property_value(name),
+            Some(cf) => db.property_value_cf(cf.deref(), name),
+        };
+        match result {
+            Ok(v) => Ok(v),
+            Err(e) => Err(PyException::new_err(e.to_string())),
         }
     }
 
@@ -1183,53 +1119,40 @@ impl Rdict {
     /// Full list of properties that return int values could be find
     /// [here](https://github.com/facebook/rocksdb/blob/08809f5e6cd9cc4bc3958dd4d59457ae78c76660/include/rocksdb/db.h#L654-L689).
     fn property_int_value(&self, name: &str) -> PyResult<Option<u64>> {
-        if let Some(db) = &self.db {
-            let db = db.borrow();
-            let result = match &self.column_family {
-                None => db.property_int_value(name),
-                Some(cf) => db.property_int_value_cf(cf.deref(), name),
-            };
-            match result {
-                Ok(v) => Ok(v),
-                Err(e) => Err(PyException::new_err(e.to_string())),
-            }
-        } else {
-            Err(PyException::new_err("DB already closed"))
+        let db = self.get_db()?.borrow();
+        let result = match &self.column_family {
+            None => db.property_int_value(name),
+            Some(cf) => db.property_int_value_cf(cf.deref(), name),
+        };
+        match result {
+            Ok(v) => Ok(v),
+            Err(e) => Err(PyException::new_err(e.to_string())),
         }
     }
 
     /// The sequence number of the most recent transaction.
     fn latest_sequence_number(&self) -> PyResult<u64> {
-        if let Some(db) = &self.db {
-            let db = db.borrow();
-            Ok(db.latest_sequence_number())
-        } else {
-            Err(PyException::new_err("DB already closed"))
-        }
+        Ok(self.get_db()?.borrow().latest_sequence_number())
     }
 
     /// Returns a list of all table files with their level, start key and end key
     fn live_files(&self, py: Python) -> PyResult<PyObject> {
-        if let Some(db) = &self.db {
-            let db = db.borrow();
-            let lfs = db.live_files();
-            match lfs {
-                Ok(lfs) => {
-                    let result = PyList::empty(py);
-                    for lf in lfs {
-                        result.append(display_live_file_dict(
-                            lf,
-                            py,
-                            &self.loads,
-                            self.opt_py.raw_mode,
-                        )?)?
-                    }
-                    Ok(result.to_object(py))
+        let db = self.get_db()?.borrow();
+        let lfs = db.live_files();
+        match lfs {
+            Ok(lfs) => {
+                let result = PyList::empty(py);
+                for lf in lfs {
+                    result.append(display_live_file_dict(
+                        lf,
+                        py,
+                        &self.loads,
+                        self.opt_py.raw_mode,
+                    )?)?
                 }
-                Err(e) => Err(PyException::new_err(e.to_string())),
+                Ok(result.to_object(py))
             }
-        } else {
-            Err(PyException::new_err("DB already closed"))
+            Err(e) => Err(PyException::new_err(e.to_string())),
         }
     }
 

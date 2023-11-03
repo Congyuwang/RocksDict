@@ -1,6 +1,6 @@
 import unittest
 from sys import getrefcount
-from rocksdict import Rdict, Options, PlainTableFactoryOptions, SliceTransform, CuckooTableOptions
+from rocksdict import Rdict, Options, PlainTableFactoryOptions, SliceTransform, CuckooTableOptions, DbClosedError
 from random import randint, random, getrandbits
 import os
 import sys
@@ -242,6 +242,9 @@ class TestInt(unittest.TestCase):
 
     def test_reopen(self):
         self.test_dict.close()
+
+        self.assertRaises(DbClosedError, self.test_dict.get("b"))
+
         test_dict = Rdict(self.path, self.opt)
         compare_dicts(self, self.ref_dict, test_dict)
 
