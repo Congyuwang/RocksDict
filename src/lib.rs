@@ -29,7 +29,7 @@ use pyo3::prelude::*;
 ///
 /// ### Installation
 ///
-/// This package is built for macOS (x86/arm), Windows 64/32, and Linux x86.
+/// This package is built for macOS (x86/arm), Windows 64/32, and Linux x86/arm.
 /// It can be installed from pypi with `pip install rocksdict`.
 ///
 /// ## Introduction
