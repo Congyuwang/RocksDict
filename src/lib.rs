@@ -1,5 +1,6 @@
 // #![feature(core_intrinsics)]
 mod encoder;
+mod exceptions;
 mod iter;
 mod options;
 mod rdict;
@@ -8,6 +9,7 @@ mod sst_file_writer;
 mod util;
 mod write_batch;
 
+use crate::exceptions::*;
 use crate::iter::*;
 use crate::options::*;
 use crate::rdict::*;
@@ -27,7 +29,7 @@ use pyo3::prelude::*;
 ///
 /// ### Installation
 ///
-/// This package is built for macOS (x86/arm), Windows 64/32, and Linux x86.
+/// This package is built for macOS (x86/arm), Windows 64/32, and Linux x86/arm.
 /// It can be installed from pypi with `pip install speedict`.
 ///
 /// ## Introduction
@@ -104,7 +106,7 @@ use pyo3::prelude::*;
 ///     supports `pickle`.
 ///
 #[pymodule]
-fn speedict(_py: Python, m: &PyModule) -> PyResult<()> {
+fn speedict(py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<Rdict>()?;
     m.add_class::<OptionsPy>()?;
     m.add_class::<MemtableFactoryPy>()?;
@@ -139,6 +141,9 @@ fn speedict(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<CompactOptionsPy>()?;
     m.add_class::<BottommostLevelCompactionPy>()?;
     m.add_class::<ChecksumTypePy>()?;
+
+    m.add("DbClosedError", py.get_type::<DbClosedError>())?;
+
     pyo3_log::init();
     Ok(())
 }
