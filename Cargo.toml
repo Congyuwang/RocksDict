@@ -11,8 +11,8 @@ name = "speedict"
 crate-type = ["cdylib"]
 
 [dependencies]
-speedb = { git = "https://github.com/Congyuwang/rust-rocksdb", tag = "speedict-v2.4.1" }
-libspeedb-sys = { git = "https://github.com/Congyuwang/rust-rocksdb", tag = "speedict-v2.4.1" }
+speedb = { git = "https://github.com/Congyuwang/rust-rocksdb", tag = "speedict-v2.7.0" }
+libspeedb-sys = { git = "https://github.com/Congyuwang/rust-rocksdb", tag = "speedict-v2.7.0" }
 pyo3-log = "0.8"
 log = "0.4"
 serde = { version = "1", features = ["derive"] }
