@@ -29,7 +29,7 @@ use pyo3::prelude::*;
 ///
 /// ### Installation
 ///
-/// This package is built for macOS (x86/arm), Windows 64/32, and Linux x86.
+/// This package is built for macOS (x86/arm), Windows 64/32, and Linux x86/arm.
 /// It can be installed from pypi with `pip install speedict`.
 ///
 /// ## Introduction
@@ -106,7 +106,7 @@ use pyo3::prelude::*;
 ///     supports `pickle`.
 ///
 #[pymodule]
-fn speedict(_py: Python, m: &PyModule) -> PyResult<()> {
+fn speedict(py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<Rdict>()?;
     m.add_class::<OptionsPy>()?;
     m.add_class::<MemtableFactoryPy>()?;
@@ -141,7 +141,6 @@ fn speedict(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<CompactOptionsPy>()?;
     m.add_class::<BottommostLevelCompactionPy>()?;
     m.add_class::<ChecksumTypePy>()?;
-    m.add_class::<KeyEncodingTypePy>()?;
 
     m.add("DbClosedError", py.get_type::<DbClosedError>())?;
 
