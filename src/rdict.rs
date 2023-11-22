@@ -1020,11 +1020,14 @@ impl Rdict {
     fn close(&mut self) -> PyResult<()> {
         let f_opt = &self.flush_opt;
         let db = self.get_db()?.borrow();
-        if let AccessTypeInner::ReadOnly { .. } = self.access_type.0 {
-            drop(db);
-            drop(self.column_family.take());
-            drop(self.db.take());
-            return Ok(());
+        match &self.access_type.0 {
+            AccessTypeInner::ReadOnly { .. } | AccessTypeInner::Secondary { .. } => {
+                drop(db);
+                drop(self.column_family.take());
+                drop(self.db.take());
+                return Ok(());
+            }
+            _ => (),
         };
         let flush_wal_result = db.flush_wal(true);
         let flush_result = if let Some(cf) = &self.column_family {
