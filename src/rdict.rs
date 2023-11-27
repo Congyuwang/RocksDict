@@ -1,3 +1,4 @@
+use crate::db_reference::{DbReference, DbReferenceHolder};
 use crate::encoder::{decode_value, encode_key, encode_value};
 use crate::exceptions::DbClosedError;
 use crate::iter::{RdictItems, RdictKeys, RdictValues};
@@ -71,7 +72,7 @@ pub(crate) struct Rdict {
     pub(crate) access_type: AccessType,
     pub(crate) slice_transforms: Arc<RwLock<HashMap<String, SliceTransformType>>>,
     // drop DB last
-    pub(crate) db: Option<Arc<RefCell<DB>>>,
+    pub(crate) db: DbReferenceHolder,
 }
 
 /// Define DB Access Types.
@@ -136,9 +137,9 @@ impl Rdict {
         .save(config_path)
     }
 
-    fn get_db(&self) -> PyResult<&Arc<RefCell<DB>>> {
+    fn get_db(&self) -> PyResult<&DbReference> {
         self.db
-            .as_ref()
+            .get()
             .ok_or_else(|| DbClosedError::new_err("DB instance already closed"))
     }
 }
@@ -266,7 +267,7 @@ impl Rdict {
                     // save rocksdict config
                     rocksdict_config.save(config_path)?;
                     Ok(Rdict {
-                        db: Some(Arc::new(RefCell::new(db))),
+                        db: DbReferenceHolder::new(db),
                         write_opt: (&w_opt).into(),
                         flush_opt: FlushOptionsPy::new(),
                         read_opt: r_opt.to_read_options(options.raw_mode, py)?,
@@ -640,7 +641,7 @@ impl Rdict {
         };
 
         RdictIter::new(
-            self.get_db()?,
+            &self.db,
             &self.column_family,
             read_opt,
             &self.loads,
@@ -818,7 +819,7 @@ impl Rdict {
                 "column name `{name}` does not exist, use `create_cf` to creat it",
             ))),
             Some(cf) => Ok(Self {
-                db: Some(db.clone()),
+                db: self.db.clone(),
                 write_opt: (&self.write_opt_py).into(),
                 flush_opt: self.flush_opt,
                 read_opt: self.read_opt_py.to_read_options(self.opt_py.raw_mode, py)?,
@@ -855,7 +856,10 @@ impl Rdict {
             None => Err(PyException::new_err(format!(
                 "column name `{name}` does not exist, use `create_cf` to creat it",
             ))),
-            Some(cf) => Ok(ColumnFamilyPy { cf, db: db.clone() }),
+            Some(cf) => Ok(ColumnFamilyPy {
+                cf,
+                db: self.db.clone(),
+            }),
         }
     }
 
@@ -1014,8 +1018,8 @@ impl Rdict {
     ///     Other Column Family `Rdict` instances, `ColumnFamily`
     ///     (cf handle) instances, iterator instances such as`RdictIter`,
     ///     `RdictItems`, `RdictKeys`, `RdictValues` can all keep RocksDB
-    ///     alive. `del` all associated instances mentioned above
-    ///     to actually shut down RocksDB.
+    ///     alive. `del` or `close` all associated instances mentioned
+    ///     above to actually shut down RocksDB.
     ///
     fn close(&mut self) -> PyResult<()> {
         let f_opt = &self.flush_opt;
@@ -1024,7 +1028,7 @@ impl Rdict {
             AccessTypeInner::ReadOnly { .. } | AccessTypeInner::Secondary { .. } => {
                 drop(db);
                 drop(self.column_family.take());
-                drop(self.db.take());
+                self.db.close();
                 return Ok(());
             }
             _ => (),
@@ -1037,7 +1041,7 @@ impl Rdict {
         };
         drop(db);
         drop(self.column_family.take());
-        drop(self.db.take());
+        self.db.close();
         match (flush_result, flush_wal_result) {
             (Ok(_), Ok(_)) => Ok(()),
             (Err(e), Ok(_)) => Err(PyException::new_err(e.to_string())),
@@ -1257,7 +1261,7 @@ fn get_batch_inner<'a>(
 impl Drop for Rdict {
     // flush
     fn drop(&mut self) {
-        if let Some(db) = &self.db {
+        if let Some(db) = self.db.get() {
             let f_opt = &self.flush_opt;
             let db = db.borrow();
             let _ = if let Some(cf) = &self.column_family {
@@ -1269,7 +1273,7 @@ impl Drop for Rdict {
         // important, always drop column families first
         // to ensure that CF handles have shorter life than DB.
         drop(self.column_family.take());
-        drop(self.db.take());
+        self.db.close();
     }
 }
 
@@ -1283,7 +1287,7 @@ pub(crate) struct ColumnFamilyPy {
     // must follow this drop order
     pub(crate) cf: Arc<ColumnFamily>,
     // must keep db alive
-    db: Arc<RefCell<DB>>,
+    db: DbReferenceHolder,
 }
 
 unsafe impl Send for ColumnFamilyPy {}

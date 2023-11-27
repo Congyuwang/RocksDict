@@ -1,9 +1,10 @@
+use crate::db_reference::{DbReference, DbReferenceHolder};
 use crate::encoder::{decode_value, encode_key};
+use crate::exceptions::DbClosedError;
 use crate::{Rdict, RdictItems, RdictIter, RdictKeys, RdictValues, ReadOptionsPy};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use rocksdb::{ColumnFamily, ReadOptions, DB};
-use std::cell::RefCell;
+use rocksdb::{ColumnFamily, ReadOptions};
 use std::ops::Deref;
 use std::sync::Arc;
 
@@ -43,7 +44,7 @@ pub struct Snapshot {
     pub(crate) pickle_loads: PyObject,
     pub(crate) read_opt: ReadOptions,
     // decrease db Rc last
-    pub(crate) db: Arc<RefCell<DB>>,
+    pub(crate) db: DbReferenceHolder,
     pub(crate) raw_mode: bool,
 }
 
@@ -133,7 +134,7 @@ impl Snapshot {
 
     /// read from snapshot
     fn __getitem__(&self, key: &PyAny, py: Python) -> PyResult<PyObject> {
-        let db = self.db.borrow();
+        let db = self.get_db().borrow();
         let key = encode_key(key, self.raw_mode)?;
         let value_result = if let Some(cf) = &self.column_family {
             db.get_pinned_cf_opt(cf.deref(), &key[..], &self.read_opt)
@@ -152,33 +153,40 @@ impl Snapshot {
 
 impl Snapshot {
     pub(crate) fn new(rdict: &Rdict, py: Python) -> PyResult<Self> {
-        if let Some(db) = &rdict.db {
-            let db_borrow = db.borrow();
-            let snapshot = unsafe { librocksdb_sys::rocksdb_create_snapshot(db_borrow.inner()) };
-            let r_opt: ReadOptions = rdict
-                .read_opt_py
-                .to_read_options(rdict.opt_py.raw_mode, py)?;
-            unsafe {
-                set_snapshot(r_opt.inner(), snapshot);
-            }
-            Ok(Snapshot {
-                inner: snapshot,
-                column_family: rdict.column_family.clone(),
-                pickle_loads: rdict.loads.clone(),
-                read_opt: r_opt,
-                db: db.clone(),
-                raw_mode: rdict.opt_py.raw_mode,
-            })
-        } else {
-            Err(PyException::new_err("DB already closed"))
+        let db_inner = rdict
+            .db
+            .get()
+            .ok_or_else(|| DbClosedError::new_err("DB instance already closed"))?
+            .borrow()
+            .inner();
+        let snapshot = unsafe { librocksdb_sys::rocksdb_create_snapshot(db_inner) };
+        let r_opt: ReadOptions = rdict
+            .read_opt_py
+            .to_read_options(rdict.opt_py.raw_mode, py)?;
+        unsafe {
+            set_snapshot(r_opt.inner(), snapshot);
         }
+        Ok(Snapshot {
+            inner: snapshot,
+            column_family: rdict.column_family.clone(),
+            pickle_loads: rdict.loads.clone(),
+            read_opt: r_opt,
+            db: rdict.db.clone(),
+            raw_mode: rdict.opt_py.raw_mode,
+        })
+    }
+
+    fn get_db(&self) -> &DbReference {
+        self.db
+            .get()
+            .expect("Snapshot should never close its DbReference")
     }
 }
 
 impl Drop for Snapshot {
     fn drop(&mut self) {
         unsafe {
-            librocksdb_sys::rocksdb_release_snapshot(self.db.borrow().inner(), self.inner);
+            librocksdb_sys::rocksdb_release_snapshot(self.get_db().borrow().inner(), self.inner);
         }
     }
 }

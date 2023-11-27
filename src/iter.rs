@@ -1,12 +1,13 @@
+use crate::db_reference::DbReferenceHolder;
 use crate::encoder::{decode_value, encode_key};
+use crate::exceptions::DbClosedError;
 use crate::util::error_message;
 use crate::{ReadOpt, ReadOptionsPy};
 use core::slice;
 use libc::{c_char, c_uchar, size_t};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use rocksdb::{AsColumnFamilyRef, ColumnFamily, DB};
-use std::cell::RefCell;
+use rocksdb::{AsColumnFamilyRef, ColumnFamily};
 use std::ptr::null_mut;
 use std::sync::Arc;
 
@@ -14,7 +15,7 @@ use std::sync::Arc;
 #[allow(dead_code)]
 pub(crate) struct RdictIter {
     /// iterator must keep a reference count of DB to keep DB alive.
-    pub(crate) db: Arc<RefCell<DB>>,
+    pub(crate) db: DbReferenceHolder,
 
     pub(crate) inner: *mut librocksdb_sys::rocksdb_iterator_t,
 
@@ -49,7 +50,7 @@ pub(crate) struct RdictValues {
 
 impl RdictIter {
     pub(crate) fn new(
-        db: &Arc<RefCell<DB>>,
+        db: &DbReferenceHolder,
         cf: &Option<Arc<ColumnFamily>>,
         readopts: ReadOptionsPy,
         pickle_loads: &PyObject,
@@ -57,18 +58,21 @@ impl RdictIter {
         py: Python,
     ) -> PyResult<Self> {
         let readopts = readopts.to_read_opt(raw_mode, py)?;
+
+        let db_inner = db
+            .get()
+            .ok_or_else(|| DbClosedError::new_err("DB instance already closed"))?
+            .borrow()
+            .inner();
+
         Ok(RdictIter {
             db: db.clone(),
             inner: unsafe {
                 match cf {
-                    None => {
-                        librocksdb_sys::rocksdb_create_iterator(db.borrow().inner(), readopts.0)
+                    None => librocksdb_sys::rocksdb_create_iterator(db_inner, readopts.0),
+                    Some(cf) => {
+                        librocksdb_sys::rocksdb_create_iterator_cf(db_inner, readopts.0, cf.inner())
                     }
-                    Some(cf) => librocksdb_sys::rocksdb_create_iterator_cf(
-                        db.borrow().inner(),
-                        readopts.0,
-                        cf.inner(),
-                    ),
                 }
             },
             readopts,
