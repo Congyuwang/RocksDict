@@ -30,7 +30,8 @@ __all__ = ["Rdict",
            "Snapshot",
            "CompactOptions",
            "BottommostLevelCompaction",
-           "KeyEncodingType"]
+           "KeyEncodingType",
+           "DbClosedError"]
 
 class DataBlockIndexType:
     @staticmethod
@@ -547,3 +548,6 @@ class KeyEncodingType:
     def none() -> KeyEncodingType: ...
     @staticmethod
     def prefix() -> KeyEncodingType: ...
+
+class DbClosedError(Exception):
+    """Raised when accessing a closed database instance."""
