@@ -1,4 +1,5 @@
 // #![feature(core_intrinsics)]
+mod db_reference;
 mod encoder;
 mod exceptions;
 mod iter;
