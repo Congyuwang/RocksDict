@@ -390,7 +390,7 @@ class Rdict:
             default: Any = None,
             read_opt: Union[ReadOptions, None] = None) -> Any | None: ...
     def multi_get(self,
-                  key: Union[List[str], List[int], List[float], List[bytes], List[bool]],
+                  key: List[Union[str, int, float, bytes, bool, None]],
                   read_opt: Union[ReadOptions, None] = None) -> List[Any] | None : ...
     def put(self,
             key: Union[str, int, float, bytes, bool],
