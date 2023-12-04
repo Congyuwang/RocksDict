@@ -7,7 +7,7 @@ use core::slice;
 use libc::{c_char, c_uchar, size_t};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use rocksdb::{AsColumnFamilyRef, ColumnFamily};
+use rocksdb::{AsColumnFamilyRef, UnboundColumnFamily};
 use std::ptr::null_mut;
 use std::sync::Arc;
 
@@ -51,7 +51,7 @@ pub(crate) struct RdictValues {
 impl RdictIter {
     pub(crate) fn new(
         db: &DbReferenceHolder,
-        cf: &Option<Arc<ColumnFamily>>,
+        cf: &Option<Arc<UnboundColumnFamily>>,
         readopts: ReadOptionsPy,
         pickle_loads: &PyObject,
         raw_mode: bool,
@@ -62,7 +62,6 @@ impl RdictIter {
         let db_inner = db
             .get()
             .ok_or_else(|| DbClosedError::new_err("DB instance already closed"))?
-            .borrow()
             .inner();
 
         Ok(RdictIter {
@@ -90,6 +89,7 @@ impl RdictIter {
     /// To check whether the iterator encountered an error after `valid` has
     /// returned `false`, use the [`status`](DBRawIteratorWithThreadMode::status) method. `status` will never
     /// return an error when `valid` is `true`.
+    #[inline]
     pub fn valid(&self) -> bool {
         unsafe { librocksdb_sys::rocksdb_iter_valid(self.inner) != 0 }
     }
@@ -135,10 +135,11 @@ impl RdictIter {
     ///
     ///         del iter, db
     ///         Rdict.destroy(path, Options())
-    pub fn seek_to_first(&mut self) {
-        unsafe {
-            librocksdb_sys::rocksdb_iter_seek_to_first(self.inner);
-        }
+    pub fn seek_to_first(&mut self, py: Python) {
+        py.allow_threads(|| unsafe {
+            let this_self = self;
+            librocksdb_sys::rocksdb_iter_seek_to_first(this_self.inner);
+        })
     }
 
     /// Seeks to the last key in the database.
@@ -165,10 +166,11 @@ impl RdictIter {
     ///
     ///         del iter, db
     ///         Rdict.destroy(path, Options())
-    pub fn seek_to_last(&mut self) {
-        unsafe {
-            librocksdb_sys::rocksdb_iter_seek_to_last(self.inner);
-        }
+    pub fn seek_to_last(&mut self, py: Python) {
+        py.allow_threads(|| unsafe {
+            let this_self = self;
+            librocksdb_sys::rocksdb_iter_seek_to_last(this_self.inner);
+        })
     }
 
     /// Seeks to the specified key or the first key that lexicographically follows it.
@@ -191,15 +193,16 @@ impl RdictIter {
     ///
     ///         del iter, db
     ///         Rdict.destroy(path, Options())
-    pub fn seek(&mut self, key: &PyAny) -> PyResult<()> {
+    pub fn seek(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
         let key = encode_key(key, self.raw_mode)?;
-        unsafe {
+        py.allow_threads(|| unsafe {
+            let this_self = self;
             librocksdb_sys::rocksdb_iter_seek(
-                self.inner,
+                this_self.inner,
                 key.as_ptr() as *const c_char,
                 key.len() as size_t,
             );
-        }
+        });
         Ok(())
     }
 
@@ -224,30 +227,33 @@ impl RdictIter {
     ///
     ///         del iter, db
     ///         Rdict.destroy(path, Options())
-    pub fn seek_for_prev(&mut self, key: &PyAny) -> PyResult<()> {
+    pub fn seek_for_prev(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
         let key = encode_key(key, self.raw_mode)?;
-        unsafe {
+        py.allow_threads(|| unsafe {
+            let this_self = self;
             librocksdb_sys::rocksdb_iter_seek_for_prev(
-                self.inner,
+                this_self.inner,
                 key.as_ptr() as *const c_char,
                 key.len() as size_t,
             );
-        }
+        });
         Ok(())
     }
 
     /// Seeks to the next key.
-    pub fn next(&mut self) {
-        unsafe {
-            librocksdb_sys::rocksdb_iter_next(self.inner);
-        }
+    pub fn next(&mut self, py: Python) {
+        py.allow_threads(|| unsafe {
+            let this_self = self;
+            librocksdb_sys::rocksdb_iter_next(this_self.inner);
+        })
     }
 
     /// Seeks to the previous key.
-    pub fn prev(&mut self) {
-        unsafe {
-            librocksdb_sys::rocksdb_iter_prev(self.inner);
-        }
+    pub fn prev(&mut self, py: Python) {
+        py.allow_threads(|| unsafe {
+            let this_self = self;
+            librocksdb_sys::rocksdb_iter_prev(this_self.inner);
+        })
     }
 
     /// Returns the current key.
@@ -257,9 +263,10 @@ impl RdictIter {
             // take `&mut self`, so borrow checker will prevent use of buffer after seek.
             unsafe {
                 let mut key_len: size_t = 0;
-                let key_len_ptr: *mut size_t = &mut key_len;
-                let key_ptr =
-                    librocksdb_sys::rocksdb_iter_key(self.inner, key_len_ptr) as *const c_uchar;
+                let key_ptr = py.allow_threads(|| {
+                    let this_self = self;
+                    librocksdb_sys::rocksdb_iter_key(this_self.inner, &mut key_len) as size_t
+                }) as *const c_uchar;
                 let key = slice::from_raw_parts(key_ptr, key_len);
                 Ok(decode_value(py, key, &self.pickle_loads, self.raw_mode)?)
             }
@@ -275,9 +282,10 @@ impl RdictIter {
             // take `&mut self`, so borrow checker will prevent use of buffer after seek.
             unsafe {
                 let mut val_len: size_t = 0;
-                let val_len_ptr: *mut size_t = &mut val_len;
-                let val_ptr =
-                    librocksdb_sys::rocksdb_iter_value(self.inner, val_len_ptr) as *const c_uchar;
+                let val_ptr = py.allow_threads(|| {
+                    let this_self = self;
+                    librocksdb_sys::rocksdb_iter_value(this_self.inner, &mut val_len) as size_t
+                }) as *const c_uchar;
                 let value = slice::from_raw_parts(val_ptr, val_len);
                 Ok(decode_value(py, value, &self.pickle_loads, self.raw_mode)?)
             }
@@ -296,6 +304,7 @@ impl Drop for RdictIter {
 }
 
 unsafe impl Send for RdictIter {}
+unsafe impl Sync for RdictIter {}
 
 macro_rules! impl_iter {
     ($iter_name: ident, $($field: ident),*) => {
@@ -305,15 +314,15 @@ macro_rules! impl_iter {
                 slf
             }
 
-            fn __next__(mut slf: PyRefMut<Self>) -> PyResult<Option<PyObject>> {
+            fn __next__(mut slf: PyRefMut<Self>, py: Python) -> PyResult<Option<PyObject>> {
                 if slf.inner.valid() {
-                    $(let $field = Python::with_gil(|py| slf.inner.$field(py))?;)*
+                    $(let $field = slf.inner.$field(py)?;)*
                     if slf.backwards {
-                        slf.inner.prev();
+                        slf.inner.prev(py);
                     } else {
-                        slf.inner.next();
+                        slf.inner.next(py);
                     }
-                    Ok(Some(Python::with_gil(|py| ($($field),*).to_object(py))))
+                    Ok(Some(($($field),*).to_object(py)))
                 } else {
                     Ok(None)
                 }
@@ -321,19 +330,19 @@ macro_rules! impl_iter {
         }
 
         impl $iter_name {
-            pub(crate) fn new(inner: RdictIter, backwards: bool, from_key: Option<&PyAny>) -> PyResult<Self> {
+            pub(crate) fn new(inner: RdictIter, backwards: bool, from_key: Option<&PyAny>, py: Python) -> PyResult<Self> {
                 let mut inner = inner;
                 if let Some(from_key) = from_key {
                     if backwards {
-                        inner.seek_for_prev(from_key)?;
+                        inner.seek_for_prev(from_key, py)?;
                     } else {
-                        inner.seek(from_key)?;
+                        inner.seek(from_key, py)?;
                     }
                 } else {
                     if backwards {
-                        inner.seek_to_last();
+                        inner.seek_to_last(py);
                     } else {
-                        inner.seek_to_first();
+                        inner.seek_to_first(py);
                     }
                 }
                 Ok(Self {

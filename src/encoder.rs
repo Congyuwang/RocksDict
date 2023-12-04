@@ -68,7 +68,6 @@ pub(crate) fn encode_value<'a>(
     value: &'a PyAny,
     dumps: &PyObject,
     raw_mode: bool,
-    py: Python,
 ) -> PyResult<Cow<'a, [u8]>> {
     if raw_mode {
         if let Ok(value) = <PyBytes as PyTryFrom>::try_from(value) {
@@ -92,7 +91,8 @@ pub(crate) fn encode_value<'a>(
                 concat_type_encoding(type_encoding, if value { &[1u8] } else { &[0u8] })
             }
             ValueTypes::Any(value) => {
-                let pickle_bytes: Vec<u8> = dumps.call1(py, (value,))?.extract(py)?;
+                let pickle_bytes: Vec<u8> =
+                    Python::with_gil(|py| dumps.call1(py, (value,))?.extract(py))?;
                 concat_type_encoding(type_encoding, &pickle_bytes[..])
             }
         };

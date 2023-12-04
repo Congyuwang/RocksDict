@@ -3,7 +3,6 @@ use crate::ColumnFamilyPy;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use rocksdb::WriteBatch;
-use std::ops::Deref;
 
 /// WriteBatch class. Use db.write() to ingest WriteBatch.
 ///
@@ -52,13 +51,13 @@ impl WriteBatchPy {
         self.len()
     }
 
-    pub fn __setitem__(&mut self, key: &PyAny, value: &PyAny, py: Python) -> PyResult<()> {
+    pub fn __setitem__(&mut self, key: &PyAny, value: &PyAny) -> PyResult<()> {
         if let Some(inner) = &mut self.inner {
             let key = encode_key(key, self.raw_mode)?;
-            let value = encode_value(value, &self.dumps, self.raw_mode, py)?;
+            let value = encode_value(value, &self.dumps, self.raw_mode)?;
             match &self.default_column_family {
                 None => inner.put(key, value),
-                Some(cf) => inner.put_cf(cf.cf.deref(), key, value),
+                Some(cf) => inner.put_cf(&cf.cf, key, value),
             }
             Ok(())
         } else {
@@ -73,7 +72,7 @@ impl WriteBatchPy {
             let key = encode_key(key, self.raw_mode)?;
             match &self.default_column_family {
                 None => inner.delete(key),
-                Some(cf) => inner.delete_cf(cf.cf.deref(), key),
+                Some(cf) => inner.delete_cf(&cf.cf, key),
             }
             Ok(())
         } else {
@@ -146,13 +145,12 @@ impl WriteBatchPy {
         key: &PyAny,
         value: &PyAny,
         column_family: Option<ColumnFamilyPy>,
-        py: Python,
     ) -> PyResult<()> {
         if let Some(inner) = &mut self.inner {
             let key = encode_key(key, self.raw_mode)?;
-            let value = encode_value(value, &self.dumps, self.raw_mode, py)?;
+            let value = encode_value(value, &self.dumps, self.raw_mode)?;
             match column_family {
-                Some(cf) => inner.put_cf(cf.cf.deref(), key, value),
+                Some(cf) => inner.put_cf(&cf.cf, key, value),
                 None => inner.put(key, value),
             }
 
@@ -173,7 +171,7 @@ impl WriteBatchPy {
         if let Some(inner) = &mut self.inner {
             let key = encode_key(key, self.raw_mode)?;
             match column_family {
-                Some(cf) => inner.delete_cf(cf.cf.deref(), key),
+                Some(cf) => inner.delete_cf(&cf.cf, key),
                 None => inner.delete(key),
             }
             Ok(())
@@ -206,7 +204,7 @@ impl WriteBatchPy {
             let from = encode_key(begin, self.raw_mode)?;
             let to = encode_key(end, self.raw_mode)?;
             match column_family {
-                Some(cf) => inner.delete_range_cf(cf.cf.deref(), from, to),
+                Some(cf) => inner.delete_range_cf(&cf.cf, from, to),
                 None => inner.delete_range(from, to),
             }
             Ok(())
