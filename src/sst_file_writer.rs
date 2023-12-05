@@ -95,24 +95,24 @@ impl SstFileWriterPy {
     }
 
     /// Prepare SstFileWriter to write into file located at "file_path".
-    fn open(&self, path: &str, py: Python) -> PyResult<()> {
+    fn open(&self, path: &str) -> PyResult<()> {
         let cpath = to_cpath(path)?;
         self.open_raw(&cpath)
     }
 
     /// Finalize writing to sst file and close file.
-    fn finish(&mut self, py: Python) -> PyResult<()> {
+    fn finish(&mut self) -> PyResult<()> {
         self.finish_raw()
     }
 
     /// returns the current file size
-    fn file_size(&self, py: Python) -> u64 {
+    fn file_size(&self) -> u64 {
         self.file_size_raw()
     }
 
     /// Adds a Put key with value to currently opened file
     /// REQUIRES: key is after any previously added key according to comparator.
-    fn __setitem__(&mut self, key: &PyAny, value: &PyAny, py: Python) -> PyResult<()> {
+    fn __setitem__(&mut self, key: &PyAny, value: &PyAny) -> PyResult<()> {
         let key = encode_key(key, self.raw_mode)?;
         let value = encode_value(value, &self.dumps, self.raw_mode)?;
         self.setitem_raw(&key, &value)
@@ -120,7 +120,7 @@ impl SstFileWriterPy {
 
     /// Adds a deletion key to currently opened file
     /// REQUIRES: key is after any previously added key according to comparator.
-    fn __delitem__(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
+    fn __delitem__(&mut self, key: &PyAny) -> PyResult<()> {
         let key = encode_key(key, self.raw_mode)?;
         self.delitem_raw(&key)
     }
