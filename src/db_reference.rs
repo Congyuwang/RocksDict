@@ -2,8 +2,6 @@ use rocksdb::{DBWithThreadMode, MultiThreaded};
 use std::sync::Arc;
 
 /// The type of a reference to a [rocksdb::DB] that is passed around the library.
-/// DbReference implements sync + send since most operations are thread safe
-/// except for those related to cf.
 pub(crate) type DbReference = Arc<DBWithThreadMode<MultiThreaded>>;
 
 /// A wrapper around [DbReference] that cancels all background work when dropped.

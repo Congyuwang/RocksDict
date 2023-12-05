@@ -336,7 +336,7 @@ impl Rdict {
         }
     }
 
-    /// Get value from key.
+    /// Get value from key or a list of keys.
     ///
     /// Args:
     ///     key: a single key or list of keys.
@@ -356,7 +356,6 @@ impl Rdict {
         py: Python,
     ) -> PyResult<Option<PyObject>> {
         let db = self.get_db()?;
-        let key_bytes = encode_key(key, self.opt_py.raw_mode)?;
         let read_opt_option = match read_opt {
             None => None,
             Some(opt) => Some(opt.to_read_options(self.opt_py.raw_mode, py)?),
@@ -372,6 +371,21 @@ impl Rdict {
             }
             Some(cf) => cf.clone(),
         };
+        if let Ok(keys) = PyTryFrom::try_from(key) {
+            return Ok(Some(
+                get_batch_inner(
+                    db,
+                    keys,
+                    py,
+                    read_opt,
+                    &self.loads,
+                    &cf,
+                    self.opt_py.raw_mode,
+                )?
+                .to_object(py),
+            ));
+        }
+        let key_bytes = encode_key(key, self.opt_py.raw_mode)?;
         let value_result = db
             .get_pinned_cf_opt(&cf, key_bytes, read_opt)
             .map_err(|e| PyException::new_err(e.to_string()))?;
@@ -391,54 +405,6 @@ impl Rdict {
                 self.opt_py.raw_mode,
             )?)),
         }
-    }
-
-    /// Get multiple value from a list of keys.
-    ///
-    /// Args:
-    ///     key: a list of keys.
-    ///     default: the default value to return if key not found.
-    ///     read_opt: override preset read options
-    ///         (or use Rdict.set_read_options to preset a read options used by default).
-    ///
-    /// Returns:
-    ///    None or default value if the key does not exist.
-    #[pyo3(signature = (key, read_opt = None))]
-    fn multi_get(
-        &self,
-        key: &PyAny,
-        read_opt: Option<&ReadOptionsPy>,
-        py: Python,
-    ) -> PyResult<Option<PyObject>> {
-        let db = self.get_db()?;
-        let read_opt_option = match read_opt {
-            None => None,
-            Some(opt) => Some(opt.to_read_options(self.opt_py.raw_mode, py)?),
-        };
-        let read_opt = match &read_opt_option {
-            None => &self.read_opt,
-            Some(opt) => opt,
-        };
-        let cf = match &self.column_family {
-            None => {
-                self.get_column_family_handle(DEFAULT_COLUMN_FAMILY_NAME)?
-                    .cf
-            }
-            Some(cf) => cf.clone(),
-        };
-        let keys = PyTryFrom::try_from(key).map_err(|e| PyException::new_err(e.to_string()))?;
-        Ok(Some(
-            get_batch_inner(
-                db,
-                keys,
-                py,
-                read_opt,
-                &self.loads,
-                &cf,
-                self.opt_py.raw_mode,
-            )?
-            .to_object(py),
-        ))
     }
 
     fn __setitem__(&self, key: &PyAny, value: &PyAny) -> PyResult<()> {
@@ -927,7 +893,7 @@ impl Rdict {
     }
 
     /// Request stopping background work, if wait is true wait until it's done.
-    pub fn cancel_all_background_work(&self, wait: bool) -> PyResult<()> {
+    pub fn cancel_all_background(&self, wait: bool) -> PyResult<()> {
         let db = self.get_db()?;
         db.cancel_all_background_work(wait);
         Ok(())
