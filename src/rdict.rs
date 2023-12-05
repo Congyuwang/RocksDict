@@ -476,7 +476,7 @@ impl Rdict {
         let db = self.get_db()?;
         let key = encode_key(key, self.opt_py.raw_mode)?;
         let value = encode_value(value, &self.dumps, self.opt_py.raw_mode)?;
-        let put_result = py.allow_threads(|| {
+        py.allow_threads(|| {
             let write_opt_option = write_opt.map(WriteOptions::from);
             let write_opt = match &write_opt_option {
                 None => &self.write_opt,
@@ -487,11 +487,8 @@ impl Rdict {
             } else {
                 db.put_opt(key, value, write_opt)
             }
-        });
-        match put_result {
-            Ok(_) => Ok(()),
-            Err(e) => Err(PyException::new_err(e.to_string())),
-        }
+            .map_err(|e| PyException::new_err(e.to_string()))
+        })
     }
 
     fn __contains__(&self, key: &PyAny, py: Python) -> PyResult<bool> {
@@ -717,7 +714,7 @@ impl Rdict {
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictItems> {
-        RdictItems::new(self.iter(read_opt, py)?, backwards, from_key, py)
+        RdictItems::new(self.iter(read_opt, py)?, backwards, from_key)
     }
 
     /// Iterate through all keys
@@ -741,7 +738,7 @@ impl Rdict {
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictKeys> {
-        RdictKeys::new(self.iter(read_opt, py)?, backwards, from_key, py)
+        RdictKeys::new(self.iter(read_opt, py)?, backwards, from_key)
     }
 
     /// Iterate through all values.
@@ -765,7 +762,7 @@ impl Rdict {
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictValues> {
-        RdictValues::new(self.iter(read_opt, py)?, backwards, from_key, py)
+        RdictValues::new(self.iter(read_opt, py)?, backwards, from_key)
     }
 
     /// Manually flush the current column family.
