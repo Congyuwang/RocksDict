@@ -7,7 +7,7 @@ use core::slice;
 use libc::{c_char, c_uchar, size_t};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use rocksdb::{AsColumnFamilyRef, ColumnFamily};
+use rocksdb::{AsColumnFamilyRef, UnboundColumnFamily};
 use std::ptr::null_mut;
 use std::sync::Arc;
 
@@ -51,7 +51,7 @@ pub(crate) struct RdictValues {
 impl RdictIter {
     pub(crate) fn new(
         db: &DbReferenceHolder,
-        cf: &Option<Arc<ColumnFamily>>,
+        cf: &Option<Arc<UnboundColumnFamily>>,
         readopts: ReadOptionsPy,
         pickle_loads: &PyObject,
         raw_mode: bool,
@@ -62,7 +62,6 @@ impl RdictIter {
         let db_inner = db
             .get()
             .ok_or_else(|| DbClosedError::new_err("DB instance already closed"))?
-            .borrow()
             .inner();
 
         Ok(RdictIter {
@@ -90,6 +89,7 @@ impl RdictIter {
     /// To check whether the iterator encountered an error after `valid` has
     /// returned `false`, use the [`status`](DBRawIteratorWithThreadMode::status) method. `status` will never
     /// return an error when `valid` is `true`.
+    #[inline]
     pub fn valid(&self) -> bool {
         unsafe { librocksdb_sys::rocksdb_iter_valid(self.inner) != 0 }
     }
@@ -305,15 +305,15 @@ macro_rules! impl_iter {
                 slf
             }
 
-            fn __next__(mut slf: PyRefMut<Self>) -> PyResult<Option<PyObject>> {
+            fn __next__(mut slf: PyRefMut<Self>, py: Python) -> PyResult<Option<PyObject>> {
                 if slf.inner.valid() {
-                    $(let $field = Python::with_gil(|py| slf.inner.$field(py))?;)*
+                    $(let $field = slf.inner.$field(py)?;)*
                     if slf.backwards {
                         slf.inner.prev();
                     } else {
                         slf.inner.next();
                     }
-                    Ok(Some(Python::with_gil(|py| ($($field),*).to_object(py))))
+                    Ok(Some(($($field),*).to_object(py)))
                 } else {
                     Ok(None)
                 }

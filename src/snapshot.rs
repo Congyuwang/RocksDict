@@ -4,8 +4,7 @@ use crate::exceptions::DbClosedError;
 use crate::{Rdict, RdictItems, RdictIter, RdictKeys, RdictValues, ReadOptionsPy};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use rocksdb::{ColumnFamily, ReadOptions};
-use std::ops::Deref;
+use rocksdb::{ReadOptions, UnboundColumnFamily};
 use std::sync::Arc;
 
 /// A consistent view of the database at the point of creation.
@@ -40,7 +39,7 @@ use std::sync::Arc;
 #[pyclass]
 pub struct Snapshot {
     pub(crate) inner: *const librocksdb_sys::rocksdb_snapshot_t,
-    pub(crate) column_family: Option<Arc<ColumnFamily>>,
+    pub(crate) column_family: Option<Arc<UnboundColumnFamily>>,
     pub(crate) pickle_loads: PyObject,
     pub(crate) read_opt: ReadOptions,
     // decrease db Rc last
@@ -134,10 +133,10 @@ impl Snapshot {
 
     /// read from snapshot
     fn __getitem__(&self, key: &PyAny, py: Python) -> PyResult<PyObject> {
-        let db = self.get_db().borrow();
+        let db = self.get_db();
         let key = encode_key(key, self.raw_mode)?;
         let value_result = if let Some(cf) = &self.column_family {
-            db.get_pinned_cf_opt(cf.deref(), &key[..], &self.read_opt)
+            db.get_pinned_cf_opt(cf, &key[..], &self.read_opt)
         } else {
             db.get_pinned_opt(&key[..], &self.read_opt)
         };
@@ -157,7 +156,6 @@ impl Snapshot {
             .db
             .get()
             .ok_or_else(|| DbClosedError::new_err("DB instance already closed"))?
-            .borrow()
             .inner();
         let snapshot = unsafe { librocksdb_sys::rocksdb_create_snapshot(db_inner) };
         let r_opt: ReadOptions = rdict
@@ -186,7 +184,7 @@ impl Snapshot {
 impl Drop for Snapshot {
     fn drop(&mut self) {
         unsafe {
-            librocksdb_sys::rocksdb_release_snapshot(self.get_db().borrow().inner(), self.inner);
+            librocksdb_sys::rocksdb_release_snapshot(self.get_db().inner(), self.inner);
         }
     }
 }

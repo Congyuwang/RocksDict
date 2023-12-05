@@ -476,6 +476,7 @@ pub(crate) struct BottommostLevelCompactionPy(BottommostLevelCompaction);
 pub(crate) struct CompactOptionsPy(pub(crate) CompactOptions);
 
 unsafe impl Send for CompactOptionsPy {}
+unsafe impl Sync for CompactOptionsPy {}
 
 impl OptionsPy {
     /// function that sets prefix extractor according to slice transform type

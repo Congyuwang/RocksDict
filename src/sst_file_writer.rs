@@ -102,52 +102,39 @@ impl SstFileWriterPy {
 
     /// Finalize writing to sst file and close file.
     fn finish(&mut self) -> PyResult<()> {
-        unsafe {
-            ffi_try!(librocksdb_sys::rocksdb_sstfilewriter_finish(self.inner,));
-            Ok(())
-        }
+        self.finish_raw()
     }
 
     /// returns the current file size
     fn file_size(&self) -> u64 {
-        let mut file_size: u64 = 0;
-        unsafe { librocksdb_sys::rocksdb_sstfilewriter_file_size(self.inner, &mut file_size) };
-        file_size
+        self.file_size_raw()
     }
 
     /// Adds a Put key with value to currently opened file
     /// REQUIRES: key is after any previously added key according to comparator.
-    fn __setitem__(&mut self, key: &PyAny, value: &PyAny, py: Python) -> PyResult<()> {
+    fn __setitem__(&mut self, key: &PyAny, value: &PyAny) -> PyResult<()> {
         let key = encode_key(key, self.raw_mode)?;
-        let value = encode_value(value, &self.dumps, self.raw_mode, py)?;
-        unsafe {
-            ffi_try!(librocksdb_sys::rocksdb_sstfilewriter_put(
-                self.inner,
-                key.as_ptr() as *const c_char,
-                key.len() as size_t,
-                value.as_ptr() as *const c_char,
-                value.len() as size_t,
-            ));
-        }
-        Ok(())
+        let value = encode_value(value, &self.dumps, self.raw_mode)?;
+        self.setitem_raw(&key, &value)
     }
 
     /// Adds a deletion key to currently opened file
     /// REQUIRES: key is after any previously added key according to comparator.
     fn __delitem__(&mut self, key: &PyAny) -> PyResult<()> {
         let key = encode_key(key, self.raw_mode)?;
-        unsafe {
-            ffi_try!(librocksdb_sys::rocksdb_sstfilewriter_delete(
-                self.inner,
-                key.as_ptr() as *const c_char,
-                key.len() as size_t,
-            ));
-        }
-        Ok(())
+        self.delitem_raw(&key)
     }
 }
 
 impl SstFileWriterPy {
+    #[inline]
+    fn create_raw(
+        opts: &Options,
+        env_opts: &EnvOptions,
+    ) -> *mut librocksdb_sys::rocksdb_sstfilewriter_t {
+        unsafe { librocksdb_sys::rocksdb_sstfilewriter_create(env_opts.inner, opts.inner()) }
+    }
+
     #[inline]
     fn open_raw(&self, cpath: &CString) -> PyResult<()> {
         unsafe {
@@ -161,11 +148,44 @@ impl SstFileWriterPy {
     }
 
     #[inline]
-    fn create_raw(
-        opts: &Options,
-        env_opts: &EnvOptions,
-    ) -> *mut librocksdb_sys::rocksdb_sstfilewriter_t {
-        unsafe { librocksdb_sys::rocksdb_sstfilewriter_create(env_opts.inner, opts.inner()) }
+    fn finish_raw(&mut self) -> PyResult<()> {
+        unsafe {
+            ffi_try!(librocksdb_sys::rocksdb_sstfilewriter_finish(self.inner,));
+            Ok(())
+        }
+    }
+
+    #[inline]
+    fn file_size_raw(&self) -> u64 {
+        let mut file_size: u64 = 0;
+        unsafe { librocksdb_sys::rocksdb_sstfilewriter_file_size(self.inner, &mut file_size) };
+        file_size
+    }
+
+    #[inline]
+    fn setitem_raw(&mut self, key: &[u8], value: &[u8]) -> PyResult<()> {
+        unsafe {
+            ffi_try!(librocksdb_sys::rocksdb_sstfilewriter_put(
+                self.inner,
+                key.as_ptr() as *const c_char,
+                key.len() as size_t,
+                value.as_ptr() as *const c_char,
+                value.len() as size_t,
+            ));
+        }
+        Ok(())
+    }
+
+    #[inline]
+    fn delitem_raw(&mut self, key: &[u8]) -> PyResult<()> {
+        unsafe {
+            ffi_try!(librocksdb_sys::rocksdb_sstfilewriter_delete(
+                self.inner,
+                key.as_ptr() as *const c_char,
+                key.len() as size_t,
+            ));
+        }
+        Ok(())
     }
 }
 
