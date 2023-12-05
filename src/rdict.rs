@@ -168,110 +168,101 @@ impl Rdict {
         py: Python,
     ) -> PyResult<Self> {
         let pickle = PyModule::import(py, "pickle")?.to_object(py);
-        let (options, db, prefix_extractors) = py.allow_threads(|| {
-            // create db path if missing
-            fs::create_dir_all(path).map_err(|e| PyException::new_err(e.to_string()))?;
-            // load options
-            let options_loaded = OptionsPy::load_latest_inner(
-                path,
-                EnvPy::default()?,
-                false,
-                CachePy::new_lru_cache(DEFAULT_LRU_CACHE_SIZE),
-            );
-            // prioritize passed options over loaded options
-            let (options, column_families) = match (options_loaded, options, column_families) {
-                (Ok((opt_loaded, cols_loaded)), opt, cols) => match (opt, cols) {
-                    (Some(opt), Some(cols)) => (opt, Some(cols)),
-                    (Some(opt), None) => (opt, Some(cols_loaded)),
-                    (None, Some(cols)) => (opt_loaded, Some(cols)),
-                    (None, None) => (opt_loaded, Some(cols_loaded)),
-                },
-                (Err(_), Some(opt), cols) => (opt, cols),
-                (Err(_), None, cols) => {
-                    log::info!("using default configuration");
-                    (OptionsPy::new(false), cols)
-                }
-            };
-            // save slice transforms types in rocksdict config
-            let config_path = config_file(path);
-            let mut prefix_extractors = HashMap::new();
-            if let Some(slice_transform) = &options.prefix_extractor {
-                prefix_extractors.insert(
-                    DEFAULT_COLUMN_FAMILY_NAME.to_string(),
-                    slice_transform.clone(),
-                );
+        // create db path if missing
+        fs::create_dir_all(path).map_err(|e| PyException::new_err(e.to_string()))?;
+        // load options
+        let options_loaded = OptionsPy::load_latest_inner(
+            path,
+            EnvPy::default()?,
+            false,
+            CachePy::new_lru_cache(DEFAULT_LRU_CACHE_SIZE),
+        );
+        // prioritize passed options over loaded options
+        let (options, column_families) = match (options_loaded, options, column_families) {
+            (Ok((opt_loaded, cols_loaded)), opt, cols) => match (opt, cols) {
+                (Some(opt), Some(cols)) => (opt, Some(cols)),
+                (Some(opt), None) => (opt, Some(cols_loaded)),
+                (None, Some(cols)) => (opt_loaded, Some(cols)),
+                (None, None) => (opt_loaded, Some(cols_loaded)),
+            },
+            (Err(_), Some(opt), cols) => (opt, cols),
+            (Err(_), None, cols) => {
+                log::info!("using default configuration");
+                (OptionsPy::new(false), cols)
             }
-            if let Some(cf) = &column_families {
-                for (name, opt) in cf.iter() {
-                    if let Some(slice_transform) = &opt.prefix_extractor {
-                        prefix_extractors.insert(name.clone(), slice_transform.clone());
+        };
+        // save slice transforms types in rocksdict config
+        let config_path = config_file(path);
+        let mut prefix_extractors = HashMap::new();
+        if let Some(slice_transform) = &options.prefix_extractor {
+            prefix_extractors.insert(
+                DEFAULT_COLUMN_FAMILY_NAME.to_string(),
+                slice_transform.clone(),
+            );
+        }
+        if let Some(cf) = &column_families {
+            for (name, opt) in cf.iter() {
+                if let Some(slice_transform) = &opt.prefix_extractor {
+                    prefix_extractors.insert(name.clone(), slice_transform.clone());
+                }
+            }
+        }
+        let rocksdict_config = RocksDictConfig {
+            raw_mode: options.raw_mode,
+            prefix_extractors: prefix_extractors.clone(),
+        };
+        rocksdict_config.save(config_path)?;
+        let opt_inner = &options.inner_opt;
+        // define column families
+        let cfs = match column_families {
+            None => {
+                vec![ColumnFamilyDescriptor::new(
+                    DEFAULT_COLUMN_FAMILY_NAME,
+                    opt_inner.clone(),
+                )]
+            }
+            Some(cf) => {
+                let mut has_default_cf = false;
+                // check options_raw_mode for column families
+                for (cf_name, cf_opt) in cf.iter() {
+                    if cf_opt.raw_mode != options.raw_mode {
+                        return Err(PyException::new_err(format!(
+                            "Options should have raw_mode={}",
+                            options.raw_mode
+                        )));
+                    }
+                    if cf_name.as_str() == DEFAULT_COLUMN_FAMILY_NAME {
+                        has_default_cf = true;
                     }
                 }
-            }
-            let rocksdict_config = RocksDictConfig {
-                raw_mode: options.raw_mode,
-                prefix_extractors: prefix_extractors.clone(),
-            };
-            rocksdict_config.save(config_path)?;
-            let opt_inner = &options.inner_opt;
-            // define column families
-            let cfs = match column_families {
-                None => {
-                    vec![ColumnFamilyDescriptor::new(
+                let mut cfs = cf
+                    .into_iter()
+                    .map(|(name, opt)| ColumnFamilyDescriptor::new(name, opt.inner_opt))
+                    .collect::<Vec<_>>();
+                // automatically add default column families
+                if !has_default_cf {
+                    cfs.push(ColumnFamilyDescriptor::new(
                         DEFAULT_COLUMN_FAMILY_NAME,
                         opt_inner.clone(),
-                    )]
+                    ));
                 }
-                Some(cf) => {
-                    let mut has_default_cf = false;
-                    // check options_raw_mode for column families
-                    for (cf_name, cf_opt) in cf.iter() {
-                        if cf_opt.raw_mode != options.raw_mode {
-                            return Err(PyException::new_err(format!(
-                                "Options should have raw_mode={}",
-                                options.raw_mode
-                            )));
-                        }
-                        if cf_name.as_str() == DEFAULT_COLUMN_FAMILY_NAME {
-                            has_default_cf = true;
-                        }
-                    }
-                    let mut cfs = cf
-                        .into_iter()
-                        .map(|(name, opt)| ColumnFamilyDescriptor::new(name, opt.inner_opt))
-                        .collect::<Vec<_>>();
-                    // automatically add default column families
-                    if !has_default_cf {
-                        cfs.push(ColumnFamilyDescriptor::new(
-                            DEFAULT_COLUMN_FAMILY_NAME,
-                            opt_inner.clone(),
-                        ));
-                    }
-                    cfs
-                }
-            };
-            // open db
-            let db = match &access_type.0 {
-                AccessTypeInner::ReadWrite => DB::open_cf_descriptors(opt_inner, path, cfs),
-                AccessTypeInner::ReadOnly {
-                    error_if_log_file_exist,
-                } => DB::open_cf_descriptors_read_only(
-                    opt_inner,
-                    path,
-                    cfs,
-                    *error_if_log_file_exist,
-                ),
-                AccessTypeInner::Secondary { secondary_path } => {
-                    DB::open_cf_descriptors_as_secondary(opt_inner, path, secondary_path, cfs)
-                }
-                AccessTypeInner::WithTTL { ttl } => {
-                    DB::open_cf_descriptors_with_ttl(opt_inner, path, cfs, *ttl)
-                }
+                cfs
             }
-            .map_err(|e| PyException::new_err(e.to_string()))?;
-            Ok((options, db, prefix_extractors))
-        })?;
-
+        };
+        // open db
+        let db = match &access_type.0 {
+            AccessTypeInner::ReadWrite => DB::open_cf_descriptors(opt_inner, path, cfs),
+            AccessTypeInner::ReadOnly {
+                error_if_log_file_exist,
+            } => DB::open_cf_descriptors_read_only(opt_inner, path, cfs, *error_if_log_file_exist),
+            AccessTypeInner::Secondary { secondary_path } => {
+                DB::open_cf_descriptors_as_secondary(opt_inner, path, secondary_path, cfs)
+            }
+            AccessTypeInner::WithTTL { ttl } => {
+                DB::open_cf_descriptors_with_ttl(opt_inner, path, cfs, *ttl)
+            }
+        }
+        .map_err(|e| PyException::new_err(e.to_string()))?;
         let r_opt = ReadOptionsPy::default(py)?;
         let w_opt = WriteOptionsPy::new();
         Ok(Rdict {
@@ -370,23 +361,20 @@ impl Rdict {
             None => None,
             Some(opt) => Some(opt.to_read_options(self.opt_py.raw_mode, py)?),
         };
-        let value_result = py.allow_threads(|| {
-            let read_opt = match &read_opt_option {
-                None => &self.read_opt,
-                Some(opt) => opt,
-            };
-            let cf = match &self.column_family {
-                None => {
-                    self.get_column_family_handle(DEFAULT_COLUMN_FAMILY_NAME)?
-                        .cf
-                }
-                Some(cf) => cf.clone(),
-            };
-            let slice = db
-                .get_pinned_cf_opt(&cf, key_bytes, read_opt)
-                .map_err(|e| PyException::new_err(e.to_string()))?;
-            Ok::<Option<DBPinnableSlice>, PyErr>(slice)
-        })?;
+        let read_opt = match &read_opt_option {
+            None => &self.read_opt,
+            Some(opt) => opt,
+        };
+        let cf = match &self.column_family {
+            None => {
+                self.get_column_family_handle(DEFAULT_COLUMN_FAMILY_NAME)?
+                    .cf
+            }
+            Some(cf) => cf.clone(),
+        };
+        let value_result = db
+            .get_pinned_cf_opt(&cf, key_bytes, read_opt)
+            .map_err(|e| PyException::new_err(e.to_string()))?;
         match value_result {
             None => {
                 // try to return default value
@@ -476,47 +464,43 @@ impl Rdict {
         let db = self.get_db()?;
         let key = encode_key(key, self.opt_py.raw_mode)?;
         let value = encode_value(value, &self.dumps, self.opt_py.raw_mode)?;
-        py.allow_threads(|| {
-            let write_opt_option = write_opt.map(WriteOptions::from);
-            let write_opt = match &write_opt_option {
-                None => &self.write_opt,
-                Some(opt) => opt,
-            };
-            if let Some(cf) = &self.column_family {
-                db.put_cf_opt(cf, key, value, write_opt)
-            } else {
-                db.put_opt(key, value, write_opt)
-            }
-            .map_err(|e| PyException::new_err(e.to_string()))
-        })
+        let write_opt_option = write_opt.map(WriteOptions::from);
+        let write_opt = match &write_opt_option {
+            None => &self.write_opt,
+            Some(opt) => opt,
+        };
+        if let Some(cf) = &self.column_family {
+            db.put_cf_opt(cf, key, value, write_opt)
+        } else {
+            db.put_opt(key, value, write_opt)
+        }
+        .map_err(|e| PyException::new_err(e.to_string()))
     }
 
     fn __contains__(&self, key: &PyAny, py: Python) -> PyResult<bool> {
         let db = self.get_db()?;
         let key = encode_key(key, self.opt_py.raw_mode)?;
-        py.allow_threads(|| {
-            let may_exist = if let Some(cf) = &self.column_family {
-                db.key_may_exist_cf_opt(cf, &key[..], &self.read_opt)
+        let may_exist = if let Some(cf) = &self.column_family {
+            db.key_may_exist_cf_opt(cf, &key[..], &self.read_opt)
+        } else {
+            db.key_may_exist_opt(&key[..], &self.read_opt)
+        };
+        if may_exist {
+            let value_result = if let Some(cf) = &self.column_family {
+                db.get_pinned_cf_opt(cf, key, &self.read_opt)
             } else {
-                db.key_may_exist_opt(&key[..], &self.read_opt)
+                db.get_pinned_opt(key, &self.read_opt)
             };
-            if may_exist {
-                let value_result = if let Some(cf) = &self.column_family {
-                    db.get_pinned_cf_opt(cf, key, &self.read_opt)
-                } else {
-                    db.get_pinned_opt(key, &self.read_opt)
-                };
-                match value_result {
-                    Ok(value) => match value {
-                        None => Ok(false),
-                        Some(_) => Ok(true),
-                    },
-                    Err(e) => Err(PyException::new_err(e.to_string())),
-                }
-            } else {
-                Ok(false)
+            match value_result {
+                Ok(value) => match value {
+                    None => Ok(false),
+                    Some(_) => Ok(true),
+                },
+                Err(e) => Err(PyException::new_err(e.to_string())),
             }
-        })
+        } else {
+            Ok(false)
+        }
     }
 
     /// Check if a key may exist without doing any IO.
@@ -569,37 +553,32 @@ impl Rdict {
             Fetch((bool, Option<CSlice>)),
         }
         unsafe impl Send for MayExist {}
-        let may_exist = py.allow_threads(|| {
-            let read_opt = match &read_opt_option {
-                None => &self.read_opt,
-                Some(opt) => opt,
-            };
-            let cf = match &self.column_family {
-                None => {
-                    self.get_column_family_handle(DEFAULT_COLUMN_FAMILY_NAME)?
-                        .cf
-                }
-                Some(cf) => cf.clone(),
-            };
-            let may_exist = if !fetch {
-                MayExist::NoFetch(db.key_may_exist_cf_opt(&cf, &key[..], read_opt))
-            } else {
-                MayExist::Fetch(db.key_may_exist_cf_opt_value(&cf, &key[..], read_opt))
-            };
-            Ok::<MayExist, PyErr>(may_exist)
-        })?;
-        let obj = match may_exist {
-            MayExist::NoFetch(may) => may.to_object(py),
-            MayExist::Fetch((may, value)) => match value {
-                None => (may, py.None()).to_object(py),
-                Some(dat) => (
+        let read_opt = match &read_opt_option {
+            None => &self.read_opt,
+            Some(opt) => opt,
+        };
+        let cf = match &self.column_family {
+            None => {
+                self.get_column_family_handle(DEFAULT_COLUMN_FAMILY_NAME)?
+                    .cf
+            }
+            Some(cf) => cf.clone(),
+        };
+        if !fetch {
+            Ok(db
+                .key_may_exist_cf_opt(&cf, &key[..], read_opt)
+                .to_object(py))
+        } else {
+            let (may, value) = db.key_may_exist_cf_opt_value(&cf, &key[..], read_opt);
+            match value {
+                None => Ok((may, py.None()).to_object(py)),
+                Some(dat) => Ok((
                     may,
                     decode_value(py, dat.as_ref(), &self.loads, self.opt_py.raw_mode)?,
                 )
-                    .to_object(py),
-            },
-        };
-        Ok(obj)
+                    .to_object(py)),
+            }
+        }
     }
 
     fn __delitem__(&self, key: &PyAny, py: Python) -> PyResult<()> {
@@ -618,19 +597,17 @@ impl Rdict {
         let db = self.get_db()?;
         let key = encode_key(key, self.opt_py.raw_mode)?;
 
-        py.allow_threads(|| {
-            let write_opt_option = write_opt.map(WriteOptions::from);
-            let write_opt = match &write_opt_option {
-                None => &self.write_opt,
-                Some(opt) => opt,
-            };
-            if let Some(cf) = &self.column_family {
-                db.delete_cf_opt(cf, key, write_opt)
-            } else {
-                db.delete_opt(key, write_opt)
-            }
-            .map_err(|e| PyException::new_err(e.to_string()))
-        })
+        let write_opt_option = write_opt.map(WriteOptions::from);
+        let write_opt = match &write_opt_option {
+            None => &self.write_opt,
+            Some(opt) => opt,
+        };
+        if let Some(cf) = &self.column_family {
+            db.delete_cf_opt(cf, key, write_opt)
+        } else {
+            db.delete_opt(key, write_opt)
+        }
+        .map_err(|e| PyException::new_err(e.to_string()))
     }
 
     /// Reversible for iterating over keys and values.
@@ -778,16 +755,14 @@ impl Rdict {
     #[pyo3(signature = (wait = true))]
     fn flush(&self, wait: bool, py: Python) -> PyResult<()> {
         let db = self.get_db()?;
-        py.allow_threads(|| {
-            let mut f_opt = FlushOptions::new();
-            f_opt.set_wait(wait);
-            if let Some(cf) = &self.column_family {
-                db.flush_cf_opt(cf, &f_opt)
-            } else {
-                db.flush_opt(&f_opt)
-            }
-            .map_err(|e| PyException::new_err(e.into_string()))
-        })
+        let mut f_opt = FlushOptions::new();
+        f_opt.set_wait(wait);
+        if let Some(cf) = &self.column_family {
+            db.flush_cf_opt(cf, &f_opt)
+        } else {
+            db.flush_opt(&f_opt)
+        }
+        .map_err(|e| PyException::new_err(e.into_string()))
     }
 
     /// Flushes the WAL buffer. If `sync` is set to `true`, also syncs
@@ -795,10 +770,8 @@ impl Rdict {
     #[pyo3(signature = (sync = true))]
     fn flush_wal(&self, sync: bool, py: Python) -> PyResult<()> {
         let db = self.get_db()?;
-        py.allow_threads(|| {
-            db.flush_wal(sync)
-                .map_err(|e| PyException::new_err(e.into_string()))
-        })
+        db.flush_wal(sync)
+            .map_err(|e| PyException::new_err(e.into_string()))
     }
 
     /// Creates column family with given name and options.
@@ -818,28 +791,24 @@ impl Rdict {
                 self.opt_py.raw_mode
             )));
         }
-        py.allow_threads(|| {
-            // write slice_transform info into config file
-            if let Some(slice_transform) = options.prefix_extractor {
-                self.slice_transforms
-                    .write()
-                    .unwrap()
-                    .insert(name.to_string(), slice_transform);
-            }
-            self.dump_config()?;
-            db.create_cf(name, &options.inner_opt)
-                .map_err(|e| PyException::new_err(e.to_string()))
-        })?;
+        // write slice_transform info into config file
+        if let Some(slice_transform) = options.prefix_extractor {
+            self.slice_transforms
+                .write()
+                .unwrap()
+                .insert(name.to_string(), slice_transform);
+        }
+        self.dump_config()?;
+        db.create_cf(name, &options.inner_opt)
+            .map_err(|e| PyException::new_err(e.to_string()));
         self.get_column_family(name, py)
     }
 
     /// Drops the column family with the given name
     fn drop_column_family(&self, name: &str, py: Python) -> PyResult<()> {
         let db = self.get_db()?;
-        py.allow_threads(|| {
-            db.drop_cf(name)
-                .map_err(|e| PyException::new_err(e.to_string()))
-        })
+        db.drop_cf(name)
+            .map_err(|e| PyException::new_err(e.to_string()))
     }
 
     /// Get a column family Rdict
@@ -952,32 +921,26 @@ impl Rdict {
     ) -> PyResult<()> {
         let db = self.get_db()?;
         let opts = &opts.borrow(py).0;
-        py.allow_threads(|| {
-            if let Some(cf) = &self.column_family {
-                db.ingest_external_file_cf_opts(cf, opts, paths)
-            } else {
-                db.ingest_external_file_opts(opts, paths)
-            }
-            .map_err(|e| PyException::new_err(e.to_string()))
-        })
+        if let Some(cf) = &self.column_family {
+            db.ingest_external_file_cf_opts(cf, opts, paths)
+        } else {
+            db.ingest_external_file_opts(opts, paths)
+        }
+        .map_err(|e| PyException::new_err(e.to_string()))
     }
 
     /// Tries to catch up with the primary by reading as much as possible from the
     /// log files.
     pub fn try_catch_up_with_primary(&self, py: Python) -> PyResult<()> {
         let db = self.get_db()?;
-        py.allow_threads(|| {
-            db.try_catch_up_with_primary()
-                .map_err(|e| PyException::new_err(e.to_string()))
-        })
+        db.try_catch_up_with_primary()
+            .map_err(|e| PyException::new_err(e.to_string()))
     }
 
     /// Request stopping background work, if wait is true wait until it's done.
     pub fn cancel_all_background_work(&self, wait: bool, py: Python) -> PyResult<()> {
         let db = self.get_db()?;
-        py.allow_threads(|| {
-            db.cancel_all_background_work(wait);
-        });
+        db.cancel_all_background_work(wait);
         Ok(())
     }
 
@@ -994,7 +957,6 @@ impl Rdict {
         &self,
         write_batch: &mut WriteBatchPy,
         write_opt: Option<&WriteOptionsPy>,
-        py: Python,
     ) -> PyResult<()> {
         let db = self.get_db()?;
         if self.opt_py.raw_mode != write_batch.raw_mode {
@@ -1008,15 +970,13 @@ impl Rdict {
                 ))
             };
         }
-        py.allow_threads(|| {
-            let write_opt_option = write_opt.map(WriteOptions::from);
-            let write_opt = match &write_opt_option {
-                None => &self.write_opt,
-                Some(opt) => opt,
-            };
-            db.write_opt(write_batch.consume()?, write_opt)
-                .map_err(|e| PyException::new_err(e.to_string()))
-        })
+        let write_opt_option = write_opt.map(WriteOptions::from);
+        let write_opt = match &write_opt_option {
+            None => &self.write_opt,
+            Some(opt) => opt,
+        };
+        db.write_opt(write_batch.consume()?, write_opt)
+            .map_err(|e| PyException::new_err(e.to_string()))
     }
 
     /// Removes the database entries in the range `["from", "to")` of the current column family.
@@ -1035,22 +995,20 @@ impl Rdict {
         let db = self.get_db()?;
         let from = encode_key(begin, self.opt_py.raw_mode)?;
         let to = encode_key(end, self.opt_py.raw_mode)?;
-        py.allow_threads(|| {
-            let cf = match &self.column_family {
-                None => {
-                    self.get_column_family_handle(DEFAULT_COLUMN_FAMILY_NAME)?
-                        .cf
-                }
-                Some(cf) => cf.clone(),
-            };
-            let write_opt_option = write_opt.map(WriteOptions::from);
-            let write_opt = match &write_opt_option {
-                None => &self.write_opt,
-                Some(opt) => opt,
-            };
-            db.delete_range_cf_opt(&cf, from, to, write_opt)
-                .map_err(|e| PyException::new_err(e.to_string()))
-        })
+        let cf = match &self.column_family {
+            None => {
+                self.get_column_family_handle(DEFAULT_COLUMN_FAMILY_NAME)?
+                    .cf
+            }
+            Some(cf) => cf.clone(),
+        };
+        let write_opt_option = write_opt.map(WriteOptions::from);
+        let write_opt = match &write_opt_option {
+            None => &self.write_opt,
+            Some(opt) => opt,
+        };
+        db.delete_range_cf_opt(&cf, from, to, write_opt)
+            .map_err(|e| PyException::new_err(e.to_string()))
     }
 
     /// Flush memory to disk, and drop the current column family.
@@ -1070,30 +1028,26 @@ impl Rdict {
         if let AccessTypeInner::ReadOnly { .. } | AccessTypeInner::Secondary { .. } =
             &self.access_type.0
         {
-            py.allow_threads(|| {
-                drop(self.column_family.take());
-                self.db.close();
-            });
-            return Ok(());
-        }
-        py.allow_threads(|| {
-            let f_opt = &self.flush_opt;
-            let db = self.get_db()?;
-            let flush_wal_result = db.flush_wal(true);
-            let flush_result = if let Some(cf) = &self.column_family {
-                db.flush_cf_opt(cf, &f_opt.into())
-            } else {
-                db.flush_opt(&f_opt.into())
-            };
             drop(self.column_family.take());
             self.db.close();
-            match (flush_result, flush_wal_result) {
-                (Ok(_), Ok(_)) => Ok(()),
-                (Err(e), Ok(_)) => Err(PyException::new_err(e.to_string())),
-                (Ok(_), Err(e)) => Err(PyException::new_err(e.to_string())),
-                (Err(e), Err(wal_e)) => Err(PyException::new_err(format!("{e}; {wal_e}"))),
-            }
-        })
+            return Ok(());
+        }
+        let f_opt = &self.flush_opt;
+        let db = self.get_db()?;
+        let flush_wal_result = db.flush_wal(true);
+        let flush_result = if let Some(cf) = &self.column_family {
+            db.flush_cf_opt(cf, &f_opt.into())
+        } else {
+            db.flush_opt(&f_opt.into())
+        };
+        drop(self.column_family.take());
+        self.db.close();
+        match (flush_result, flush_wal_result) {
+            (Ok(_), Ok(_)) => Ok(()),
+            (Err(e), Ok(_)) => Err(PyException::new_err(e.to_string())),
+            (Ok(_), Err(e)) => Err(PyException::new_err(e.to_string())),
+            (Err(e), Err(wal_e)) => Err(PyException::new_err(format!("{e}; {wal_e}"))),
+        }
     }
 
     /// Return current database path.
@@ -1128,42 +1082,36 @@ impl Rdict {
         };
         let opt = compact_opt.borrow(py);
         let opt_ref = opt.deref();
-        py.allow_threads(|| {
-            if let Some(cf) = &self.column_family {
-                db.compact_range_cf_opt(cf, from, to, &opt_ref.0)
-            } else {
-                db.compact_range_opt(from, to, &opt_ref.0)
-            };
-        });
+        if let Some(cf) = &self.column_family {
+            db.compact_range_cf_opt(cf, from, to, &opt_ref.0)
+        } else {
+            db.compact_range_opt(from, to, &opt_ref.0)
+        };
         Ok(())
     }
 
     /// Set options for the current column family.
     fn set_options(&self, options: HashMap<String, String>, py: Python) -> PyResult<()> {
         let db = self.get_db()?;
-        py.allow_threads(|| {
-            let options: Vec<(&str, &str)> = options
-                .iter()
-                .map(|(opt, v)| (opt.as_str(), v.as_str()))
-                .collect();
-            match &self.column_family {
-                None => db.set_options(&options),
-                Some(cf) => db.set_options_cf(cf, &options),
-            }
-            .map_err(|e| PyException::new_err(e.to_string()))
-        })
+        let options: Vec<(&str, &str)> = options
+            .iter()
+            .map(|(opt, v)| (opt.as_str(), v.as_str()))
+            .collect();
+        match &self.column_family {
+            None => db.set_options(&options),
+            Some(cf) => db.set_options_cf(cf, &options),
+        }
+        .map_err(|e| PyException::new_err(e.to_string()))
     }
 
     /// Retrieves a RocksDB property by name, for the current column family.
     fn property_value(&self, name: &str, py: Python) -> PyResult<Option<String>> {
         let db = self.get_db()?;
-        py.allow_threads(|| {
-            match &self.column_family {
-                None => db.property_value(name),
-                Some(cf) => db.property_value_cf(cf, name),
-            }
-            .map_err(|e| PyException::new_err(e.to_string()))
-        })
+        match &self.column_family {
+            None => db.property_value(name),
+            Some(cf) => db.property_value_cf(cf, name),
+        }
+        .map_err(|e| PyException::new_err(e.to_string()))
     }
 
     /// Retrieves a RocksDB property and casts it to an integer
@@ -1173,13 +1121,11 @@ impl Rdict {
     /// [here](https://github.com/facebook/rocksdb/blob/08809f5e6cd9cc4bc3958dd4d59457ae78c76660/include/rocksdb/db.h#L654-L689).
     fn property_int_value(&self, name: &str, py: Python) -> PyResult<Option<u64>> {
         let db = self.get_db()?;
-        py.allow_threads(|| {
-            match &self.column_family {
-                None => db.property_int_value(name),
-                Some(cf) => db.property_int_value_cf(cf, name),
-            }
-            .map_err(|e| PyException::new_err(e.to_string()))
-        })
+        match &self.column_family {
+            None => db.property_int_value(name),
+            Some(cf) => db.property_int_value_cf(cf, name),
+        }
+        .map_err(|e| PyException::new_err(e.to_string()))
     }
 
     /// The sequence number of the most recent transaction.
@@ -1190,8 +1136,7 @@ impl Rdict {
     /// Returns a list of all table files with their level, start key and end key
     fn live_files(&self, py: Python) -> PyResult<PyObject> {
         let db = self.get_db()?;
-        let lfs = py.allow_threads(|| db.live_files());
-        match lfs {
+        match db.live_files() {
             Ok(lfs) => {
                 let result = PyList::empty(py);
                 for lf in lfs {
@@ -1216,10 +1161,8 @@ impl Rdict {
     #[staticmethod]
     #[pyo3(signature = (path, options = OptionsPy::new(false)))]
     fn destroy(path: &str, options: OptionsPy, py: Python) -> PyResult<()> {
-        py.allow_threads(|| {
-            fs::remove_file(config_file(path)).ok();
-            DB::destroy(&options.inner_opt, path).map_err(|e| PyException::new_err(e.to_string()))
-        })
+        fs::remove_file(config_file(path)).ok();
+        DB::destroy(&options.inner_opt, path).map_err(|e| PyException::new_err(e.to_string()))
     }
 
     /// Repair the database.
@@ -1230,17 +1173,13 @@ impl Rdict {
     #[staticmethod]
     #[pyo3(signature = (path, options = OptionsPy::new(false)))]
     fn repair(path: &str, options: OptionsPy, py: Python) -> PyResult<()> {
-        py.allow_threads(|| {
-            DB::repair(&options.inner_opt, path).map_err(|e| PyException::new_err(e.to_string()))
-        })
+        DB::repair(&options.inner_opt, path).map_err(|e| PyException::new_err(e.to_string()))
     }
 
     #[staticmethod]
     #[pyo3(signature = (path, options = OptionsPy::new(false)))]
     fn list_cf(path: &str, options: OptionsPy, py: Python) -> PyResult<Vec<String>> {
-        py.allow_threads(|| {
-            DB::list_cf(&options.inner_opt, path).map_err(|e| PyException::new_err(e.to_string()))
-        })
+        DB::list_cf(&options.inner_opt, path).map_err(|e| PyException::new_err(e.to_string()))
     }
 }
 
@@ -1282,7 +1221,7 @@ fn get_batch_inner<'a>(
     for key in key_list {
         keys.push(encode_key(key, raw_mode)?);
     }
-    let values = py.allow_threads(|| db.batched_multi_get_cf_opt(cf, &keys, false, read_opt));
+    let values = db.batched_multi_get_cf_opt(cf, &keys, false, read_opt);
     let result = PyList::empty(py);
     for v in values {
         match v {
