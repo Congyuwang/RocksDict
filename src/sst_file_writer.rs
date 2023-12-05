@@ -96,20 +96,18 @@ impl SstFileWriterPy {
 
     /// Prepare SstFileWriter to write into file located at "file_path".
     fn open(&self, path: &str, py: Python) -> PyResult<()> {
-        py.allow_threads(|| {
-            let cpath = to_cpath(path)?;
-            self.open_raw(&cpath)
-        })
+        let cpath = to_cpath(path)?;
+        self.open_raw(&cpath)
     }
 
     /// Finalize writing to sst file and close file.
     fn finish(&mut self, py: Python) -> PyResult<()> {
-        py.allow_threads(|| self.finish_raw())
+        self.finish_raw()
     }
 
     /// returns the current file size
     fn file_size(&self, py: Python) -> u64 {
-        py.allow_threads(|| self.file_size_raw())
+        self.file_size_raw()
     }
 
     /// Adds a Put key with value to currently opened file
@@ -117,14 +115,14 @@ impl SstFileWriterPy {
     fn __setitem__(&mut self, key: &PyAny, value: &PyAny, py: Python) -> PyResult<()> {
         let key = encode_key(key, self.raw_mode)?;
         let value = encode_value(value, &self.dumps, self.raw_mode)?;
-        py.allow_threads(|| self.setitem_raw(&key, &value))
+        self.setitem_raw(&key, &value)
     }
 
     /// Adds a deletion key to currently opened file
     /// REQUIRES: key is after any previously added key according to comparator.
     fn __delitem__(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
         let key = encode_key(key, self.raw_mode)?;
-        py.allow_threads(|| self.delitem_raw(&key))
+        self.delitem_raw(&key)
     }
 }
 

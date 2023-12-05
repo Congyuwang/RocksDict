@@ -135,13 +135,11 @@ impl Snapshot {
     fn __getitem__(&self, key: &PyAny, py: Python) -> PyResult<PyObject> {
         let db = self.get_db();
         let key = encode_key(key, self.raw_mode)?;
-        let value_result = py.allow_threads(|| {
-            if let Some(cf) = &self.column_family {
-                db.get_pinned_cf_opt(cf, &key[..], &self.read_opt)
-            } else {
-                db.get_pinned_opt(&key[..], &self.read_opt)
-            }
-        });
+        let value_result = if let Some(cf) = &self.column_family {
+            db.get_pinned_cf_opt(cf, &key[..], &self.read_opt)
+        } else {
+            db.get_pinned_opt(&key[..], &self.read_opt)
+        };
         match value_result {
             Ok(value) => match value {
                 None => Err(PyException::new_err("key not found")),
