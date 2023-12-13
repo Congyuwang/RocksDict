@@ -1175,7 +1175,7 @@ fn get_batch_inner<'a>(
     for key in key_list {
         keys.push(encode_key(key, raw_mode)?);
     }
-    let values = db.batched_multi_get_cf_opt(cf, &keys, false, read_opt);
+    let values = py.allow_threads(|| db.batched_multi_get_cf_opt(cf, &keys, false, read_opt));
     let result = PyList::empty(py);
     for v in values {
         match v {
