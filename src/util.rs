@@ -25,3 +25,22 @@ pub(crate) fn to_cpath<P: AsRef<Path>>(path: P) -> PyResult<CString> {
         ))),
     }
 }
+
+/// Wrapper around a raw pointer that is safe to send across threads. The user is responsible for
+/// ensuring that the pointer is valid for the lifetime of the thread.
+pub(crate) struct SendSyncMutPtr<T> {
+    ptr: *mut T,
+}
+
+unsafe impl<T> Send for SendSyncMutPtr<T> {}
+unsafe impl<T> Sync for SendSyncMutPtr<T> {}
+
+impl<T> SendSyncMutPtr<T> {
+    pub(crate) unsafe fn new(ptr: *mut T) -> Self {
+        Self { ptr }
+    }
+
+    pub(crate) unsafe fn get(&self) -> *mut T {
+        self.ptr
+    }
+}

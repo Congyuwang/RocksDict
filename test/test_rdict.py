@@ -213,6 +213,146 @@ class TestIterInt(unittest.TestCase):
             [k for k in self.test_dict.keys(from_key=key, backwards=True)], ref_list
         )
 
+    def test_chunk_keys_forward(self):
+        it = self.test_dict.iter()
+        it.seek_to_first()
+        test_list = it.get_chunk_keys()
+
+        ref_list = [k for k in self.ref_dict.keys()]
+        ref_list.sort()
+
+        self.assertEqual(test_list, ref_list)
+
+    def test_chunk_keys_backward(self):
+        it = self.test_dict.iter()
+        it.seek_to_last()
+        test_list = it.get_chunk_keys(backwards=True)
+
+        ref_list = [k for k in self.ref_dict.keys()]
+        ref_list.sort(reverse=True)
+
+        self.assertEqual(test_list, ref_list)
+
+    def test_chunk_keys_forward_with_count(self):
+        CHUNK_SIZE = 33
+        test_list = []
+
+        for chunk in self.test_dict.chunked_keys(chunk_size=CHUNK_SIZE):
+            test_list.extend(chunk)
+
+        ref_list = [k for k in self.ref_dict.keys()]
+        ref_list.sort()
+
+        self.assertEqual(test_list, ref_list)
+
+    def test_chunk_keys_backward_with_count(self):
+        CHUNK_SIZE = 33
+        test_list = []
+
+        for chunk in self.test_dict.chunked_keys(chunk_size=CHUNK_SIZE, backwards=True):
+            test_list.extend(chunk)
+
+        ref_list = [k for k in self.ref_dict.keys()]
+        ref_list.sort(reverse=True)
+
+        self.assertEqual(test_list, ref_list)
+
+    def test_chunk_items_forward(self):
+        it = self.test_dict.iter()
+        it.seek_to_first()
+        test_list = it.get_chunk_items()
+
+        ref_list = [k for k in self.ref_dict.items()]
+        ref_list.sort()
+
+        self.assertEqual(test_list, ref_list)
+
+    def test_chunk_items_backward(self):
+        it = self.test_dict.iter()
+        it.seek_to_last()
+        test_list = it.get_chunk_items(backwards=True)
+
+        ref_list = [k for k in self.ref_dict.items()]
+        ref_list.sort(reverse=True)
+
+        self.assertEqual(test_list, ref_list)
+
+    def test_chunk_items_forward_with_count(self):
+        CHUNK_SIZE = 33
+        test_list = []
+
+        for chunk in self.test_dict.chunked_items(chunk_size=CHUNK_SIZE):
+            test_list.extend(chunk)
+
+        ref_list = [k for k in self.ref_dict.items()]
+        ref_list.sort()
+
+        self.assertEqual(test_list, ref_list)
+
+    def test_chunk_items_backward_with_count(self):
+        CHUNK_SIZE = 33
+        test_list = []
+
+        for chunk in self.test_dict.chunked_items(
+            chunk_size=CHUNK_SIZE, backwards=True
+        ):
+            test_list.extend(chunk)
+
+        ref_list = [k for k in self.ref_dict.items()]
+        ref_list.sort(reverse=True)
+
+        self.assertEqual(test_list, ref_list)
+
+    def test_chunk_values_forward(self):
+        it = self.test_dict.iter()
+        it.seek_to_first()
+        test_list = it.get_chunk_values()
+
+        ref_list = list(self.ref_dict.items())
+        ref_list.sort()
+        ref_list = [v for _, v in ref_list]
+
+        self.assertEqual(test_list, ref_list)
+
+    def test_chunk_values_backward(self):
+        it = self.test_dict.iter()
+        it.seek_to_last()
+        test_list = it.get_chunk_values(backwards=True)
+
+        ref_list = list(self.ref_dict.items())
+        ref_list.sort(reverse=True)
+        ref_list = [v for _, v in ref_list]
+
+        self.assertEqual(test_list, ref_list)
+
+    def test_chunk_values_forward_with_count(self):
+        CHUNK_SIZE = 33
+        test_list = []
+
+        for chunk in self.test_dict.chunked_values(chunk_size=CHUNK_SIZE):
+            test_list.extend(chunk)
+
+        ref_list = list(self.ref_dict.items())
+        ref_list.sort()
+        ref_list = [v for _, v in ref_list]
+
+        self.assertEqual(test_list, ref_list)
+
+    def test_chunk_values_backward_with_count(self):
+        CHUNK_SIZE = 33
+        test_list = []
+
+        for chunk in self.test_dict.chunked_values(
+            chunk_size=CHUNK_SIZE, backwards=True
+        ):
+            test_list.extend(chunk)
+
+        ref_list = list(self.ref_dict.items())
+        ref_list.sort(reverse=True)
+        ref_list = [v for _, v in ref_list]
+
+        self.assertEqual(test_list, ref_list)
+
     @classmethod
     def tearDownClass(cls):
         cls.test_dict.close()

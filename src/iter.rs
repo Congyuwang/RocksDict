@@ -1,7 +1,7 @@
 use crate::db_reference::DbReferenceHolder;
 use crate::encoder::{decode_value, encode_key};
 use crate::exceptions::DbClosedError;
-use crate::util::error_message;
+use crate::util::{error_message, SendSyncMutPtr};
 use crate::{ReadOpt, ReadOptionsPy};
 use core::slice;
 use libc::{c_char, c_uchar, size_t};
@@ -17,7 +17,10 @@ pub(crate) struct RdictIter {
     /// iterator must keep a reference count of DB to keep DB alive.
     pub(crate) db: DbReferenceHolder,
 
-    pub(crate) inner: *mut librocksdb_sys::rocksdb_iterator_t,
+    // This is a wrapper around a `*mut rocksdb_iterator_t`. It is wrapped in a `SendSyncMutPtr`, so
+    // it is the responsibility of any user that sends it across threads to ensure that the thread
+    // does not outlive this iterator.
+    pub(crate) inner: SendSyncMutPtr<librocksdb_sys::rocksdb_iterator_t>,
 
     /// When iterate_upper_bound is set, the inner C iterator keeps a pointer to the upper bound
     /// inside `_readopts`. Storing this makes sure the upper bound is always alive when the
@@ -64,16 +67,22 @@ impl RdictIter {
             .ok_or_else(|| DbClosedError::new_err("DB instance already closed"))?
             .inner();
 
+        let inner = unsafe {
+            match cf {
+                None => SendSyncMutPtr::new(librocksdb_sys::rocksdb_create_iterator(
+                    db_inner, readopts.0,
+                )),
+                Some(cf) => SendSyncMutPtr::new(librocksdb_sys::rocksdb_create_iterator_cf(
+                    db_inner,
+                    readopts.0,
+                    cf.inner(),
+                )),
+            }
+        };
+
         Ok(RdictIter {
             db: db.clone(),
-            inner: unsafe {
-                match cf {
-                    None => librocksdb_sys::rocksdb_create_iterator(db_inner, readopts.0),
-                    Some(cf) => {
-                        librocksdb_sys::rocksdb_create_iterator_cf(db_inner, readopts.0, cf.inner())
-                    }
-                }
-            },
+            inner,
             readopts,
             pickle_loads: pickle_loads.clone(),
             raw_mode,
@@ -91,7 +100,7 @@ impl RdictIter {
     /// return an error when `valid` is `true`.
     #[inline]
     pub fn valid(&self) -> bool {
-        unsafe { librocksdb_sys::rocksdb_iter_valid(self.inner) != 0 }
+        unsafe { librocksdb_sys::rocksdb_iter_valid(self.inner.get()) != 0 }
     }
 
     /// Returns an error `Result` if the iterator has encountered an error
@@ -102,7 +111,7 @@ impl RdictIter {
     pub fn status(&self) -> PyResult<()> {
         let mut err: *mut c_char = null_mut();
         unsafe {
-            librocksdb_sys::rocksdb_iter_get_error(self.inner, &mut err);
+            librocksdb_sys::rocksdb_iter_get_error(self.inner.get(), &mut err);
         }
         if !err.is_null() {
             Err(PyException::new_err(error_message(err)))
@@ -137,7 +146,7 @@ impl RdictIter {
     ///         Rdict.destroy(path, Options())
     pub fn seek_to_first(&mut self) {
         unsafe {
-            librocksdb_sys::rocksdb_iter_seek_to_first(self.inner);
+            librocksdb_sys::rocksdb_iter_seek_to_first(self.inner.get());
         }
     }
 
@@ -167,7 +176,7 @@ impl RdictIter {
     ///         Rdict.destroy(path, Options())
     pub fn seek_to_last(&mut self) {
         unsafe {
-            librocksdb_sys::rocksdb_iter_seek_to_last(self.inner);
+            librocksdb_sys::rocksdb_iter_seek_to_last(self.inner.get());
         }
     }
 
@@ -195,7 +204,7 @@ impl RdictIter {
         let key = encode_key(key, self.raw_mode)?;
         unsafe {
             librocksdb_sys::rocksdb_iter_seek(
-                self.inner,
+                self.inner.get(),
                 key.as_ptr() as *const c_char,
                 key.len() as size_t,
             );
@@ -228,7 +237,7 @@ impl RdictIter {
         let key = encode_key(key, self.raw_mode)?;
         unsafe {
             librocksdb_sys::rocksdb_iter_seek_for_prev(
-                self.inner,
+                self.inner.get(),
                 key.as_ptr() as *const c_char,
                 key.len() as size_t,
             );
@@ -239,14 +248,14 @@ impl RdictIter {
     /// Seeks to the next key.
     pub fn next(&mut self) {
         unsafe {
-            librocksdb_sys::rocksdb_iter_next(self.inner);
+            librocksdb_sys::rocksdb_iter_next(self.inner.get());
         }
     }
 
     /// Seeks to the previous key.
     pub fn prev(&mut self) {
         unsafe {
-            librocksdb_sys::rocksdb_iter_prev(self.inner);
+            librocksdb_sys::rocksdb_iter_prev(self.inner.get());
         }
     }
 
@@ -258,8 +267,8 @@ impl RdictIter {
             unsafe {
                 let mut key_len: size_t = 0;
                 let key_len_ptr: *mut size_t = &mut key_len;
-                let key_ptr =
-                    librocksdb_sys::rocksdb_iter_key(self.inner, key_len_ptr) as *const c_uchar;
+                let key_ptr = librocksdb_sys::rocksdb_iter_key(self.inner.get(), key_len_ptr)
+                    as *const c_uchar;
                 let key = slice::from_raw_parts(key_ptr, key_len);
                 Ok(decode_value(py, key, &self.pickle_loads, self.raw_mode)?)
             }
@@ -276,8 +285,8 @@ impl RdictIter {
             unsafe {
                 let mut val_len: size_t = 0;
                 let val_len_ptr: *mut size_t = &mut val_len;
-                let val_ptr =
-                    librocksdb_sys::rocksdb_iter_value(self.inner, val_len_ptr) as *const c_uchar;
+                let val_ptr = librocksdb_sys::rocksdb_iter_value(self.inner.get(), val_len_ptr)
+                    as *const c_uchar;
                 let value = slice::from_raw_parts(val_ptr, val_len);
                 Ok(decode_value(py, value, &self.pickle_loads, self.raw_mode)?)
             }
@@ -285,12 +294,179 @@ impl RdictIter {
             Ok(py.None())
         }
     }
+
+    /// Returns a chunk of keys from the iterator.
+    ///
+    /// This is more efficient than calling the iterator per element and will drop the GIL while
+    /// fetching the chunk.
+    ///
+    /// Args:
+    ///     chunk_size: the number of items to return. If `None`, items will be returned until the
+    ///         iterator is exhausted.
+    ///    backwards: if `True`, iterator will traverse backwards.
+    #[pyo3(signature = (chunk_size = None, backwards = false))]
+    pub fn get_chunk_keys(
+        &mut self,
+        chunk_size: Option<usize>,
+        backwards: bool,
+        py: Python,
+    ) -> PyResult<Vec<PyObject>> {
+        let raw_keys = py.allow_threads(|| {
+            let mut raw_keys = Vec::new();
+            while self.valid() && raw_keys.len() < chunk_size.unwrap_or(usize::MAX) {
+                // Safety: This is safe for multiple reasons:
+                //   * It makes a copy of the buffer before returning.
+                //   * This `allow_threads` block does not outlive the iterator's lifetime.
+                let key = unsafe {
+                    let mut key_len: size_t = 0;
+                    let key_len_ptr: *mut size_t = &mut key_len;
+                    let key_ptr = librocksdb_sys::rocksdb_iter_key(self.inner.get(), key_len_ptr)
+                        as *const c_uchar;
+                    slice::from_raw_parts(key_ptr, key_len)
+                        .to_vec()
+                        .into_boxed_slice()
+                };
+                raw_keys.push(key);
+
+                if backwards {
+                    self.prev();
+                } else {
+                    self.next();
+                }
+            }
+
+            raw_keys
+        });
+
+        raw_keys
+            .into_iter()
+            .map(|key| decode_value(py, &key, &self.pickle_loads, self.raw_mode))
+            .collect()
+    }
+
+    /// Returns a chunk of values from the iterator.
+    ///
+    /// This is more efficient than calling the iterator per element and will drop the GIL while
+    /// fetching the chunk.
+    ///
+    /// Args:
+    ///     chunk_size: the number of items to return. If `None`, items will be returned until the
+    ///         iterator is exhausted.
+    ///    backwards: if `True`, iterator will traverse backwards.
+    #[pyo3(signature = (chunk_size = None, backwards = false))]
+    pub fn get_chunk_values(
+        &mut self,
+        chunk_size: Option<usize>,
+        backwards: bool,
+        py: Python,
+    ) -> PyResult<Vec<PyObject>> {
+        let raw_values = py.allow_threads(|| {
+            let mut raw_values = Vec::new();
+            while self.valid() && raw_values.len() < chunk_size.unwrap_or(usize::MAX) {
+                // Safety: This is safe for multiple reasons:
+                //   * It makes a copy of the buffer before returning.
+                //   * This `allow_threads` block does not outlive the iterator's lifetime.
+                let value = unsafe {
+                    let mut value_len: size_t = 0;
+                    let value_len_ptr: *mut size_t = &mut value_len;
+                    let value_ptr =
+                        librocksdb_sys::rocksdb_iter_value(self.inner.get(), value_len_ptr)
+                            as *const c_uchar;
+                    slice::from_raw_parts(value_ptr, value_len)
+                        .to_vec()
+                        .into_boxed_slice()
+                };
+                raw_values.push(value);
+
+                if backwards {
+                    self.prev();
+                } else {
+                    self.next();
+                }
+            }
+
+            raw_values
+        });
+
+        raw_values
+            .into_iter()
+            .map(|value| decode_value(py, &value, &self.pickle_loads, self.raw_mode))
+            .collect()
+    }
+
+    /// Returns a chunk of key-value pairs from the iterator.
+    ///
+    /// This is more efficient than calling the iterator per element and will drop the GIL while
+    /// fetching the chunk.
+    ///
+    /// Args:
+    ///     chunk_size: the number of items to return. If `None`, items will be returned until the
+    ///         iterator is exhausted.
+    ///    backwards: if `True`, iterator will traverse backwards.
+    #[pyo3(signature = (chunk_size = None, backwards = false))]
+    pub fn get_chunk_items(
+        &mut self,
+        chunk_size: Option<usize>,
+        backwards: bool,
+        py: Python,
+    ) -> PyResult<Vec<(PyObject, PyObject)>> {
+        let raw_items = py.allow_threads(|| {
+            let mut raw_items = Vec::new();
+            while self.valid() && raw_items.len() < chunk_size.unwrap_or(usize::MAX) {
+                // Safety: This is safe for multiple reasons:
+                //   * It makes a copy of the buffer before returning.
+                //   * This `allow_threads` block does not outlive the iterator's lifetime.
+                let key = unsafe {
+                    let mut key_len: size_t = 0;
+                    let key_len_ptr: *mut size_t = &mut key_len;
+                    let key_ptr = librocksdb_sys::rocksdb_iter_key(self.inner.get(), key_len_ptr)
+                        as *const c_uchar;
+                    slice::from_raw_parts(key_ptr, key_len)
+                        .to_vec()
+                        .into_boxed_slice()
+                };
+
+                // Safety: This is safe for multiple reasons:
+                //   * It makes a copy of the buffer before returning.
+                //   * This `allow_threads` block does not outlive the iterator's lifetime.
+                let value = unsafe {
+                    let mut value_len: size_t = 0;
+                    let value_len_ptr: *mut size_t = &mut value_len;
+                    let value_ptr =
+                        librocksdb_sys::rocksdb_iter_value(self.inner.get(), value_len_ptr)
+                            as *const c_uchar;
+                    slice::from_raw_parts(value_ptr, value_len)
+                        .to_vec()
+                        .into_boxed_slice()
+                };
+
+                raw_items.push((key, value));
+
+                if backwards {
+                    self.prev();
+                } else {
+                    self.next();
+                }
+            }
+
+            raw_items
+        });
+
+        raw_items
+            .into_iter()
+            .map(|(key, value)| {
+                let key = decode_value(py, &key, &self.pickle_loads, self.raw_mode)?;
+                let value = decode_value(py, &value, &self.pickle_loads, self.raw_mode)?;
+                Ok((key, value))
+            })
+            .collect()
+    }
 }
 
 impl Drop for RdictIter {
     fn drop(&mut self) {
         unsafe {
-            librocksdb_sys::rocksdb_iter_destroy(self.inner);
+            librocksdb_sys::rocksdb_iter_destroy(self.inner.get());
         }
     }
 }
@@ -345,6 +521,69 @@ macro_rules! impl_iter {
     };
 }
 
+macro_rules! impl_chunked_iter {
+    ($iter_name: ident, $iter_chunk_fn: ident) => {
+        #[pyclass]
+        pub(crate) struct $iter_name {
+            inner: RdictIter,
+            backwards: bool,
+            chunk_size: Option<usize>,
+        }
+
+        #[pymethods]
+        impl $iter_name {
+            fn __iter__(slf: PyRef<Self>) -> PyRef<Self> {
+                slf
+            }
+
+            fn __next__(&mut self, py: Python) -> PyResult<Option<PyObject>> {
+                if self.inner.valid() {
+                    Ok(Some(
+                        self.inner
+                            .$iter_chunk_fn(self.chunk_size, self.backwards, py)
+                            .map(|v| v.to_object(py))?,
+                    ))
+                } else {
+                    Ok(None)
+                }
+            }
+        }
+
+        impl $iter_name {
+            pub(crate) fn new(
+                inner: RdictIter,
+                chunk_size: Option<usize>,
+                backwards: bool,
+                from_key: Option<&PyAny>,
+            ) -> PyResult<Self> {
+                let mut inner = inner;
+                if let Some(from_key) = from_key {
+                    if backwards {
+                        inner.seek_for_prev(from_key)?;
+                    } else {
+                        inner.seek(from_key)?;
+                    }
+                } else {
+                    if backwards {
+                        inner.seek_to_last();
+                    } else {
+                        inner.seek_to_first();
+                    }
+                }
+                Ok(Self {
+                    inner,
+                    backwards,
+                    chunk_size,
+                })
+            }
+        }
+    };
+}
+
 impl_iter!(RdictKeys, key);
 impl_iter!(RdictValues, value);
 impl_iter!(RdictItems, key, value);
+
+impl_chunked_iter!(RdictChunkedKeys, get_chunk_keys);
+impl_chunked_iter!(RdictChunkedValues, get_chunk_values);
+impl_chunked_iter!(RdictChunkedItems, get_chunk_items);

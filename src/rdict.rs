@@ -1,7 +1,9 @@
 use crate::db_reference::{DbReference, DbReferenceHolder};
 use crate::encoder::{decode_value, encode_key, encode_value};
 use crate::exceptions::DbClosedError;
-use crate::iter::{RdictItems, RdictKeys, RdictValues};
+use crate::iter::{
+    RdictChunkedItems, RdictChunkedKeys, RdictChunkedValues, RdictItems, RdictKeys, RdictValues,
+};
 use crate::options::{CachePy, EnvPy, SliceTransformType};
 use crate::{
     CompactOptionsPy, FlushOptionsPy, IngestExternalFileOptionsPy, OptionsPy, RdictIter,
@@ -624,7 +626,7 @@ impl Rdict {
         )
     }
 
-    /// Iterate through all keys and values pairs.
+    /// Creates an iterator through the items.
     ///
     /// Examples:
     ///     ::
@@ -649,7 +651,39 @@ impl Rdict {
         RdictItems::new(self.iter(read_opt, py)?, backwards, from_key)
     }
 
-    /// Iterate through all keys
+    /// Creates a chunked iterator through the items.
+    ///
+    /// This is more efficient than a normal per-element iterator
+    /// and will drop the GIL while fetching a chunk.
+    ///
+    /// Examples:
+    ///     ::
+    ///
+    ///         for chunk in db.chunked_items(chunk_size=1000):
+    ///             for k, v in chunk:
+    ///                 print(f"{k} -> {v}")
+    ///
+    /// Args:
+    ///     chunk_size: the number of items to return. If None,
+    ///         returns all items in one chunk.
+    ///     backwards: iteration direction, forward if `False`.
+    ///     from_key: iterate from key, first seek to this key
+    ///         or the nearest next key for iteration
+    ///         (depending on iteration direction).
+    ///     read_opt: ReadOptions
+    #[pyo3(signature = (chunk_size = None, backwards = false, from_key = None, read_opt = None))]
+    fn chunked_items(
+        &self,
+        chunk_size: Option<usize>,
+        backwards: bool,
+        from_key: Option<&PyAny>,
+        read_opt: Option<&ReadOptionsPy>,
+        py: Python,
+    ) -> PyResult<RdictChunkedItems> {
+        RdictChunkedItems::new(self.iter(read_opt, py)?, chunk_size, backwards, from_key)
+    }
+
+    /// Creates an iterator through the keys.
     ///
     /// Examples:
     ///     ::
@@ -673,7 +707,38 @@ impl Rdict {
         RdictKeys::new(self.iter(read_opt, py)?, backwards, from_key)
     }
 
-    /// Iterate through all values.
+    /// Creates a chunked iterator through the keys.
+    ///
+    /// This is more efficient than a normal per-element iterator
+    /// and will drop the GIL while fetching a chunk.
+    ///
+    /// Examples:
+    ///     ::
+    ///
+    ///         for chunk in db.chunked_keys(chunk_size=1000):
+    ///             print(", ".join(chunk))
+    ///
+    /// Args:
+    ///     chunk_size: the number of items to return. If None,
+    ///         returns all items in one chunk.
+    ///     backwards: iteration direction, forward if `False`.
+    ///     from_key: iterate from key, first seek to this key
+    ///         or the nearest next key for iteration
+    ///         (depending on iteration direction).
+    ///     read_opt: ReadOptions
+    #[pyo3(signature = (chunk_size = None, backwards = false, from_key = None, read_opt = None))]
+    fn chunked_keys(
+        &self,
+        chunk_size: Option<usize>,
+        backwards: bool,
+        from_key: Option<&PyAny>,
+        read_opt: Option<&ReadOptionsPy>,
+        py: Python,
+    ) -> PyResult<RdictChunkedKeys> {
+        RdictChunkedKeys::new(self.iter(read_opt, py)?, chunk_size, backwards, from_key)
+    }
+
+    /// Creates an iterator through the values.
     ///
     /// Examples:
     ///     ::
@@ -695,6 +760,37 @@ impl Rdict {
         py: Python,
     ) -> PyResult<RdictValues> {
         RdictValues::new(self.iter(read_opt, py)?, backwards, from_key)
+    }
+
+    /// Creates a chunked iterator through the values.
+    ///
+    /// This is more efficient than a normal per-element iterator
+    /// and will drop the GIL while fetching a chunk.
+    ///
+    /// Examples:
+    ///     ::
+    ///
+    ///         for chunk in db.chunked_values(chunk_size=1000):
+    ///             print(", ".join(chunk))
+    ///
+    /// Args:
+    ///     chunk_size: the number of items to return. If None,
+    ///         returns all items in one chunk.
+    ///     backwards: iteration direction, forward if `False`.
+    ///     from_key: iterate from key, first seek to this key
+    ///         or the nearest next key for iteration
+    ///         (depending on iteration direction).
+    ///     read_opt: ReadOptions
+    #[pyo3(signature = (chunk_size = None, backwards = false, from_key = None, read_opt = None))]
+    fn chunked_values(
+        &self,
+        chunk_size: Option<usize>,
+        backwards: bool,
+        from_key: Option<&PyAny>,
+        read_opt: Option<&ReadOptionsPy>,
+        py: Python,
+    ) -> PyResult<RdictChunkedValues> {
+        RdictChunkedValues::new(self.iter(read_opt, py)?, chunk_size, backwards, from_key)
     }
 
     /// Manually flush the current column family.
