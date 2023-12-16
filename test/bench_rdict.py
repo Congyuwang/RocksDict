@@ -123,16 +123,19 @@ def perf_iterator_multi_thread(rand_bytes: List[bytes], num_threads: int):
     rdict.close()
 
 
-def perf_iterator_chunk_single_thread(rand_bytes: List[bytes], chunk_size: int):
+def perf_iterator_chunk_single_thread(
+    rand_bytes: List[bytes], chunk_size: int, num_iterations: int
+):
     rdict = Rdict("test.db", Options(raw_mode=True))
-    items = []
 
     start = time.perf_counter()
-    for batch in rdict.chunked_items(chunk_size=chunk_size):
-        items.extend(batch)
+    for _ in range(num_iterations):
+        items = []
+        for batch in rdict.chunked_items(chunk_size=chunk_size):
+            items.extend(batch)
     end = time.perf_counter()
 
-    num_items = len(items)
+    num_items = len(items) * num_iterations
     secs = end - start
     item_per_sec = num_items / secs
     print(
@@ -239,7 +242,9 @@ if __name__ == "__main__":
 
     print()
     print("Benchmarking Rdict Batch Iterator...")
-    perf_iterator_chunk_single_thread(rand_bytes, chunk_size=ITER_CHUNK_SIZE)
+    perf_iterator_chunk_single_thread(
+        rand_bytes, chunk_size=ITER_CHUNK_SIZE, num_iterations=NUM_THREADS
+    )
     perf_iterator_chunk_multi_thread(
         rand_bytes, num_threads=NUM_THREADS, batch_size=ITER_CHUNK_SIZE
     )
