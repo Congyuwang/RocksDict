@@ -1,15 +1,16 @@
 use crate::db_reference::DbReferenceHolder;
 use crate::encoder::{decode_value, encode_key};
 use crate::exceptions::DbClosedError;
-use crate::util::{error_message, SendSyncMutPtr};
+use crate::util::{error_message, SendMutPtr};
 use crate::{ReadOpt, ReadOptionsPy};
 use core::slice;
 use libc::{c_char, c_uchar, size_t};
-use pyo3::exceptions::PyException;
+use pyo3::exceptions::{PyException, PyRuntimeError};
 use pyo3::prelude::*;
 use rocksdb::{AsColumnFamilyRef, UnboundColumnFamily};
+use std::ops::Deref;
 use std::ptr::null_mut;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, MutexGuard};
 
 #[pyclass]
 #[allow(dead_code)]
@@ -17,10 +18,9 @@ pub(crate) struct RdictIter {
     /// iterator must keep a reference count of DB to keep DB alive.
     pub(crate) db: DbReferenceHolder,
 
-    // This is a wrapper around a `*mut rocksdb_iterator_t`. It is wrapped in a `SendSyncMutPtr`, so
-    // it is the responsibility of any user that sends it across threads to ensure that the thread
-    // does not outlive this iterator.
-    pub(crate) inner: SendSyncMutPtr<librocksdb_sys::rocksdb_iterator_t>,
+    // This is wrapped in a lock, since this iterator can theoretically be shared between Python
+    // threads.
+    pub(crate) inner: Mutex<SendMutPtr<librocksdb_sys::rocksdb_iterator_t>>,
 
     /// When iterate_upper_bound is set, the inner C iterator keeps a pointer to the upper bound
     /// inside `_readopts`. Storing this makes sure the upper bound is always alive when the
@@ -69,10 +69,10 @@ impl RdictIter {
 
         let inner = unsafe {
             match cf {
-                None => SendSyncMutPtr::new(librocksdb_sys::rocksdb_create_iterator(
+                None => SendMutPtr::new(librocksdb_sys::rocksdb_create_iterator(
                     db_inner, readopts.0,
                 )),
-                Some(cf) => SendSyncMutPtr::new(librocksdb_sys::rocksdb_create_iterator_cf(
+                Some(cf) => SendMutPtr::new(librocksdb_sys::rocksdb_create_iterator_cf(
                     db_inner,
                     readopts.0,
                     cf.inner(),
@@ -82,11 +82,44 @@ impl RdictIter {
 
         Ok(RdictIter {
             db: db.clone(),
-            inner,
+            inner: Mutex::new(inner),
             readopts,
             pickle_loads: pickle_loads.clone(),
             raw_mode,
         })
+    }
+
+    fn is_valid_locked(
+        &self,
+        inner_locked: &MutexGuard<'_, SendMutPtr<librocksdb_sys::rocksdb_iterator_t>>,
+    ) -> bool {
+        unsafe { librocksdb_sys::rocksdb_iter_valid(inner_locked.deref().get()) != 0 }
+    }
+
+    fn prev_locked(
+        &self,
+        inner_locked: &MutexGuard<'_, SendMutPtr<librocksdb_sys::rocksdb_iterator_t>>,
+    ) {
+        unsafe {
+            librocksdb_sys::rocksdb_iter_prev(inner_locked.deref().get());
+        }
+    }
+
+    fn next_locked(
+        &self,
+        inner_locked: &MutexGuard<'_, SendMutPtr<librocksdb_sys::rocksdb_iterator_t>>,
+    ) {
+        unsafe {
+            librocksdb_sys::rocksdb_iter_next(inner_locked.deref().get());
+        }
+    }
+
+    fn get_inner_locked(
+        &self,
+    ) -> PyResult<MutexGuard<'_, SendMutPtr<librocksdb_sys::rocksdb_iterator_t>>> {
+        self.inner
+            .lock()
+            .map_err(|e| PyRuntimeError::new_err(e.to_string()))
     }
 }
 
@@ -99,8 +132,9 @@ impl RdictIter {
     /// returned `false`, use the [`status`](DBRawIteratorWithThreadMode::status) method. `status` will never
     /// return an error when `valid` is `true`.
     #[inline]
-    pub fn valid(&self) -> bool {
-        unsafe { librocksdb_sys::rocksdb_iter_valid(self.inner.get()) != 0 }
+    pub fn valid(&self) -> PyResult<bool> {
+        let inner_locked = self.get_inner_locked()?;
+        Ok(self.is_valid_locked(&inner_locked))
     }
 
     /// Returns an error `Result` if the iterator has encountered an error
@@ -110,8 +144,9 @@ impl RdictIter {
     /// Performing a seek will discard the current status.
     pub fn status(&self) -> PyResult<()> {
         let mut err: *mut c_char = null_mut();
+        let inner_locked = self.get_inner_locked()?;
         unsafe {
-            librocksdb_sys::rocksdb_iter_get_error(self.inner.get(), &mut err);
+            librocksdb_sys::rocksdb_iter_get_error(inner_locked.deref().get(), &mut err);
         }
         if !err.is_null() {
             Err(PyException::new_err(error_message(err)))
@@ -144,10 +179,13 @@ impl RdictIter {
     ///
     ///         del iter, db
     ///         Rdict.destroy(path, Options())
-    pub fn seek_to_first(&mut self) {
+    pub fn seek_to_first(&mut self) -> PyResult<()> {
+        let inner_locked = self.get_inner_locked()?;
         unsafe {
-            librocksdb_sys::rocksdb_iter_seek_to_first(self.inner.get());
+            librocksdb_sys::rocksdb_iter_seek_to_first(inner_locked.deref().get());
         }
+
+        Ok(())
     }
 
     /// Seeks to the last key in the database.
@@ -174,10 +212,13 @@ impl RdictIter {
     ///
     ///         del iter, db
     ///         Rdict.destroy(path, Options())
-    pub fn seek_to_last(&mut self) {
+    pub fn seek_to_last(&mut self) -> PyResult<()> {
+        let inner_locked = self.get_inner_locked()?;
         unsafe {
-            librocksdb_sys::rocksdb_iter_seek_to_last(self.inner.get());
+            librocksdb_sys::rocksdb_iter_seek_to_last(inner_locked.deref().get());
         }
+
+        Ok(())
     }
 
     /// Seeks to the specified key or the first key that lexicographically follows it.
@@ -202,9 +243,11 @@ impl RdictIter {
     ///         Rdict.destroy(path, Options())
     pub fn seek(&mut self, key: &PyAny) -> PyResult<()> {
         let key = encode_key(key, self.raw_mode)?;
+
+        let inner_locked = self.get_inner_locked()?;
         unsafe {
             librocksdb_sys::rocksdb_iter_seek(
-                self.inner.get(),
+                inner_locked.deref().get(),
                 key.as_ptr() as *const c_char,
                 key.len() as size_t,
             );
@@ -235,9 +278,10 @@ impl RdictIter {
     ///         Rdict.destroy(path, Options())
     pub fn seek_for_prev(&mut self, key: &PyAny) -> PyResult<()> {
         let key = encode_key(key, self.raw_mode)?;
+        let inner_locked = self.get_inner_locked()?;
         unsafe {
             librocksdb_sys::rocksdb_iter_seek_for_prev(
-                self.inner.get(),
+                inner_locked.deref().get(),
                 key.as_ptr() as *const c_char,
                 key.len() as size_t,
             );
@@ -246,29 +290,33 @@ impl RdictIter {
     }
 
     /// Seeks to the next key.
-    pub fn next(&mut self) {
-        unsafe {
-            librocksdb_sys::rocksdb_iter_next(self.inner.get());
-        }
+    pub fn next(&mut self) -> PyResult<()> {
+        let inner_locked = self.get_inner_locked()?;
+        self.next_locked(&inner_locked);
+        Ok(())
     }
 
     /// Seeks to the previous key.
-    pub fn prev(&mut self) {
-        unsafe {
-            librocksdb_sys::rocksdb_iter_prev(self.inner.get());
-        }
+    pub fn prev(&mut self) -> PyResult<()> {
+        let inner_locked = self.get_inner_locked()?;
+        self.prev_locked(&inner_locked);
+        Ok(())
     }
 
     /// Returns the current key.
     pub fn key(&self, py: Python) -> PyResult<PyObject> {
-        if self.valid() {
+        let inner_locked = self.get_inner_locked()?;
+        if self.is_valid_locked(&inner_locked) {
+            let inner_locked = self.get_inner_locked()?;
+
             // Safety Note: This is safe as all methods that may invalidate the buffer returned
             // take `&mut self`, so borrow checker will prevent use of buffer after seek.
             unsafe {
                 let mut key_len: size_t = 0;
                 let key_len_ptr: *mut size_t = &mut key_len;
-                let key_ptr = librocksdb_sys::rocksdb_iter_key(self.inner.get(), key_len_ptr)
-                    as *const c_uchar;
+                let key_ptr =
+                    librocksdb_sys::rocksdb_iter_key(inner_locked.deref().get(), key_len_ptr)
+                        as *const c_uchar;
                 let key = slice::from_raw_parts(key_ptr, key_len);
                 Ok(decode_value(py, key, &self.pickle_loads, self.raw_mode)?)
             }
@@ -279,14 +327,16 @@ impl RdictIter {
 
     /// Returns the current value.
     pub fn value(&self, py: Python) -> PyResult<PyObject> {
-        if self.valid() {
+        let inner_locked = self.get_inner_locked()?;
+        if self.is_valid_locked(&inner_locked) {
             // Safety Note: This is safe as all methods that may invalidate the buffer returned
             // take `&mut self`, so borrow checker will prevent use of buffer after seek.
             unsafe {
                 let mut val_len: size_t = 0;
                 let val_len_ptr: *mut size_t = &mut val_len;
-                let val_ptr = librocksdb_sys::rocksdb_iter_value(self.inner.get(), val_len_ptr)
-                    as *const c_uchar;
+                let val_ptr =
+                    librocksdb_sys::rocksdb_iter_value(inner_locked.deref().get(), val_len_ptr)
+                        as *const c_uchar;
                 let value = slice::from_raw_parts(val_ptr, val_len);
                 Ok(decode_value(py, value, &self.pickle_loads, self.raw_mode)?)
             }
@@ -311,17 +361,22 @@ impl RdictIter {
         backwards: bool,
         py: Python,
     ) -> PyResult<Vec<PyObject>> {
-        let raw_keys = py.allow_threads(|| {
+        let raw_keys = py.allow_threads(|| -> PyResult<Vec<Box<[u8]>>> {
             let mut raw_keys = Vec::new();
-            while self.valid() && raw_keys.len() < chunk_size.unwrap_or(usize::MAX) {
+            let inner_locked = self.get_inner_locked()?;
+
+            while self.is_valid_locked(&inner_locked)
+                && raw_keys.len() < chunk_size.unwrap_or(usize::MAX)
+            {
                 // Safety: This is safe for multiple reasons:
                 //   * It makes a copy of the buffer before returning.
                 //   * This `allow_threads` block does not outlive the iterator's lifetime.
                 let key = unsafe {
                     let mut key_len: size_t = 0;
                     let key_len_ptr: *mut size_t = &mut key_len;
-                    let key_ptr = librocksdb_sys::rocksdb_iter_key(self.inner.get(), key_len_ptr)
-                        as *const c_uchar;
+                    let key_ptr =
+                        librocksdb_sys::rocksdb_iter_key(inner_locked.deref().get(), key_len_ptr)
+                            as *const c_uchar;
                     slice::from_raw_parts(key_ptr, key_len)
                         .to_vec()
                         .into_boxed_slice()
@@ -329,14 +384,14 @@ impl RdictIter {
                 raw_keys.push(key);
 
                 if backwards {
-                    self.prev();
+                    self.prev_locked(&inner_locked);
                 } else {
-                    self.next();
+                    self.next_locked(&inner_locked);
                 }
             }
 
-            raw_keys
-        });
+            Ok(raw_keys)
+        })?;
 
         raw_keys
             .into_iter()
@@ -360,18 +415,22 @@ impl RdictIter {
         backwards: bool,
         py: Python,
     ) -> PyResult<Vec<PyObject>> {
-        let raw_values = py.allow_threads(|| {
+        let raw_values = py.allow_threads(|| -> PyResult<Vec<Box<[u8]>>> {
             let mut raw_values = Vec::new();
-            while self.valid() && raw_values.len() < chunk_size.unwrap_or(usize::MAX) {
+            let inner_locked = self.get_inner_locked()?;
+            while self.is_valid_locked(&inner_locked)
+                && raw_values.len() < chunk_size.unwrap_or(usize::MAX)
+            {
                 // Safety: This is safe for multiple reasons:
                 //   * It makes a copy of the buffer before returning.
                 //   * This `allow_threads` block does not outlive the iterator's lifetime.
                 let value = unsafe {
                     let mut value_len: size_t = 0;
                     let value_len_ptr: *mut size_t = &mut value_len;
-                    let value_ptr =
-                        librocksdb_sys::rocksdb_iter_value(self.inner.get(), value_len_ptr)
-                            as *const c_uchar;
+                    let value_ptr = librocksdb_sys::rocksdb_iter_value(
+                        inner_locked.deref().get(),
+                        value_len_ptr,
+                    ) as *const c_uchar;
                     slice::from_raw_parts(value_ptr, value_len)
                         .to_vec()
                         .into_boxed_slice()
@@ -379,14 +438,14 @@ impl RdictIter {
                 raw_values.push(value);
 
                 if backwards {
-                    self.prev();
+                    self.prev_locked(&inner_locked)
                 } else {
-                    self.next();
+                    self.next_locked(&inner_locked);
                 }
             }
 
-            raw_values
-        });
+            Ok(raw_values)
+        })?;
 
         raw_values
             .into_iter()
@@ -410,17 +469,21 @@ impl RdictIter {
         backwards: bool,
         py: Python,
     ) -> PyResult<Vec<(PyObject, PyObject)>> {
-        let raw_items = py.allow_threads(|| {
+        let raw_items = py.allow_threads(|| -> PyResult<Vec<(Box<[u8]>, Box<[u8]>)>> {
             let mut raw_items = Vec::new();
-            while self.valid() && raw_items.len() < chunk_size.unwrap_or(usize::MAX) {
+            let inner_locked = self.get_inner_locked()?;
+            while self.is_valid_locked(&inner_locked)
+                && raw_items.len() < chunk_size.unwrap_or(usize::MAX)
+            {
                 // Safety: This is safe for multiple reasons:
                 //   * It makes a copy of the buffer before returning.
                 //   * This `allow_threads` block does not outlive the iterator's lifetime.
                 let key = unsafe {
                     let mut key_len: size_t = 0;
                     let key_len_ptr: *mut size_t = &mut key_len;
-                    let key_ptr = librocksdb_sys::rocksdb_iter_key(self.inner.get(), key_len_ptr)
-                        as *const c_uchar;
+                    let key_ptr =
+                        librocksdb_sys::rocksdb_iter_key(inner_locked.deref().get(), key_len_ptr)
+                            as *const c_uchar;
                     slice::from_raw_parts(key_ptr, key_len)
                         .to_vec()
                         .into_boxed_slice()
@@ -432,9 +495,10 @@ impl RdictIter {
                 let value = unsafe {
                     let mut value_len: size_t = 0;
                     let value_len_ptr: *mut size_t = &mut value_len;
-                    let value_ptr =
-                        librocksdb_sys::rocksdb_iter_value(self.inner.get(), value_len_ptr)
-                            as *const c_uchar;
+                    let value_ptr = librocksdb_sys::rocksdb_iter_value(
+                        inner_locked.deref().get(),
+                        value_len_ptr,
+                    ) as *const c_uchar;
                     slice::from_raw_parts(value_ptr, value_len)
                         .to_vec()
                         .into_boxed_slice()
@@ -443,14 +507,14 @@ impl RdictIter {
                 raw_items.push((key, value));
 
                 if backwards {
-                    self.prev();
+                    self.prev_locked(&inner_locked);
                 } else {
-                    self.next();
+                    self.next_locked(&inner_locked);
                 }
             }
 
-            raw_items
-        });
+            Ok(raw_items)
+        })?;
 
         raw_items
             .into_iter()
@@ -465,8 +529,10 @@ impl RdictIter {
 
 impl Drop for RdictIter {
     fn drop(&mut self) {
-        unsafe {
-            librocksdb_sys::rocksdb_iter_destroy(self.inner.get());
+        if let Ok(inner_locked) = self.get_inner_locked() {
+            unsafe {
+                librocksdb_sys::rocksdb_iter_destroy(inner_locked.deref().get());
+            }
         }
     }
 }
@@ -482,12 +548,12 @@ macro_rules! impl_iter {
             }
 
             fn __next__(mut slf: PyRefMut<Self>, py: Python) -> PyResult<Option<PyObject>> {
-                if slf.inner.valid() {
+                if slf.inner.valid()? {
                     $(let $field = slf.inner.$field(py)?;)*
                     if slf.backwards {
-                        slf.inner.prev();
+                        slf.inner.prev()?;
                     } else {
-                        slf.inner.next();
+                        slf.inner.next()?;
                     }
                     Ok(Some(($($field),*).to_object(py)))
                 } else {
@@ -507,9 +573,9 @@ macro_rules! impl_iter {
                     }
                 } else {
                     if backwards {
-                        inner.seek_to_last();
+                        inner.seek_to_last()?;
                     } else {
-                        inner.seek_to_first();
+                        inner.seek_to_first()?;
                     }
                 }
                 Ok(Self {
@@ -537,7 +603,7 @@ macro_rules! impl_chunked_iter {
             }
 
             fn __next__(&mut self, py: Python) -> PyResult<Option<PyObject>> {
-                if self.inner.valid() {
+                if self.inner.valid()? {
                     Ok(Some(
                         self.inner
                             .$iter_chunk_fn(self.chunk_size, self.backwards, py)
@@ -565,9 +631,9 @@ macro_rules! impl_chunked_iter {
                     }
                 } else {
                     if backwards {
-                        inner.seek_to_last();
+                        inner.seek_to_last()?;
                     } else {
-                        inner.seek_to_first();
+                        inner.seek_to_first()?;
                     }
                 }
                 Ok(Self {
