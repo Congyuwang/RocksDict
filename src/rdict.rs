@@ -671,7 +671,7 @@ impl Rdict {
     ///         or the nearest next key for iteration
     ///         (depending on iteration direction).
     ///     read_opt: ReadOptions
-    #[pyo3(signature = (chunk_size = None, backwards = false, from_key = None, read_opt = None))]
+    #[pyo3(signature = (chunk_size = 10000, backwards = false, from_key = None, read_opt = None))]
     fn chunked_items(
         &self,
         chunk_size: Option<usize>,
@@ -726,7 +726,7 @@ impl Rdict {
     ///         or the nearest next key for iteration
     ///         (depending on iteration direction).
     ///     read_opt: ReadOptions
-    #[pyo3(signature = (chunk_size = None, backwards = false, from_key = None, read_opt = None))]
+    #[pyo3(signature = (chunk_size = 10000, backwards = false, from_key = None, read_opt = None))]
     fn chunked_keys(
         &self,
         chunk_size: Option<usize>,
@@ -781,7 +781,7 @@ impl Rdict {
     ///         or the nearest next key for iteration
     ///         (depending on iteration direction).
     ///     read_opt: ReadOptions
-    #[pyo3(signature = (chunk_size = None, backwards = false, from_key = None, read_opt = None))]
+    #[pyo3(signature = (chunk_size = 10000, backwards = false, from_key = None, read_opt = None))]
     fn chunked_values(
         &self,
         chunk_size: Option<usize>,

@@ -450,7 +450,7 @@ class Rdict:
     ) -> RdictItems: ...
     def chunked_items(
         self,
-        chunk_size: Optional[int] = None,
+        chunk_size: Optional[int] = 10_000,
         backwards: bool = False,
         from_key: Union[str, int, float, bytes, bool, None] = None,
         read_opt: Union[ReadOptions, None] = None,
@@ -463,7 +463,7 @@ class Rdict:
     ) -> RdictKeys: ...
     def chunked_keys(
         self,
-        chunk_size: Optional[int] = None,
+        chunk_size: Optional[int] = 10_000,
         backwards: bool = False,
         from_key: Union[str, int, float, bytes, bool, None] = None,
         read_opt: Union[ReadOptions, None] = None,
@@ -476,7 +476,7 @@ class Rdict:
     ) -> RdictValues: ...
     def chunked_values(
         self,
-        chunk_size: Optional[int] = None,
+        chunk_size: Optional[int] = 10_000,
         backwards: bool = False,
         from_key: Union[str, int, float, bytes, bool, None] = None,
         read_opt: Union[ReadOptions, None] = None,
@@ -565,13 +565,13 @@ class RdictIter:
     def key(self) -> Any: ...
     def value(self) -> Any: ...
     def get_chunk_keys(
-        self, chunk_size: Optional[int] = None, backwards: bool = False
+        self, chunk_size: Optional[int] = 10_000, backwards: bool = False
     ) -> List[Union[str, int, float, bytes, bool]]: ...
     def get_chunk_values(
-        self, chunk_size: Optional[int] = None, backwards: bool = False
+        self, chunk_size: Optional[int] = 10_000, backwards: bool = False
     ) -> List[Any]: ...
     def get_chunk_items(
-        self, chunk_size: Optional[int] = None, backwards: bool = False
+        self, chunk_size: Optional[int] = 10_000, backwards: bool = False
     ) -> List[Tuple[Union[str, int, float, bytes, bool], Any]]: ...
 
 class IngestExternalFileOptions:

@@ -216,7 +216,7 @@ class TestIterInt(unittest.TestCase):
     def test_chunk_keys_forward(self):
         it = self.test_dict.iter()
         it.seek_to_first()
-        test_list = it.get_chunk_keys()
+        test_list = it.get_chunk_keys(chunk_size=None)
 
         ref_list = [k for k in self.ref_dict.keys()]
         ref_list.sort()
@@ -226,7 +226,7 @@ class TestIterInt(unittest.TestCase):
     def test_chunk_keys_backward(self):
         it = self.test_dict.iter()
         it.seek_to_last()
-        test_list = it.get_chunk_keys(backwards=True)
+        test_list = it.get_chunk_keys(chunk_size=None, backwards=True)
 
         ref_list = [k for k in self.ref_dict.keys()]
         ref_list.sort(reverse=True)
@@ -260,7 +260,7 @@ class TestIterInt(unittest.TestCase):
     def test_chunk_items_forward(self):
         it = self.test_dict.iter()
         it.seek_to_first()
-        test_list = it.get_chunk_items()
+        test_list = it.get_chunk_items(chunk_size=None)
 
         ref_list = [k for k in self.ref_dict.items()]
         ref_list.sort()
@@ -270,7 +270,7 @@ class TestIterInt(unittest.TestCase):
     def test_chunk_items_backward(self):
         it = self.test_dict.iter()
         it.seek_to_last()
-        test_list = it.get_chunk_items(backwards=True)
+        test_list = it.get_chunk_items(chunk_size=None, backwards=True)
 
         ref_list = [k for k in self.ref_dict.items()]
         ref_list.sort(reverse=True)
@@ -306,7 +306,7 @@ class TestIterInt(unittest.TestCase):
     def test_chunk_values_forward(self):
         it = self.test_dict.iter()
         it.seek_to_first()
-        test_list = it.get_chunk_values()
+        test_list = it.get_chunk_values(chunk_size=None)
 
         ref_list = list(self.ref_dict.items())
         ref_list.sort()
@@ -317,7 +317,7 @@ class TestIterInt(unittest.TestCase):
     def test_chunk_values_backward(self):
         it = self.test_dict.iter()
         it.seek_to_last()
-        test_list = it.get_chunk_values(backwards=True)
+        test_list = it.get_chunk_values(chunk_size=None, backwards=True)
 
         ref_list = list(self.ref_dict.items())
         ref_list.sort(reverse=True)

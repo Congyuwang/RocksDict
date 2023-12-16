@@ -218,7 +218,7 @@ if __name__ == "__main__":
     rand_bytes = gen_rand_bytes()
 
     NUM_THREADS = 4
-    ITER_CHUNK_SIZE = 25_000
+    ITER_CHUNK_SIZE = 10_000
 
     print()
     print("Benchmarking Rdict Put...")
