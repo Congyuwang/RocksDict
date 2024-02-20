@@ -23,3 +23,9 @@ libc = "0.2.112"
 [dependencies.pyo3]
 version = "0.20"
 features = ["extension-module", "num-bigint"]
+
+[profile.release]
+codegen-units = 1
+debug = false
+lto = true
+opt-level = 3
