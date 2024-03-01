@@ -1035,6 +1035,8 @@ impl Rdict {
         py: Python,
     ) -> PyResult<()> {
         let db = self.get_db()?;
+        let opt = compact_opt.borrow(py);
+        let opt_ref = opt.deref();
         let from = if begin.is_none() {
             None
         } else {
@@ -1045,13 +1047,13 @@ impl Rdict {
         } else {
             Some(encode_key(end, self.opt_py.raw_mode)?)
         };
-        let opt = compact_opt.borrow(py);
-        let opt_ref = opt.deref();
-        if let Some(cf) = &self.column_family {
-            db.compact_range_cf_opt(cf, from, to, &opt_ref.0)
-        } else {
-            db.compact_range_opt(from, to, &opt_ref.0)
-        };
+        py.allow_threads(|| {
+            if let Some(cf) = &self.column_family {
+                db.compact_range_cf_opt(cf, from, to, &opt_ref.0)
+            } else {
+                db.compact_range_opt(from, to, &opt_ref.0)
+            };
+        });
         Ok(())
     }
 
