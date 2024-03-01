@@ -34,9 +34,10 @@ jobs:
           export CC=${HOMEBREW_PREFIX}/opt/llvm/bin/clang
           export CXX=${HOMEBREW_PREFIX}/opt/llvm/bin/clang++
           export AR=${HOMEBREW_PREFIX}/opt/llvm/bin/llvm-ar
+          export LTO=${HOMEBREW_PREFIX}/opt/llvm/lib/libLTO.dylib
           export CFLAGS="-flto=thin -O3"
           export CXXFLAGS="-flto=thin -O3"
-          export RUSTFLAGS="-Clinker-plugin-lto -Clinker=${CC} -Clink-arg=-fuse-ld=lld"
+          export RUSTFLAGS="-Clinker-plugin-lto=${LTO}"
           maturin build --release --target aarch64-apple-darwin --out dist -i python${{ matrix.py_version }}
           maturin build --release --target x86_64-apple-darwin --out dist -i python${{ matrix.py_version }}
       - name: Install built wheel

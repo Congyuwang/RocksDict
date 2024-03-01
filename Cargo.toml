@@ -27,5 +27,5 @@ features = ["extension-module", "num-bigint"]
 [profile.release]
 codegen-units = 1
 debug = false
-lto = true
+lto = "thin"
 opt-level = 3
