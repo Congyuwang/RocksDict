@@ -201,14 +201,28 @@ jobs:
           manylinux: 2_28
           args: --release --out dist --interpreter '3.7 3.8 3.9 3.10 3.11 3.12'
           container: congyuwang/manylinux_2_28_aarch64:llvm-17.0.6
+          docker-options: "-e BINDGEN_EXTRA_CLANG_ARGS"
         env:
           LIBCLANG_PATH: /usr/local/lib
-          CC: /usr/local/bin/clang
-          CXX: /usr/local/bin/clang++
-          AR: /usr/local/bin/llvm-ar
-          CFLAGS: "-flto=thin -O3"
-          CXXFLAGS: "-flto=thin -O3"
-          RUSTFLAGS: "-Clinker-plugin-lto -Clinker=/usr/local/bin/clang -Clink-arg=-fuse-ld=/usr/local/bin/ld.lld"
+          CC_aarch64_unknown_linux_gnu: /usr/local/bin/clang
+          CXX_aarch64_unknown_linux_gnu: /usr/local/bin/clang++
+          AR_aarch64_unknown_linux_gnu: /usr/local/bin/llvm-ar
+          CFLAGS_aarch64_unknown_linux_gnu: >
+            -flto=thin -O3 --sysroot=/usr/aarch64-unknown-linux-gnu/aarch64-unknown-linux-gnu/sysroot/
+          CXXFLAGS_aarch64_unknown_linux_gnu: >
+            -flto=thin -O3 --sysroot=/usr/aarch64-unknown-linux-gnu/aarch64-unknown-linux-gnu/sysroot/
+            -I /usr/aarch64-unknown-linux-gnu/aarch64-unknown-linux-gnu/include/c++/7.5.0/
+            -I /usr/aarch64-unknown-linux-gnu/aarch64-unknown-linux-gnu/include/c++/7.5.0/aarch64-unknown-linux-gnu/
+          BINDGEN_EXTRA_CLANG_ARGS: >
+            --sysroot=/usr/aarch64-unknown-linux-gnu/aarch64-unknown-linux-gnu/sysroot/
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: >
+            /usr/local/bin/clang
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUSTFLAGS: >
+            -Clinker-plugin-lto
+            -Clinker=/usr/local/bin/clang
+            -Clink-arg=-fuse-ld=/usr/local/bin/ld.lld
+            -Clink-arg=--sysroot=/usr/aarch64-unknown-linux-gnu/aarch64-unknown-linux-gnu/sysroot/
+            -Clink-arg=--gcc-toolchain=/usr/aarch64-unknown-linux-gnu
       - uses: uraimo/run-on-arch-action@v2
         name: Install built wheel and test
         with:
