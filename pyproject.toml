@@ -1,12 +1,12 @@
 [project]
 name = "rocksdict"
-version = "0.3.21"
+version = "0.3.22"
 description = "Rocksdb Python Binding"
-long_description_content_type="text/markdown"
+long_description_content_type = "text/markdown"
 readme = "README.md"
 keywords = ["rocksdb", "dbm", "dict", "key-value"]
 
-classifiers=[
+classifiers = [
     "Programming Language :: Rust",
     "License :: OSI Approved :: MIT License",
     'Operating System :: MacOS :: MacOS X',
