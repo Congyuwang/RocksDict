@@ -120,9 +120,17 @@ jobs:
           target: ${{ matrix.target }}
           manylinux: 2_28
           args: --release --out dist --interpreter '3.7 3.8 3.9 3.10 3.11 3.12'
-          container: messense/manylinux_2_28-cross:${{ matrix.target }}
+          container: congyuwang/manylinux_2_28_x86_64:llvm-17.0.6
+        env:
+          LIBCLANG_PATH: /usr/local/lib
+          CC: /usr/local/bin/clang
+          CXX: /usr/local/bin/clang++
+          AR: /usr/local/bin/llvm-ar
+          CFLAGS: "-flto=thin -O3"
+          CXXFLAGS: "-flto=thin -O3"
+          RUSTFLAGS: "-Clinker-plugin-lto -Clinker=/usr/local/bin/clang -Clink-arg=-fuse-ld=/usr/local/bin/ld.lld"
+
       - name: Install built wheel and test
-        if: matrix.target == 'x86_64'
         run: |
           pip install rocksdict --no-index --find-links dist --force-reinstall || true
           pip install speedict --no-index --find-links dist --force-reinstall || true
@@ -153,9 +161,16 @@ jobs:
           target: ${{ matrix.target }}
           manylinux: 2014
           args: --release --out dist --interpreter '3.7 3.8 3.9 3.10 3.11 3.12'
-          container: congyuwang/manylinux2014:${{ matrix.target }}
+          container: congyuwang/manylinux2014_x86_64:llvm-17.0.6
+        env:
+          LIBCLANG_PATH: /usr/local/lib
+          CC: /usr/local/bin/clang
+          CXX: /usr/local/bin/clang++
+          AR: /usr/local/bin/llvm-ar
+          CFLAGS: "-flto=thin -O3"
+          CXXFLAGS: "-flto=thin -O3"
+          RUSTFLAGS: "-Clinker-plugin-lto -Clinker=/usr/local/bin/clang -Clink-arg=-fuse-ld=/usr/local/bin/ld.lld"
       - name: Install built wheel and test
-        if: matrix.target == 'x86_64'
         run: |
           pip install rocksdict --no-index --find-links dist --force-reinstall || true
           pip install speedict --no-index --find-links dist --force-reinstall || true
@@ -185,9 +200,16 @@ jobs:
           target: ${{ matrix.target }}
           manylinux: 2_28
           args: --release --out dist --interpreter '3.7 3.8 3.9 3.10 3.11 3.12'
-          container: congyuwang/manylinux_2_28-cross:${{ matrix.target }}
+          container: congyuwang/manylinux_2_28_aarch64:llvm-17.0.6
+        env:
+          LIBCLANG_PATH: /usr/local/lib
+          CC: /usr/local/bin/clang
+          CXX: /usr/local/bin/clang++
+          AR: /usr/local/bin/llvm-ar
+          CFLAGS: "-flto=thin -O3"
+          CXXFLAGS: "-flto=thin -O3"
+          RUSTFLAGS: "-Clinker-plugin-lto -Clinker=/usr/local/bin/clang -Clink-arg=-fuse-ld=/usr/local/bin/ld.lld"
       - uses: uraimo/run-on-arch-action@v2
-        if: matrix.target != 'ppc64'
         name: Install built wheel and test
         with:
           arch: ${{ matrix.target }}
