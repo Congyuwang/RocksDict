@@ -9,7 +9,8 @@
 
 ## Installation
 
-Wheels available, just 
+Wheels available for macOS amd64/arm64, linux amd64/arm64, and windows amd64.
+
 - `pip install rocksdict` for rocksdb backend, then `from rocksdict import Rdict`
 - `pip install speedict` for speedb backend, then `from speedict import Rdict`
 
@@ -22,11 +23,11 @@ This library has two purposes.
 
 These two purposes operate in different modes:
 
-- **Default mode**, which allows storing `int`, `float`, 
-`bool`, `str`, `bytes`, and other python objects (with `Pickle`).
+- **Default mode**, which allows storing `int`, `float`,
+  `bool`, `str`, `bytes`, and other python objects (with `Pickle`).
 
 - **Raw mode** (`options=Options(raw_mode=True)`),
-which allows storing only `bytes`.
+  which allows storing only `bytes`.
 
 ## Examples
 
@@ -69,7 +70,7 @@ for k, v in db.items():
 # batch get:
 print(db[["good", "bad", 1.0]])
 # [True, False, 1]
- 
+
 # delete Rdict from dict
 db.close()
 Rdict.destroy(path)
@@ -105,6 +106,7 @@ Rdict.destroy(PATH_TO_ROCKSDB)
 Loading Options from RocksDict Path.
 
 ### Load Options and add A New ColumnFamily
+
 ```python
 from rocksdict import Options, Rdict
 path = str("./rocksdict_path")
