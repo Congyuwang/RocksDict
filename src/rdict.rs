@@ -120,7 +120,11 @@ impl RocksDictConfig {
     }
 
     pub fn save<P: AsRef<Path>>(&self, path: P) -> PyResult<()> {
-        let config_file = fs::File::options().create(true).write(true).open(path)?;
+        let config_file = fs::File::options()
+            .create(true)
+            .truncate(true)
+            .write(true)
+            .open(path)?;
         match serde_json::to_writer(config_file, self) {
             Ok(_) => Ok(()),
             Err(e) => Err(PyException::new_err(e.to_string())),
