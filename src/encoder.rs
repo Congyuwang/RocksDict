@@ -91,9 +91,10 @@ pub(crate) fn encode_value<'a>(
                 concat_type_encoding(type_encoding, if value { &[1u8] } else { &[0u8] })
             }
             ValueTypes::Any(value) => {
-                let pickle_bytes: Vec<u8> =
-                    Python::with_gil(|py| dumps.call1(py, (value,))?.extract(py))?;
-                concat_type_encoding(type_encoding, &pickle_bytes[..])
+                let py = value.py();
+                let pickle_bytes = dumps.call1(py, (value,))?;
+                let bytes: &[u8] = pickle_bytes.downcast_bound::<PyBytes>(py)?.as_bytes();
+                concat_type_encoding(type_encoding, bytes)
             }
         };
         Ok(Cow::Owned(owned_bytes))
