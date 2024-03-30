@@ -33,7 +33,7 @@ impl WriteBatchPy {
     #[new]
     #[pyo3(signature = (raw_mode = false))]
     pub fn default(py: Python, raw_mode: bool) -> PyResult<Self> {
-        let pickle = PyModule::import(py, "pickle")?.to_object(py);
+        let pickle = PyModule::import_bound(py, "pickle")?.to_object(py);
         Ok(WriteBatchPy {
             inner: Some(WriteBatch::default()),
             default_column_family: None,
@@ -51,7 +51,7 @@ impl WriteBatchPy {
         self.len()
     }
 
-    pub fn __setitem__(&mut self, key: &PyAny, value: &PyAny) -> PyResult<()> {
+    pub fn __setitem__(&mut self, key: &Bound<PyAny>, value: &Bound<PyAny>) -> PyResult<()> {
         if let Some(inner) = &mut self.inner {
             let key = encode_key(key, self.raw_mode)?;
             let value = encode_value(value, &self.dumps, self.raw_mode)?;
@@ -67,7 +67,7 @@ impl WriteBatchPy {
         }
     }
 
-    pub fn __delitem__(&mut self, key: &PyAny) -> PyResult<()> {
+    pub fn __delitem__(&mut self, key: &Bound<PyAny>) -> PyResult<()> {
         if let Some(inner) = &mut self.inner {
             let key = encode_key(key, self.raw_mode)?;
             match &self.default_column_family {
@@ -142,8 +142,8 @@ impl WriteBatchPy {
     #[pyo3(signature = (key, value, column_family = None))]
     pub fn put(
         &mut self,
-        key: &PyAny,
-        value: &PyAny,
+        key: &Bound<PyAny>,
+        value: &Bound<PyAny>,
         column_family: Option<ColumnFamilyPy>,
     ) -> PyResult<()> {
         if let Some(inner) = &mut self.inner {
@@ -167,7 +167,11 @@ impl WriteBatchPy {
     /// Args:
     ///     column_family: override the default column family set by set_default_column_family
     #[pyo3(signature = (key, column_family = None))]
-    pub fn delete(&mut self, key: &PyAny, column_family: Option<ColumnFamilyPy>) -> PyResult<()> {
+    pub fn delete(
+        &mut self,
+        key: &Bound<PyAny>,
+        column_family: Option<ColumnFamilyPy>,
+    ) -> PyResult<()> {
         if let Some(inner) = &mut self.inner {
             let key = encode_key(key, self.raw_mode)?;
             match column_family {
@@ -196,8 +200,8 @@ impl WriteBatchPy {
     #[pyo3(signature = (begin, end, column_family = None))]
     pub fn delete_range(
         &mut self,
-        begin: &PyAny,
-        end: &PyAny,
+        begin: &Bound<PyAny>,
+        end: &Bound<PyAny>,
         column_family: Option<ColumnFamilyPy>,
     ) -> PyResult<()> {
         if let Some(inner) = &mut self.inner {

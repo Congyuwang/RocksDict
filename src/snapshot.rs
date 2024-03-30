@@ -86,7 +86,7 @@ impl Snapshot {
     fn items(
         &self,
         backwards: bool,
-        from_key: Option<&PyAny>,
+        from_key: Option<&Bound<PyAny>>,
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictItems> {
@@ -105,7 +105,7 @@ impl Snapshot {
     fn keys(
         &self,
         backwards: bool,
-        from_key: Option<&PyAny>,
+        from_key: Option<&Bound<PyAny>>,
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictKeys> {
@@ -124,7 +124,7 @@ impl Snapshot {
     fn values(
         &self,
         backwards: bool,
-        from_key: Option<&PyAny>,
+        from_key: Option<&Bound<PyAny>>,
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictValues> {
@@ -132,7 +132,7 @@ impl Snapshot {
     }
 
     /// read from snapshot
-    fn __getitem__(&self, key: &PyAny, py: Python) -> PyResult<PyObject> {
+    fn __getitem__(&self, key: &Bound<PyAny>, py: Python) -> PyResult<PyObject> {
         let db = self.get_db();
         let key = encode_key(key, self.raw_mode)?;
         let value_result = if let Some(cf) = &self.column_family {

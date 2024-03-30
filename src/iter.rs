@@ -191,7 +191,7 @@ impl RdictIter {
     ///
     ///         del iter, db
     ///         Rdict.destroy(path, Options())
-    pub fn seek(&mut self, key: &PyAny) -> PyResult<()> {
+    pub fn seek(&mut self, key: &Bound<PyAny>) -> PyResult<()> {
         let key = encode_key(key, self.raw_mode)?;
         unsafe {
             librocksdb_sys::rocksdb_iter_seek(
@@ -224,7 +224,7 @@ impl RdictIter {
     ///
     ///         del iter, db
     ///         Rdict.destroy(path, Options())
-    pub fn seek_for_prev(&mut self, key: &PyAny) -> PyResult<()> {
+    pub fn seek_for_prev(&mut self, key: &Bound<PyAny>) -> PyResult<()> {
         let key = encode_key(key, self.raw_mode)?;
         unsafe {
             librocksdb_sys::rocksdb_iter_seek_for_prev(
@@ -321,7 +321,7 @@ macro_rules! impl_iter {
         }
 
         impl $iter_name {
-            pub(crate) fn new(inner: RdictIter, backwards: bool, from_key: Option<&PyAny>) -> PyResult<Self> {
+            pub(crate) fn new(inner: RdictIter, backwards: bool, from_key: Option<&Bound<PyAny>>) -> PyResult<Self> {
                 let mut inner = inner;
                 if let Some(from_key) = from_key {
                     if backwards {

@@ -78,7 +78,7 @@ impl SstFileWriterPy {
         let raw_mode = options.raw_mode;
         let options = &options.inner_opt;
         let writer = Self::create_raw(options, &env_options);
-        let pickle = PyModule::import(py, "pickle")?.to_object(py);
+        let pickle = PyModule::import_bound(py, "pickle")?.to_object(py);
         let pickle_dumps = pickle.getattr(py, "dumps")?;
 
         Ok(Self {
@@ -112,7 +112,7 @@ impl SstFileWriterPy {
 
     /// Adds a Put key with value to currently opened file
     /// REQUIRES: key is after any previously added key according to comparator.
-    fn __setitem__(&mut self, key: &PyAny, value: &PyAny) -> PyResult<()> {
+    fn __setitem__(&mut self, key: &Bound<PyAny>, value: &Bound<PyAny>) -> PyResult<()> {
         let key = encode_key(key, self.raw_mode)?;
         let value = encode_value(value, &self.dumps, self.raw_mode)?;
         self.setitem_raw(&key, &value)
@@ -120,7 +120,7 @@ impl SstFileWriterPy {
 
     /// Adds a deletion key to currently opened file
     /// REQUIRES: key is after any previously added key according to comparator.
-    fn __delitem__(&mut self, key: &PyAny) -> PyResult<()> {
+    fn __delitem__(&mut self, key: &Bound<PyAny>) -> PyResult<()> {
         let key = encode_key(key, self.raw_mode)?;
         self.delitem_raw(&key)
     }

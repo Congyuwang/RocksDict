@@ -10,7 +10,7 @@ pub(crate) enum ValueTypes<'a, 'b> {
     Int(BigInt),
     Float(f64),
     Bool(bool),
-    Any(&'b PyAny),
+    Any(&'a Bound<'b, PyAny>),
 }
 
 #[inline(always)]
@@ -26,9 +26,9 @@ pub(crate) fn encoding_byte(v_type: &ValueTypes) -> u8 {
 }
 
 #[inline(always)]
-pub(crate) fn encode_key(key: &PyAny, raw_mode: bool) -> PyResult<Cow<[u8]>> {
+pub(crate) fn encode_key<'a>(key: &'a Bound<PyAny>, raw_mode: bool) -> PyResult<Cow<'a, [u8]>> {
     if raw_mode {
-        return if let Ok(value) = <PyBytes as PyTryFrom>::try_from(key) {
+        return if let Ok(value) = key.downcast::<PyBytes>() {
             Ok(Cow::Borrowed(value.as_bytes()))
         } else {
             Err(PyKeyError::new_err("raw mode only support bytes"))
@@ -65,12 +65,12 @@ pub(crate) fn encode_key(key: &PyAny, raw_mode: bool) -> PyResult<Cow<[u8]>> {
 ///
 #[inline(always)]
 pub(crate) fn encode_value<'a>(
-    value: &'a PyAny,
+    value: &'a Bound<PyAny>,
     dumps: &PyObject,
     raw_mode: bool,
 ) -> PyResult<Cow<'a, [u8]>> {
     if raw_mode {
-        if let Ok(value) = <PyBytes as PyTryFrom>::try_from(value) {
+        if let Ok(value) = value.downcast::<PyBytes>() {
             Ok(Cow::Borrowed(value.as_bytes()))
         } else {
             Err(PyValueError::new_err("raw mode only support bytes"))
@@ -91,9 +91,10 @@ pub(crate) fn encode_value<'a>(
                 concat_type_encoding(type_encoding, if value { &[1u8] } else { &[0u8] })
             }
             ValueTypes::Any(value) => {
-                let pickle_bytes: Vec<u8> =
-                    Python::with_gil(|py| dumps.call1(py, (value,))?.extract(py))?;
-                concat_type_encoding(type_encoding, &pickle_bytes[..])
+                let py = value.py();
+                let pickle_bytes = dumps.call1(py, (value,))?;
+                let bytes: &[u8] = pickle_bytes.downcast_bound::<PyBytes>(py)?.as_bytes();
+                concat_type_encoding(type_encoding, bytes)
             }
         };
         Ok(Cow::Owned(owned_bytes))
@@ -101,21 +102,21 @@ pub(crate) fn encode_value<'a>(
 }
 
 #[inline(always)]
-fn py_to_value_types(value: &PyAny) -> PyResult<ValueTypes> {
-    if let Ok(value) = <PyBool as PyTryFrom>::try_from(value) {
+fn py_to_value_types<'a, 'b>(value: &'a Bound<'b, PyAny>) -> PyResult<ValueTypes<'a, 'b>> {
+    if let Ok(value) = value.downcast::<PyBool>() {
         return Ok(ValueTypes::Bool(value.extract()?));
     }
-    if let Ok(value) = <PyBytes as PyTryFrom>::try_from(value) {
+    if let Ok(value) = value.downcast::<PyBytes>() {
         return Ok(ValueTypes::Bytes(value.as_bytes()));
     }
-    if let Ok(value) = <PyString as PyTryFrom>::try_from(value) {
+    if let Ok(value) = value.downcast::<PyString>() {
         return Ok(ValueTypes::String(value.to_string()));
     }
-    if let Ok(value) = <PyInt as PyTryFrom>::try_from(value) {
+    if let Ok(value) = value.downcast::<PyInt>() {
         return Ok(ValueTypes::Int(value.extract()?));
     }
-    if let Ok(value) = <PyFloat as PyTryFrom>::try_from(value) {
-        return Ok(ValueTypes::Float(value.extract()?));
+    if let Ok(value) = value.downcast::<PyFloat>() {
+        return Ok(ValueTypes::Float(value.value()));
     }
     Ok(ValueTypes::Any(value))
 }
@@ -130,18 +131,18 @@ pub(crate) fn decode_value(
 ) -> PyResult<PyObject> {
     // directly return bytes if raw_mode is true
     if raw_mode {
-        return Ok(PyBytes::new(py, bytes).to_object(py));
+        return Ok(PyBytes::new_bound(py, bytes).to_object(py));
     }
     match bytes.first() {
         None => Err(PyException::new_err("Unknown value type")),
         Some(byte) => match byte {
-            1 => Ok(PyBytes::new(py, &bytes[1..]).to_object(py)),
+            1 => Ok(PyBytes::new_bound(py, &bytes[1..]).to_object(py)),
             2 => {
                 let string = match String::from_utf8(bytes[1..].to_vec()) {
                     Ok(s) => s,
                     Err(_) => return Err(PyException::new_err("utf-8 decoding error")),
                 };
-                Ok(string.into_py(py))
+                Ok(PyString::new_bound(py, &string).to_object(py))
             }
             3 => {
                 let big_int = BigInt::from_signed_bytes_be(&bytes[1..]);
@@ -151,8 +152,8 @@ pub(crate) fn decode_value(
                 let float: f64 = f64::from_be_bytes(bytes[1..].try_into().unwrap());
                 Ok(float.into_py(py))
             }
-            5 => Ok((bytes[1] != 0).to_object(py)),
-            6 => loads.call1(py, (PyBytes::new(py, &bytes[1..]),)),
+            5 => Ok(PyBool::new_bound(py, bytes[1] != 0).to_object(py)),
+            6 => loads.call1(py, (PyBytes::new_bound(py, &bytes[1..]),)),
             _ => Err(PyException::new_err("Unknown value type")),
         },
     }
