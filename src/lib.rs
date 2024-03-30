@@ -107,7 +107,7 @@ use pyo3::prelude::*;
 ///     supports `pickle`.
 ///
 #[pymodule]
-fn rocksdict(py: Python, m: &PyModule) -> PyResult<()> {
+fn rocksdict(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<Rdict>()?;
     m.add_class::<OptionsPy>()?;
     m.add_class::<MemtableFactoryPy>()?;
@@ -144,8 +144,7 @@ fn rocksdict(py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<ChecksumTypePy>()?;
     m.add_class::<KeyEncodingTypePy>()?;
 
-    m.add("DbClosedError", py.get_type::<DbClosedError>())?;
+    m.add("DbClosedError", py.get_type_bound::<DbClosedError>())?;
 
-    pyo3_log::init();
     Ok(())
 }

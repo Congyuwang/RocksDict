@@ -614,11 +614,11 @@ impl OptionsPy {
         let (options, column_families) =
             OptionsPy::load_latest_inner(path, env, ignore_unknown_options, cache)?;
         let options = Py::new(py, options)?;
-        let columns = PyDict::new(py);
+        let columns = PyDict::new_bound(py);
         for (name, opt) in column_families {
             columns.set_item(name, Py::new(py, opt)?)?
         }
-        let returned_tuple = PyTuple::new(py, [options.to_object(py), columns.to_object(py)]);
+        let returned_tuple = PyTuple::new_bound(py, [options.to_object(py), columns.to_object(py)]);
         Ok(returned_tuple.to_object(py))
     }
 
@@ -745,10 +745,10 @@ impl OptionsPy {
     ///     flash_path = DBPath("/flash_path", 10 * 1024 * 1024 * 1024) # 10 GB
     ///     hard_drive = DBPath("/hard_drive", 2 * 1024 * 1024 * 1024 * 1024) # 2 TB
     ///     opt.set_db_paths([flash_path, hard_drive])
-    pub fn set_db_paths(&mut self, paths: &PyList) -> PyResult<()> {
+    pub fn set_db_paths(&mut self, paths: &Bound<PyList>) -> PyResult<()> {
         let mut db_paths = Vec::with_capacity(paths.len());
         for p in paths.iter() {
-            let path: &PyCell<DBPathPy> = PyTryFrom::try_from(p)?;
+            let path: &Bound<DBPathPy> = p.downcast()?;
             db_paths.push(
                 match DBPath::new(&path.borrow().path, path.borrow().target_size) {
                     Ok(p) => p,
@@ -805,10 +805,10 @@ impl OptionsPy {
     ///             DBCompressionType.snappy(),
     ///             DBCompressionType.snappy()
     ///         ])
-    pub fn set_compression_per_level(&mut self, level_types: &PyList) -> PyResult<()> {
+    pub fn set_compression_per_level(&mut self, level_types: &Bound<PyList>) -> PyResult<()> {
         let mut result = Vec::with_capacity(level_types.len());
         for py_any in level_types.iter() {
-            let level_type: &PyCell<DBCompressionTypePy> = PyTryFrom::try_from(py_any)?;
+            let level_type: &Bound<DBCompressionTypePy> = py_any.downcast()?;
             result.push(level_type.borrow().0)
         }
         self.inner_opt.set_compression_per_level(&result);
@@ -1960,13 +1960,13 @@ impl ReadOptionsPy {
     }
 
     /// Sets the upper bound for an iterator.
-    pub fn set_iterate_upper_bound(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
+    pub fn set_iterate_upper_bound(&mut self, key: &Bound<PyAny>, py: Python) -> PyResult<()> {
         self.iterate_upper_bound = key.to_object(py);
         Ok(())
     }
 
     /// Sets the lower bound for an iterator.
-    pub fn set_iterate_lower_bound(&mut self, key: &PyAny, py: Python) -> PyResult<()> {
+    pub fn set_iterate_lower_bound(&mut self, key: &Bound<PyAny>, py: Python) -> PyResult<()> {
         self.iterate_upper_bound = key.to_object(py);
         Ok(())
     }
@@ -2075,11 +2075,11 @@ impl ReadOptionsPy {
         let mut opt = ReadOptions::default();
         opt.fill_cache(self.fill_cache);
         if !self.iterate_lower_bound.is_none(py) {
-            let lower_bound = encode_key(self.iterate_lower_bound.as_ref(py), raw_mode)?;
+            let lower_bound = encode_key(self.iterate_lower_bound.bind(py), raw_mode)?;
             opt.set_iterate_lower_bound(lower_bound);
         }
         if !self.iterate_upper_bound.is_none(py) {
-            let upper_bound = encode_key(self.iterate_upper_bound.as_ref(py), raw_mode)?;
+            let upper_bound = encode_key(self.iterate_upper_bound.bind(py), raw_mode)?;
             opt.set_iterate_upper_bound(upper_bound);
         }
         opt.set_prefix_same_as_start(self.prefix_same_as_start);
@@ -2098,7 +2098,7 @@ impl ReadOptionsPy {
     pub(crate) fn to_read_opt(&self, raw_mode: bool, py: Python) -> PyResult<ReadOpt> {
         let opt = unsafe { ReadOpt(librocksdb_sys::rocksdb_readoptions_create()) };
         if !self.iterate_lower_bound.is_none(py) {
-            let lower_bound = encode_key(self.iterate_lower_bound.as_ref(py), raw_mode)?;
+            let lower_bound = encode_key(self.iterate_lower_bound.bind(py), raw_mode)?;
 
             unsafe {
                 librocksdb_sys::rocksdb_readoptions_set_iterate_lower_bound(
@@ -2109,7 +2109,7 @@ impl ReadOptionsPy {
             }
         }
         if !self.iterate_upper_bound.is_none(py) {
-            let upper_bound = encode_key(self.iterate_upper_bound.as_ref(py), raw_mode)?;
+            let upper_bound = encode_key(self.iterate_upper_bound.bind(py), raw_mode)?;
 
             unsafe {
                 librocksdb_sys::rocksdb_readoptions_set_iterate_upper_bound(

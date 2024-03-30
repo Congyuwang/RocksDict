@@ -171,7 +171,7 @@ impl Rdict {
         access_type: AccessType,
         py: Python,
     ) -> PyResult<Self> {
-        let pickle = PyModule::import(py, "pickle")?.to_object(py);
+        let pickle = PyModule::import_bound(py, "pickle")?.to_object(py);
         // create db path if missing
         fs::create_dir_all(path).map_err(|e| PyException::new_err(e.to_string()))?;
         // load options
@@ -332,7 +332,7 @@ impl Rdict {
     }
 
     /// Use list of keys for batch get.
-    fn __getitem__(&self, key: &PyAny, py: Python) -> PyResult<PyObject> {
+    fn __getitem__(&self, key: &Bound<PyAny>, py: Python) -> PyResult<PyObject> {
         match self.get(key, None, None, py) {
             Ok(Some(v)) => Ok(v),
             Ok(None) => Err(PyKeyError::new_err(format!("key {key} not found"))),
@@ -354,8 +354,8 @@ impl Rdict {
     #[pyo3(signature = (key, default = None, read_opt = None))]
     fn get(
         &self,
-        key: &PyAny,
-        default: Option<&PyAny>,
+        key: &Bound<PyAny>,
+        default: Option<&Bound<PyAny>>,
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<Option<PyObject>> {
@@ -375,7 +375,7 @@ impl Rdict {
             }
             Some(cf) => cf.clone(),
         };
-        if let Ok(keys) = PyTryFrom::try_from(key) {
+        if let Ok(keys) = key.downcast() {
             return Ok(Some(
                 get_batch_inner(
                     db,
@@ -411,7 +411,7 @@ impl Rdict {
         }
     }
 
-    fn __setitem__(&self, key: &PyAny, value: &PyAny) -> PyResult<()> {
+    fn __setitem__(&self, key: &Bound<PyAny>, value: &Bound<PyAny>) -> PyResult<()> {
         self.put(key, value, None)
     }
 
@@ -424,7 +424,12 @@ impl Rdict {
     ///         (or use Rdict.set_write_options to preset a write options used by default).
     #[inline]
     #[pyo3(signature = (key, value, write_opt = None))]
-    fn put(&self, key: &PyAny, value: &PyAny, write_opt: Option<&WriteOptionsPy>) -> PyResult<()> {
+    fn put(
+        &self,
+        key: &Bound<PyAny>,
+        value: &Bound<PyAny>,
+        write_opt: Option<&WriteOptionsPy>,
+    ) -> PyResult<()> {
         let db = self.get_db()?;
         let key = encode_key(key, self.opt_py.raw_mode)?;
         let value = encode_value(value, &self.dumps, self.opt_py.raw_mode)?;
@@ -441,7 +446,7 @@ impl Rdict {
         .map_err(|e| PyException::new_err(e.to_string()))
     }
 
-    fn __contains__(&self, key: &PyAny) -> PyResult<bool> {
+    fn __contains__(&self, key: &Bound<PyAny>) -> PyResult<bool> {
         let db = self.get_db()?;
         let key = encode_key(key, self.opt_py.raw_mode)?;
         let may_exist = if let Some(cf) = &self.column_family {
@@ -501,7 +506,7 @@ impl Rdict {
     #[pyo3(signature = (key, fetch = false, read_opt = None))]
     fn key_may_exist(
         &self,
-        key: &PyAny,
+        key: &Bound<PyAny>,
         fetch: bool,
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
@@ -540,7 +545,7 @@ impl Rdict {
         }
     }
 
-    fn __delitem__(&self, key: &PyAny) -> PyResult<()> {
+    fn __delitem__(&self, key: &Bound<PyAny>) -> PyResult<()> {
         self.delete(key, None)
     }
 
@@ -552,7 +557,7 @@ impl Rdict {
     ///         (or use Rdict.set_write_options to preset a write options used by default).
     #[inline]
     #[pyo3(signature = (key, write_opt = None))]
-    fn delete(&self, key: &PyAny, write_opt: Option<&WriteOptionsPy>) -> PyResult<()> {
+    fn delete(&self, key: &Bound<PyAny>, write_opt: Option<&WriteOptionsPy>) -> PyResult<()> {
         let db = self.get_db()?;
         let key = encode_key(key, self.opt_py.raw_mode)?;
 
@@ -646,7 +651,7 @@ impl Rdict {
     fn items(
         &self,
         backwards: bool,
-        from_key: Option<&PyAny>,
+        from_key: Option<&Bound<PyAny>>,
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictItems> {
@@ -670,7 +675,7 @@ impl Rdict {
     fn keys(
         &self,
         backwards: bool,
-        from_key: Option<&PyAny>,
+        from_key: Option<&Bound<PyAny>>,
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictKeys> {
@@ -694,7 +699,7 @@ impl Rdict {
     fn values(
         &self,
         backwards: bool,
-        from_key: Option<&PyAny>,
+        from_key: Option<&Bound<PyAny>>,
         read_opt: Option<&ReadOptionsPy>,
         py: Python,
     ) -> PyResult<RdictValues> {
@@ -949,8 +954,8 @@ impl Rdict {
     ///     write_opt: WriteOptions
     pub fn delete_range(
         &self,
-        begin: &PyAny,
-        end: &PyAny,
+        begin: &Bound<PyAny>,
+        end: &Bound<PyAny>,
         write_opt: Option<&WriteOptionsPy>,
     ) -> PyResult<()> {
         let db = self.get_db()?;
@@ -1033,8 +1038,8 @@ impl Rdict {
     #[pyo3(signature = (begin, end, compact_opt = Python::with_gil(|py| Py::new(py, CompactOptionsPy::default()).unwrap())))]
     fn compact_range(
         &self,
-        begin: &PyAny,
-        end: &PyAny,
+        begin: &Bound<PyAny>,
+        end: &Bound<PyAny>,
         compact_opt: Py<CompactOptionsPy>,
         py: Python,
     ) -> PyResult<()> {
@@ -1109,7 +1114,7 @@ impl Rdict {
         let db = self.get_db()?;
         match db.live_files() {
             Ok(lfs) => {
-                let result = PyList::empty(py);
+                let result = PyList::empty_bound(py);
                 for lf in lfs {
                     result.append(display_live_file_dict(
                         lf,
@@ -1168,7 +1173,7 @@ fn display_live_file_dict(
     pickle_loads: &PyObject,
     raw_mode: bool,
 ) -> PyResult<PyObject> {
-    let result = PyDict::new(py);
+    let result = PyDict::new_bound(py);
     let start_key = match lf.start_key {
         None => py.None(),
         Some(k) => decode_value(py, &k, pickle_loads, raw_mode)?,
@@ -1189,19 +1194,20 @@ fn display_live_file_dict(
 
 fn get_batch_inner<'a>(
     db: &DB,
-    key_list: &'a PyList,
+    key_list: &Bound<PyList>,
     py: Python<'a>,
     read_opt: &ReadOptions,
     loads: &PyObject,
     cf: &Arc<UnboundColumnFamily>,
     raw_mode: bool,
-) -> PyResult<&'a PyList> {
+) -> PyResult<Bound<'a, PyList>> {
+    let keys_py = key_list.iter().collect::<Vec<_>>();
     let mut keys: Vec<Cow<[u8]>> = Vec::with_capacity(key_list.len());
-    for key in key_list {
+    for key in keys_py.iter() {
         keys.push(encode_key(key, raw_mode)?);
     }
     let values = py.allow_threads(|| db.batched_multi_get_cf_opt(cf, &keys, false, read_opt));
-    let result = PyList::empty(py);
+    let result = PyList::empty_bound(py);
     for v in values {
         match v {
             Ok(value) => match value {
