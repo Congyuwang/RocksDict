@@ -122,9 +122,9 @@ fn py_to_value_types<'a, 'b>(value: &'a Bound<'b, PyAny>) -> PyResult<ValueTypes
 
 /// this function is used for decoding value from bytes
 #[inline(always)]
-pub(crate) fn decode_value<'a>(
+pub(crate) fn decode_value(
     py: Python,
-    bytes: &'a [u8],
+    bytes: &[u8],
     loads: &PyObject,
     raw_mode: bool,
 ) -> PyResult<PyObject> {
