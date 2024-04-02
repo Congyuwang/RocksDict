@@ -6,7 +6,7 @@ use std::borrow::Cow;
 
 pub(crate) enum ValueTypes<'a, 'b> {
     Bytes(&'a [u8]),
-    String(String),
+    String(&'a str),
     Int(BigInt),
     Float(f64),
     Bool(bool),
@@ -110,7 +110,7 @@ fn py_to_value_types<'a, 'b>(value: &'a Bound<'b, PyAny>) -> PyResult<ValueTypes
         return Ok(ValueTypes::Bytes(value.as_bytes()));
     }
     if let Ok(value) = value.downcast::<PyString>() {
-        return Ok(ValueTypes::String(value.to_string()));
+        return Ok(ValueTypes::String(value.to_str()?));
     }
     if let Ok(value) = value.downcast::<PyInt>() {
         return Ok(ValueTypes::Int(value.extract()?));
