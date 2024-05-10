@@ -6,7 +6,7 @@ on:
 
 jobs:
   macos:
-    runs-on: macos-latest
+    runs-on: macos-13
     strategy:
       fail-fast: false
       matrix:
@@ -17,7 +17,7 @@ jobs:
         run: |
           brew update
           brew install llvm@18
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.py_version }}
           architecture: x64
@@ -64,7 +64,7 @@ jobs:
         py_version: [3.7, 3.8, 3.9, "3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.py_version }}
           architecture: ${{ matrix.target }}
@@ -110,7 +110,7 @@ jobs:
         target: [x86_64]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: 3.9
           architecture: x64
@@ -151,7 +151,7 @@ jobs:
         target: [x86_64]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: 3.9
           architecture: x64
@@ -191,7 +191,7 @@ jobs:
         target: [aarch64]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: 3.9
       - name: Build Wheels
