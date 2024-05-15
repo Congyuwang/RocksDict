@@ -7,7 +7,7 @@ use core::slice;
 use libc::{c_char, c_uchar, size_t};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use pyo3::types::{PyList, PyString, PyTuple};
+use pyo3::types::{PyList, PyTuple};
 use rocksdb::{AsColumnFamilyRef, Iterable as _, UnboundColumnFamily};
 use std::ptr::null_mut;
 use std::sync::Arc;
@@ -301,12 +301,7 @@ impl RdictIter {
             };
             let result = PyList::empty_bound(py);
             for column in columns.iter() {
-                let name = if !self.raw_mode && column.name.is_empty() {
-                    // deals with default column name in non-raw-mode
-                    PyString::new_bound(py, "").to_object(py)
-                } else {
-                    decode_value(py, column.name, &self.loads, self.raw_mode)?
-                };
+                let name = decode_value(py, column.name, &self.loads, self.raw_mode)?;
                 let value = decode_value(py, column.value, &self.loads, self.raw_mode)?;
                 result.append(PyTuple::new_bound(py, [name, value]))?;
             }

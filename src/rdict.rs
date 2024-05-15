@@ -9,7 +9,7 @@ use crate::{
 };
 use pyo3::exceptions::{PyException, PyKeyError};
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList, PyString, PyTuple};
+use pyo3::types::{PyDict, PyList, PyTuple};
 use rocksdb::{
     ColumnFamilyDescriptor, FlushOptions, Iterable as _, LiveFile, ReadOptions,
     UnboundColumnFamily, WriteOptions, DEFAULT_COLUMN_FAMILY_NAME,
@@ -460,12 +460,7 @@ impl Rdict {
             Some(columns) => {
                 let result = PyList::empty_bound(py);
                 for column in columns.iter() {
-                    let name = if !self.opt_py.raw_mode && column.name.is_empty() {
-                        // deals with default column name in non-raw-mode
-                        PyString::new_bound(py, "").to_object(py)
-                    } else {
-                        decode_value(py, column.name, &self.loads, self.opt_py.raw_mode)?
-                    };
+                    let name = decode_value(py, column.name, &self.loads, self.opt_py.raw_mode)?;
                     let value = decode_value(py, column.value, &self.loads, self.opt_py.raw_mode)?;
                     result.append(PyTuple::new_bound(py, [name, value]))?;
                 }

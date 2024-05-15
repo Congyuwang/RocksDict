@@ -134,7 +134,8 @@ pub(crate) fn decode_value(
         return Ok(PyBytes::new_bound(py, bytes).to_object(py));
     }
     match bytes.first() {
-        None => Err(PyException::new_err("Unknown value type")),
+        // deal with empty value returned by entities
+        None => Ok(PyString::new_bound(py, "").to_object(py)),
         Some(byte) => match byte {
             1 => Ok(PyBytes::new_bound(py, &bytes[1..]).to_object(py)),
             2 => {
