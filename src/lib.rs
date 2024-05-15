@@ -133,6 +133,8 @@ fn rocksdict(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<RdictItems>()?;
     m.add_class::<RdictValues>()?;
     m.add_class::<RdictKeys>()?;
+    m.add_class::<RdictColumns>()?;
+    m.add_class::<RdictEntities>()?;
     m.add_class::<IngestExternalFileOptionsPy>()?;
     m.add_class::<SstFileWriterPy>()?;
     m.add_class::<WriteBatchPy>()?;

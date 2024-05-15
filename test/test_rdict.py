@@ -484,6 +484,7 @@ class TestWideColumnsRaw(unittest.TestCase):
         self.assertEqual(self.test_dict[b"Sichuan"], b"")
         self.assertEqual(self.test_dict.get_entity(b"Sichuan"), [(b"city", b"Chengdu"), (b"language", b"Sichuanhua")])
 
+        # iterator
         it = self.test_dict.iter()
         it.seek_to_first()
         self.assertTrue(it.valid())
@@ -500,6 +501,25 @@ class TestWideColumnsRaw(unittest.TestCase):
         self.assertEqual(it.key(), b"Sichuan")
         self.assertEqual(it.value(), b"")
         self.assertEqual(it.columns(), [(b"city", b"Chengdu"), (b"language", b"Sichuanhua")])
+
+        # iterators
+        expected = [
+            (b"Beijing", [(b"", b"Beijing")]),
+            (b"Guangdong", [(b"city", b"Shenzhen"), (b"language", b"Cantonese")]),
+            (b"Sichuan", [(b"city", b"Chengdu"), (b"language", b"Sichuanhua")]),
+        ]
+        for i, (key, entity) in enumerate(self.test_dict.entities()):
+            self.assertEqual(key, expected[i][0])
+            self.assertEqual(entity, expected[i][1])
+
+        self.assertEqual(
+            [c for c in self.test_dict.columns()],
+            [
+                [(b"", b"Beijing")],
+                [(b"city", b"Shenzhen"), (b"language", b"Cantonese")],
+                [(b"city", b"Chengdu"), (b"language", b"Sichuanhua")],
+            ]
+        )
 
     @classmethod
     def tearDownClass(cls):
@@ -553,6 +573,25 @@ class TestWideColumns(unittest.TestCase):
         self.assertEqual(it.key(), "Sichuan")
         self.assertEqual(it.value(), "")
         self.assertEqual(it.columns(), [("city", "Chengdu"), ("language", "Sichuanhua")])
+
+        # iterators
+        expected = [
+            ("Beijing", [("", "Beijing")]),
+            ("Guangdong", [("city", "Shenzhen"), ("language", "Cantonese"), ("population", 1.27)]),
+            ("Sichuan", [("city", "Chengdu"), ("language", "Sichuanhua")]),
+        ]
+        for i, (key, entity) in enumerate(self.test_dict.entities()):
+            self.assertEqual(key, expected[i][0])
+            self.assertEqual(entity, expected[i][1])
+
+        self.assertEqual(
+            [c for c in self.test_dict.columns()],
+            [
+                [("", "Beijing")],
+                [("city", "Shenzhen"), ("language", "Cantonese"), ("population", 1.27)],
+                [("city", "Chengdu"), ("language", "Sichuanhua")],
+            ]
+        )
 
     @classmethod
     def tearDownClass(cls):
