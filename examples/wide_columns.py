@@ -2,38 +2,57 @@ from rocksdict import Rdict, Options
 
 test_dict = None
 opt = None
-path = "./temp_wide_columns_raw"
+path = "./temp_wide_columns"
 
-opt = Options(True)
+opt = Options()
 opt.create_if_missing(True)
 test_dict = Rdict(path, opt)
 
-test_dict.put_entity(key=b"Guangdong", names=[b"language", b"city"], values=[b"Cantonese", b"Shenzhen"]);
-test_dict.put_entity(key=b"Sichuan", names=[b"language", b"city"], values=[b"Mandarin", b"Chengdu"]);
-assert test_dict.get_entity(b"Guangdong") == [(b"city", b"Shenzhen"), (b"language", b"Cantonese")]
-assert test_dict.get_entity(b"Sichuan") == [(b"city", b"Chengdu"), (b"language", b"Mandarin")]
+# write
+test_dict.put_entity(key="Guangdong", names=["population", "language", "city"], values=[1.27, "Cantonese", "Shenzhen"]);
+test_dict.put_entity(key="Sichuan", names=["language", "city"], values=["Mandarin", "Chengdu"]);
+
+# read
+assert test_dict["Guangdong"] == ""
+assert test_dict.get_entity("Guangdong") == [("city", "Shenzhen"), ("language", "Cantonese"), ("population", 1.27)]
+
+assert test_dict["Sichuan"] == ""
+assert test_dict.get_entity("Sichuan") == [("city", "Chengdu"), ("language", "Mandarin")]
+
 # overwrite
-test_dict.put_entity(key=b"Sichuan", names=[b"language", b"city"], values=[b"Sichuanhua", b"Chengdu"]);
-test_dict[b"Beijing"] = b"Beijing"
+test_dict.put_entity(key="Sichuan", names=["language", "city"], values=["Sichuanhua", "Chengdu"]);
+test_dict["Beijing"] = "Beijing"
 
 # assertions
-assert test_dict.get_entity(b"Beijing") == [(b"", b"Beijing")]
-assert test_dict.get_entity(b"Guangdong") == [(b"city", b"Shenzhen"), (b"language", b"Cantonese")]
-assert test_dict.get_entity(b"Sichuan") == [(b"city", b"Chengdu"), (b"language", b"Sichuanhua")]
+assert test_dict["Beijing"] == "Beijing"
+assert test_dict.get_entity("Beijing") == [("", "Beijing")]
 
+assert test_dict["Guangdong"] == ""
+assert test_dict.get_entity("Guangdong") == [("city", "Shenzhen"), ("language", "Cantonese"), ("population", 1.27)]
+
+assert test_dict["Sichuan"] == ""
+assert test_dict.get_entity("Sichuan") == [("city", "Chengdu"), ("language", "Sichuanhua")]
+
+# iterator
 it = test_dict.iter()
 it.seek_to_first()
+
 assert it.valid()
-assert it.key() == b"Beijing"
-assert it.columns() == [(b"", b"Beijing")]
+assert it.key() == "Beijing"
+assert it.value() == "Beijing"
+assert it.columns() == [("", "Beijing")]
+
 it.next()
 assert it.valid()
-assert it.key() == b"Guangdong"
-assert it.columns() == [(b"city", b"Shenzhen"), (b"language", b"Cantonese")]
+assert it.key() == "Guangdong"
+assert it.value() == ""
+assert it.columns() == [("city", "Shenzhen"), ("language", "Cantonese"), ("population", 1.27)]
+
 it.next()
 assert it.valid()
-assert it.key() == b"Sichuan"
-assert it.columns() == [(b"city", b"Chengdu"), (b"language", b"Sichuanhua")]
+assert it.key() == "Sichuan"
+assert it.value() == ""
+assert it.columns() == [("city", "Chengdu"), ("language", "Sichuanhua")]
 
 del it, test_dict
 
