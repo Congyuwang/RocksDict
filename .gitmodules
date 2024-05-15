@@ -1,0 +1,3 @@
+[submodule "rust-rocksdb"]
+	path = rust-rocksdb
+	url = https://github.com/Congyuwang/rust-rocksdb
