@@ -26,7 +26,7 @@ pub(crate) struct RdictIter {
     pub(crate) readopts: ReadOpt,
 
     /// use pickle loads to convert bytes to pyobjects
-    pub(crate) pickle_loads: PyObject,
+    pub(crate) loads: PyObject,
 
     pub(crate) raw_mode: bool,
 }
@@ -76,7 +76,7 @@ impl RdictIter {
                 }
             },
             readopts,
-            pickle_loads: pickle_loads.clone(),
+            loads: pickle_loads.clone(),
             raw_mode,
         })
     }
@@ -262,7 +262,7 @@ impl RdictIter {
                 let key_ptr =
                     librocksdb_sys::rocksdb_iter_key(self.inner, key_len_ptr) as *const c_uchar;
                 let key = slice::from_raw_parts(key_ptr, key_len);
-                Ok(decode_value(py, key, &self.pickle_loads, self.raw_mode)?)
+                Ok(decode_value(py, key, &self.loads, self.raw_mode)?)
             }
         } else {
             Ok(py.None())
@@ -280,7 +280,7 @@ impl RdictIter {
                 let val_ptr =
                     librocksdb_sys::rocksdb_iter_value(self.inner, val_len_ptr) as *const c_uchar;
                 let value = slice::from_raw_parts(val_ptr, val_len);
-                Ok(decode_value(py, value, &self.pickle_loads, self.raw_mode)?)
+                Ok(decode_value(py, value, &self.loads, self.raw_mode)?)
             }
         } else {
             Ok(py.None())
