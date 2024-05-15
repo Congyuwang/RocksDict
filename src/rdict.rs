@@ -406,7 +406,7 @@ impl Rdict {
         }
     }
 
-    /// Get a wide column from a key.
+    /// Get a wide-column from a key.
     ///
     /// Args:
     ///     key: a single key or list of keys.
@@ -415,6 +415,9 @@ impl Rdict {
     ///         (or use Rdict.set_read_options to preset a read options used by default).
     ///
     /// Returns:
+    ///    A list of `(name, value)` tuples.
+    ///    If the value is not an entity, returns a single-column
+    ///    with default column name (empty bytes/string).
     ///    None or default value if the key does not exist.
     #[inline]
     #[pyo3(signature = (key, default = None, read_opt = None))]
@@ -506,7 +509,9 @@ impl Rdict {
         .map_err(|e| PyException::new_err(e.to_string()))
     }
 
-    /// Insert a wide-columns.
+    /// Insert a wide-column.
+    ///
+    /// The length of `names` and `values` must be the same.
     ///
     /// Args:
     ///     key: the key.

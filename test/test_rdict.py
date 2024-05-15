@@ -511,9 +511,9 @@ class TestWideColumns(unittest.TestCase):
         cls.test_dict = Rdict(cls.path, cls.opt)
 
     def test_put_wide_columns(self):
-        self.test_dict.put_entity(key="Guangdong", names=["language", "city"], values=["Cantonese", "Shenzhen"]);
+        self.test_dict.put_entity(key="Guangdong", names=["language", "city", "population"], values=["Cantonese", "Shenzhen", 1.27]);
         self.test_dict.put_entity(key="Sichuan", names=["language", "city"], values=["Mandarin", "Chengdu"]);
-        self.assertEqual(self.test_dict.get_entity("Guangdong"), [("city", "Shenzhen"), ("language", "Cantonese")])
+        self.assertEqual(self.test_dict.get_entity("Guangdong"), [("city", "Shenzhen"), ("language", "Cantonese"), ("population", 1.27)])
         self.assertEqual(self.test_dict.get_entity("Sichuan"), [("city", "Chengdu"), ("language", "Mandarin")])
         # overwrite
         self.test_dict.put_entity(key="Sichuan", names=["language", "city"], values=["Sichuanhua", "Chengdu"]);
@@ -521,7 +521,7 @@ class TestWideColumns(unittest.TestCase):
 
         # assertions
         self.assertEqual(self.test_dict.get_entity("Beijing"), [("", "Beijing")])
-        self.assertEqual(self.test_dict.get_entity("Guangdong"), [("city", "Shenzhen"), ("language", "Cantonese")])
+        self.assertEqual(self.test_dict.get_entity("Guangdong"), [("city", "Shenzhen"), ("language", "Cantonese"), ("population", 1.27)])
         self.assertEqual(self.test_dict.get_entity("Sichuan"), [("city", "Chengdu"), ("language", "Sichuanhua")])
 
         it = self.test_dict.iter()
@@ -532,7 +532,7 @@ class TestWideColumns(unittest.TestCase):
         it.next()
         self.assertTrue(it.valid())
         self.assertEqual(it.key(), "Guangdong")
-        self.assertEqual(it.columns(), [("city", "Shenzhen"), ("language", "Cantonese")])
+        self.assertEqual(it.columns(), [("city", "Shenzhen"), ("language", "Cantonese"), ("population", 1.27)])
         it.next()
         self.assertTrue(it.valid())
         self.assertEqual(it.key(), "Sichuan")

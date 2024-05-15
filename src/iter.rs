@@ -288,6 +288,12 @@ impl RdictIter {
     }
 
     /// Returns the current wide-column.
+    ///
+    /// Returns:
+    ///    A list of `(name, value)` tuples.
+    ///    If the value is not an entity, returns a single-column
+    ///    with default column name (empty bytes/string).
+    ///    None or default value if the key does not exist.
     pub fn columns(&self, py: Python) -> PyResult<PyObject> {
         if self.valid() {
             let columns = unsafe {
