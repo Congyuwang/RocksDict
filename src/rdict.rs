@@ -9,7 +9,7 @@ use crate::{
 };
 use pyo3::exceptions::{PyException, PyKeyError};
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList, PyTuple};
+use pyo3::types::{PyDict, PyList, PyString, PyTuple};
 use rocksdb::{
     ColumnFamilyDescriptor, FlushOptions, Iterable as _, LiveFile, ReadOptions,
     UnboundColumnFamily, WriteOptions, DEFAULT_COLUMN_FAMILY_NAME,
@@ -461,13 +461,15 @@ impl Rdict {
             }
             Some(columns) => {
                 let result = PyList::empty_bound(py);
-                println!("GetEntity");
                 for column in columns.iter() {
-                    println!("{:?}", column.name);
-                    println!("{:?}", column.value);
-                    let name = decode_value(py, column.name, &self.loads, self.opt_py.raw_mode)?;
+                    let name = if !self.opt_py.raw_mode && column.name == b"" {
+                        // deals with default column name in non-raw-mode
+                        PyString::new_bound(py, "").to_object(py)
+                    } else {
+                        decode_value(py, column.name, &self.loads, self.opt_py.raw_mode)?
+                    };
                     let value = decode_value(py, column.value, &self.loads, self.opt_py.raw_mode)?;
-                    result.add(PyTuple::new_bound(py, [name, value]))?;
+                    result.append(PyTuple::new_bound(py, [name, value]))?;
                 }
                 Ok(Some(result.to_object(py)))
             }
@@ -553,10 +555,7 @@ impl Rdict {
         for value in values.iter() {
             values_vec.push(encode_value(value, &self.dumps, self.opt_py.raw_mode)?);
         }
-        println!("PutEntity");
-        println!("names_vec {:?}", names_vec);
-        println!("values_vec {:?}", values_vec);
-        db.put_entity_cf_opt(&cf, key, names_vec, values_vec, write_opt)
+        db.put_entity_cf_opt(&cf, key, &names_vec, &values_vec, write_opt)
             .map_err(|e| PyException::new_err(e.to_string()))
     }
 
