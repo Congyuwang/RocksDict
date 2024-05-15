@@ -457,7 +457,7 @@ impl Rdict {
             Some(columns) => {
                 let result = PyList::empty_bound(py);
                 for column in columns.iter() {
-                    let name = if !self.opt_py.raw_mode && column.name == b"" {
+                    let name = if !self.opt_py.raw_mode && column.name.is_empty() {
                         // deals with default column name in non-raw-mode
                         PyString::new_bound(py, "").to_object(py)
                     } else {
