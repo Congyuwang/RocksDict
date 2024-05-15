@@ -225,16 +225,11 @@ impl Rdict {
                     opt_inner.clone(),
                 )]
             }
-            Some(cf) => {
+            Some(mut cf) => {
                 let mut has_default_cf = false;
                 // check options_raw_mode for column families
-                for (cf_name, cf_opt) in cf.iter() {
-                    if cf_opt.raw_mode != options.raw_mode {
-                        return Err(PyException::new_err(format!(
-                            "Options should have raw_mode={}",
-                            options.raw_mode
-                        )));
-                    }
+                for (cf_name, cf_opt) in cf.iter_mut() {
+                    cf_opt.raw_mode = options.raw_mode;
                     if cf_name.as_str() == DEFAULT_COLUMN_FAMILY_NAME {
                         has_default_cf = true;
                     }
