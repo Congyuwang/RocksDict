@@ -34,26 +34,22 @@ assert test_dict[b"Sichuan"] == b""
 assert test_dict.get_entity(b"Sichuan") == [(b"city", b"Chengdu"), (b"language", b"Sichuanhua")]
 
 # iterator
-it = test_dict.iter()
-it.seek_to_first()
+expected = [
+    (b"Beijing", [(b"", b"Beijing")]),
+    (b"Guangdong", [(b"city", b"Shenzhen"), (b"language", b"Cantonese")]),
+    (b"Sichuan", [(b"city", b"Chengdu"), (b"language", b"Sichuanhua")]),
+]
+for i, (key, entity) in enumerate(test_dict.entities()):
+    assert key == expected[i][0]
+    assert entity == expected[i][1]
 
-assert it.valid()
-assert it.key() == b"Beijing"
-assert it.value() == b"Beijing"
-assert it.columns() == [(b"", b"Beijing")]
+all_columns = [
+    [(b"", b"Beijing")],
+    [(b"city", b"Shenzhen"), (b"language", b"Cantonese")],
+    [(b"city", b"Chengdu"), (b"language", b"Sichuanhua")],
+]
+assert [c for c in test_dict.columns()] == all_columns
 
-it.next()
-assert it.valid()
-assert it.key() == b"Guangdong"
-assert it.value() == b""
-assert it.columns() == [(b"city", b"Shenzhen"), (b"language", b"Cantonese")]
-
-it.next()
-assert it.valid()
-assert it.key() == b"Sichuan"
-assert it.value() == b""
-assert it.columns() == [(b"city", b"Chengdu"), (b"language", b"Sichuanhua")]
-
-del it, test_dict
+del test_dict
 
 Rdict.destroy(path)

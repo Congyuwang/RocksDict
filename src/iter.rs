@@ -49,6 +49,18 @@ pub(crate) struct RdictValues {
     backwards: bool,
 }
 
+#[pyclass]
+pub(crate) struct RdictColumns {
+    inner: RdictIter,
+    backwards: bool,
+}
+
+#[pyclass]
+pub(crate) struct RdictEntities {
+    inner: RdictIter,
+    backwards: bool,
+}
+
 impl RdictIter {
     pub(crate) fn new(
         db: &DbReferenceHolder,
@@ -373,3 +385,5 @@ macro_rules! impl_iter {
 impl_iter!(RdictKeys, key);
 impl_iter!(RdictValues, value);
 impl_iter!(RdictItems, key, value);
+impl_iter!(RdictColumns, columns);
+impl_iter!(RdictEntities, key, columns);

@@ -4,8 +4,8 @@ use crate::exceptions::DbClosedError;
 use crate::iter::{RdictItems, RdictKeys, RdictValues};
 use crate::options::{CachePy, EnvPy, SliceTransformType};
 use crate::{
-    CompactOptionsPy, FlushOptionsPy, IngestExternalFileOptionsPy, OptionsPy, RdictIter,
-    ReadOptionsPy, Snapshot, WriteBatchPy, WriteOptionsPy,
+    CompactOptionsPy, FlushOptionsPy, IngestExternalFileOptionsPy, OptionsPy, RdictColumns,
+    RdictEntities, RdictIter, ReadOptionsPy, Snapshot, WriteBatchPy, WriteOptionsPy,
 };
 use pyo3::exceptions::{PyException, PyKeyError};
 use pyo3::prelude::*;
@@ -812,6 +812,55 @@ impl Rdict {
         py: Python,
     ) -> PyResult<RdictValues> {
         RdictValues::new(self.iter(read_opt, py)?, backwards, from_key)
+    }
+
+    /// Iterate through all values as widecolumns
+    ///
+    /// Examples:
+    ///     ::
+    ///
+    ///         all_entities = [v for v in db.columns()]
+    ///
+    /// Args:
+    ///     backwards: iteration direction, forward if `False`.
+    ///     from_key: iterate from key, first seek to this key
+    ///         or the nearest next key for iteration
+    ///         (depending on iteration direction).
+    ///     read_opt: ReadOptions, must have the same `raw_mode` argument.
+    #[pyo3(signature = (backwards = false, from_key = None, read_opt = None))]
+    fn columns(
+        &self,
+        backwards: bool,
+        from_key: Option<&Bound<PyAny>>,
+        read_opt: Option<&ReadOptionsPy>,
+        py: Python,
+    ) -> PyResult<RdictColumns> {
+        RdictColumns::new(self.iter(read_opt, py)?, backwards, from_key)
+    }
+
+    /// Iterate through all keys and entities pairs.
+    ///
+    /// Examples:
+    ///     ::
+    ///
+    ///         for k, v in db.entities():
+    ///             print(f"{k} -> {v}")
+    ///
+    /// Args:
+    ///     backwards: iteration direction, forward if `False`.
+    ///     from_key: iterate from key, first seek to this key
+    ///         or the nearest next key for iteration
+    ///         (depending on iteration direction).
+    ///     read_opt: ReadOptions
+    #[pyo3(signature = (backwards = false, from_key = None, read_opt = None))]
+    fn entities(
+        &self,
+        backwards: bool,
+        from_key: Option<&Bound<PyAny>>,
+        read_opt: Option<&ReadOptionsPy>,
+        py: Python,
+    ) -> PyResult<RdictEntities> {
+        RdictEntities::new(self.iter(read_opt, py)?, backwards, from_key)
     }
 
     /// Manually flush the current column family.
