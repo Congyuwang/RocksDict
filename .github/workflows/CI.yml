@@ -13,6 +13,8 @@ jobs:
         py_version: [3.7, 3.8, 3.9, "3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - name: Install llvm-18
         run: |
           brew update
@@ -64,6 +66,8 @@ jobs:
         py_version: [3.7, 3.8, 3.9, "3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.py_version }}
@@ -110,6 +114,8 @@ jobs:
         target: [x86_64]
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - uses: actions/setup-python@v5
         with:
           python-version: 3.9
@@ -151,6 +157,8 @@ jobs:
         target: [x86_64]
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - uses: actions/setup-python@v5
         with:
           python-version: 3.9
@@ -191,6 +199,8 @@ jobs:
         target: [aarch64]
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - uses: actions/setup-python@v5
         with:
           python-version: 3.9
