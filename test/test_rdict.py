@@ -454,6 +454,38 @@ class TestString(unittest.TestCase):
         Rdict.destroy(cls.path, cls.opt)
 
 
+class TestWideColumns(unittest.TestCase):
+    test_dict = None
+    opt = None
+    path = "./temp_wide_columns"
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.opt = Options()
+        cls.opt.create_if_missing(True)
+        cls.test_dict = Rdict(cls.path, cls.opt)
+
+    def test_put_wide_columns(self):
+        self.test_dict.put_entity(key="Guangdong", names=["language", "city"], values=["Cantonese", "Shenzhen"]);
+        self.test_dict.put_entity(key="Sichuan", names=["language", "city"], values=["Mandarin", "Chengdu"]);
+        self.assertEqual(self.test_dict.get_entity("Guangdong"), [("language", "Cantonese"), ("city", "Shenzhen")])
+        self.assertEqual(self.test_dict.get_entity("Sichuan"), [("language", "Mandarin"), ("city", "Chengdu")])
+        # # overwrite
+        self.test_dict.put_entity(key="Sichuan", names=["language", "city"], values=["Sichuanhua", "Chengdu"]);
+        self.test_dict["Beijing"] = "Beijing"
+        del self.test_dict["Beijing"]
+
+        # # assertions
+        self.assertNotIn("Beijing", self.test_dict)
+        self.assertEqual(self.test_dict.get_entity("Guangdong"), [("language", "Cantonese"), ("city", "Shenzhen")])
+        self.assertEqual(self.test_dict.get_entity("Sichuan"), [("language", "Sichuanhua"), ("city", "Chengdu")])
+
+    @classmethod
+    def tearDownClass(cls):
+        del cls.test_dict
+        Rdict.destroy(cls.path, cls.opt)
+
+
 class TestColumnFamiliesDefaultOpts(unittest.TestCase):
     test_dict = None
     path = "./column_families"

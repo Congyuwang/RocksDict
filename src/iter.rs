@@ -7,7 +7,8 @@ use core::slice;
 use libc::{c_char, c_uchar, size_t};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use rocksdb::{AsColumnFamilyRef, UnboundColumnFamily};
+use pyo3::types::{PyList, PyTuple};
+use rocksdb::{AsColumnFamilyRef, Iterable as _, UnboundColumnFamily};
 use std::ptr::null_mut;
 use std::sync::Arc;
 
@@ -280,6 +281,25 @@ impl RdictIter {
                     librocksdb_sys::rocksdb_iter_value(self.inner, val_len_ptr) as *const c_uchar;
                 let value = slice::from_raw_parts(val_ptr, val_len);
                 Ok(decode_value(py, value, &self.pickle_loads, self.raw_mode)?)
+            }
+        } else {
+            Ok(py.None())
+        }
+    }
+
+    /// Returns the current wide-column.
+    pub fn columns(&self, py: Python) -> PyResult<PyObject> {
+        if self.valid() {
+            unsafe {
+                let columns =
+                    rocksdb::WideColumns::from_c(librocksdb_sys::rocksdb_iter_columns(self.inner));
+                let result = PyList::empty_bound(py);
+                for column in columns.iter() {
+                    let name = decode_value(py, column.name, &self.pickle_loads, self.raw_mode)?;
+                    let value = decode_value(py, column.value, &self.pickle_loads, self.raw_mode)?;
+                    result.add(PyTuple::new_bound(py, [name, value]))?;
+                }
+                Ok(result.to_object(py))
             }
         } else {
             Ok(py.None())

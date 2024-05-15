@@ -9,10 +9,10 @@ use crate::{
 };
 use pyo3::exceptions::{PyException, PyKeyError};
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList};
+use pyo3::types::{PyDict, PyList, PyTuple};
 use rocksdb::{
-    ColumnFamilyDescriptor, FlushOptions, LiveFile, ReadOptions, UnboundColumnFamily, WriteOptions,
-    DEFAULT_COLUMN_FAMILY_NAME,
+    ColumnFamilyDescriptor, FlushOptions, Iterable as _, LiveFile, ReadOptions,
+    UnboundColumnFamily, WriteOptions, DEFAULT_COLUMN_FAMILY_NAME,
 };
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -411,6 +411,69 @@ impl Rdict {
         }
     }
 
+    /// Get a wide column from a key.
+    ///
+    /// Args:
+    ///     key: a single key or list of keys.
+    ///     default: the default value to return if key not found.
+    ///     read_opt: override preset read options
+    ///         (or use Rdict.set_read_options to preset a read options used by default).
+    ///
+    /// Returns:
+    ///    None or default value if the key does not exist.
+    #[inline]
+    #[pyo3(signature = (key, default = None, read_opt = None))]
+    fn get_entity(
+        &self,
+        key: &Bound<PyAny>,
+        default: Option<&Bound<PyAny>>,
+        read_opt: Option<&ReadOptionsPy>,
+        py: Python,
+    ) -> PyResult<Option<PyObject>> {
+        let db = self.get_db()?;
+        let read_opt_option = match read_opt {
+            None => None,
+            Some(opt) => Some(opt.to_read_options(self.opt_py.raw_mode, py)?),
+        };
+        let read_opt = match &read_opt_option {
+            None => &self.read_opt,
+            Some(opt) => opt,
+        };
+        let cf = match &self.column_family {
+            None => {
+                self.get_column_family_handle(DEFAULT_COLUMN_FAMILY_NAME)?
+                    .cf
+            }
+            Some(cf) => cf.clone(),
+        };
+        let key_bytes = encode_key(key, self.opt_py.raw_mode)?;
+        let column_result = db
+            .get_entity_cf_opt(&cf, key_bytes, read_opt)
+            .map_err(|e| PyException::new_err(e.to_string()))?;
+        match column_result {
+            None => {
+                // try to return default value
+                if let Some(default) = default {
+                    Ok(Some(default.to_object(py)))
+                } else {
+                    Ok(None)
+                }
+            }
+            Some(columns) => {
+                let result = PyList::empty_bound(py);
+                println!("GetEntity");
+                for column in columns.iter() {
+                    println!("{:?}", column.name);
+                    println!("{:?}", column.value);
+                    let name = decode_value(py, column.name, &self.loads, self.opt_py.raw_mode)?;
+                    let value = decode_value(py, column.value, &self.loads, self.opt_py.raw_mode)?;
+                    result.add(PyTuple::new_bound(py, [name, value]))?;
+                }
+                Ok(Some(result.to_object(py)))
+            }
+        }
+    }
+
     fn __setitem__(&self, key: &Bound<PyAny>, value: &Bound<PyAny>) -> PyResult<()> {
         self.put(key, value, None)
     }
@@ -444,6 +507,57 @@ impl Rdict {
             db.put_opt(key, value, write_opt)
         }
         .map_err(|e| PyException::new_err(e.to_string()))
+    }
+
+    /// Insert a wide-columns.
+    ///
+    /// Args:
+    ///     key: the key.
+    ///     names: the names of the columns.
+    ///     values: the values of the columns.
+    ///     write_opt: override preset write options
+    ///         (or use Rdict.set_write_options to preset a write options used by default).
+    #[inline]
+    #[pyo3(signature = (key, names, values, write_opt = None))]
+    fn put_entity(
+        &self,
+        key: &Bound<PyAny>,
+        names: Vec<Bound<PyAny>>,
+        values: Vec<Bound<PyAny>>,
+        write_opt: Option<&WriteOptionsPy>,
+    ) -> PyResult<()> {
+        let db = self.get_db()?;
+        let key = encode_key(key, self.opt_py.raw_mode)?;
+        let write_opt_option = write_opt.map(WriteOptions::from);
+        let write_opt = match &write_opt_option {
+            None => &self.write_opt,
+            Some(opt) => opt,
+        };
+        let cf = match &self.column_family {
+            None => {
+                self.get_column_family_handle(DEFAULT_COLUMN_FAMILY_NAME)?
+                    .cf
+            }
+            Some(cf) => cf.clone(),
+        };
+        if names.len() != values.len() {
+            return Err(PyException::new_err(
+                "names and values must have the same length",
+            ));
+        }
+        let mut names_vec = Vec::with_capacity(names.len());
+        let mut values_vec = Vec::with_capacity(values.len());
+        for name in names.iter() {
+            names_vec.push(encode_value(name, &self.dumps, self.opt_py.raw_mode)?);
+        }
+        for value in values.iter() {
+            values_vec.push(encode_value(value, &self.dumps, self.opt_py.raw_mode)?);
+        }
+        println!("PutEntity");
+        println!("names_vec {:?}", names_vec);
+        println!("values_vec {:?}", values_vec);
+        db.put_entity_cf_opt(&cf, key, names_vec, values_vec, write_opt)
+            .map_err(|e| PyException::new_err(e.to_string()))
     }
 
     fn __contains__(&self, key: &Bound<PyAny>) -> PyResult<bool> {
