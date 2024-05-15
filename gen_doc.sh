@@ -1,4 +1,4 @@
 #!/bin/bash
 
-maturin develop --release || exit
+just develop
 pdoc -o ./docs/ -d google rocksdict

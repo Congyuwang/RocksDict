@@ -454,6 +454,112 @@ class TestString(unittest.TestCase):
         Rdict.destroy(cls.path, cls.opt)
 
 
+class TestWideColumnsRaw(unittest.TestCase):
+    test_dict = None
+    opt = None
+    path = "./temp_wide_columns_raw"
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.opt = Options(True)
+        cls.opt.create_if_missing(True)
+        cls.test_dict = Rdict(cls.path, cls.opt)
+
+    def test_put_wide_columns(self):
+        self.test_dict.put_entity(key=b"Guangdong", names=[b"language", b"city"], values=[b"Cantonese", b"Shenzhen"]);
+        self.test_dict.put_entity(key=b"Sichuan", names=[b"language", b"city"], values=[b"Mandarin", b"Chengdu"]);
+        self.assertEqual(self.test_dict[b"Guangdong"], b"")
+        self.assertEqual(self.test_dict.get_entity(b"Guangdong"), [(b"city", b"Shenzhen"), (b"language", b"Cantonese")])
+        self.assertEqual(self.test_dict[b"Sichuan"], b"")
+        self.assertEqual(self.test_dict.get_entity(b"Sichuan"), [(b"city", b"Chengdu"), (b"language", b"Mandarin")])
+        # overwrite
+        self.test_dict.put_entity(key=b"Sichuan", names=[b"language", b"city"], values=[b"Sichuanhua", b"Chengdu"]);
+        self.test_dict[b"Beijing"] = b"Beijing"
+
+        # assertions
+        self.assertEqual(self.test_dict[b"Beijing"], b"Beijing")
+        self.assertEqual(self.test_dict.get_entity(b"Beijing"), [(b"", b"Beijing")])
+        self.assertEqual(self.test_dict[b"Guangdong"], b"")
+        self.assertEqual(self.test_dict.get_entity(b"Guangdong"), [(b"city", b"Shenzhen"), (b"language", b"Cantonese")])
+        self.assertEqual(self.test_dict[b"Sichuan"], b"")
+        self.assertEqual(self.test_dict.get_entity(b"Sichuan"), [(b"city", b"Chengdu"), (b"language", b"Sichuanhua")])
+
+        it = self.test_dict.iter()
+        it.seek_to_first()
+        self.assertTrue(it.valid())
+        self.assertEqual(it.key(), b"Beijing")
+        self.assertEqual(it.value(), b"Beijing")
+        self.assertEqual(it.columns(), [(b"", b"Beijing")])
+        it.next()
+        self.assertTrue(it.valid())
+        self.assertEqual(it.key(), b"Guangdong")
+        self.assertEqual(it.value(), b"")
+        self.assertEqual(it.columns(), [(b"city", b"Shenzhen"), (b"language", b"Cantonese")])
+        it.next()
+        self.assertTrue(it.valid())
+        self.assertEqual(it.key(), b"Sichuan")
+        self.assertEqual(it.value(), b"")
+        self.assertEqual(it.columns(), [(b"city", b"Chengdu"), (b"language", b"Sichuanhua")])
+
+    @classmethod
+    def tearDownClass(cls):
+        del cls.test_dict
+        Rdict.destroy(cls.path, cls.opt)
+
+
+class TestWideColumns(unittest.TestCase):
+    test_dict = None
+    opt = None
+    path = "./temp_wide_columns"
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.opt = Options()
+        cls.opt.create_if_missing(True)
+        cls.test_dict = Rdict(cls.path, cls.opt)
+
+    def test_put_wide_columns(self):
+        self.test_dict.put_entity(key="Guangdong", names=["language", "city", "population"], values=["Cantonese", "Shenzhen", 1.27]);
+        self.test_dict.put_entity(key="Sichuan", names=["language", "city"], values=["Mandarin", "Chengdu"]);
+        self.assertEqual(self.test_dict["Guangdong"], "")
+        self.assertEqual(self.test_dict.get_entity("Guangdong"), [("city", "Shenzhen"), ("language", "Cantonese"), ("population", 1.27)])
+        self.assertEqual(self.test_dict["Sichuan"], "")
+        self.assertEqual(self.test_dict.get_entity("Sichuan"), [("city", "Chengdu"), ("language", "Mandarin")])
+        # overwrite
+        self.test_dict.put_entity(key="Sichuan", names=["language", "city"], values=["Sichuanhua", "Chengdu"]);
+        self.test_dict["Beijing"] = "Beijing"
+
+        # assertions
+        self.assertEqual(self.test_dict["Beijing"], "Beijing")
+        self.assertEqual(self.test_dict.get_entity("Beijing"), [("", "Beijing")])
+        self.assertEqual(self.test_dict["Guangdong"], "")
+        self.assertEqual(self.test_dict.get_entity("Guangdong"), [("city", "Shenzhen"), ("language", "Cantonese"), ("population", 1.27)])
+        self.assertEqual(self.test_dict["Sichuan"], "")
+        self.assertEqual(self.test_dict.get_entity("Sichuan"), [("city", "Chengdu"), ("language", "Sichuanhua")])
+
+        it = self.test_dict.iter()
+        it.seek_to_first()
+        self.assertTrue(it.valid())
+        self.assertEqual(it.key(), "Beijing")
+        self.assertEqual(it.value(), "Beijing")
+        self.assertEqual(it.columns(), [("", "Beijing")])
+        it.next()
+        self.assertTrue(it.valid())
+        self.assertEqual(it.key(), "Guangdong")
+        self.assertEqual(it.value(), "")
+        self.assertEqual(it.columns(), [("city", "Shenzhen"), ("language", "Cantonese"), ("population", 1.27)])
+        it.next()
+        self.assertTrue(it.valid())
+        self.assertEqual(it.key(), "Sichuan")
+        self.assertEqual(it.value(), "")
+        self.assertEqual(it.columns(), [("city", "Chengdu"), ("language", "Sichuanhua")])
+
+    @classmethod
+    def tearDownClass(cls):
+        del cls.test_dict
+        Rdict.destroy(cls.path, cls.opt)
+
+
 class TestColumnFamiliesDefaultOpts(unittest.TestCase):
     test_dict = None
     path = "./column_families"
