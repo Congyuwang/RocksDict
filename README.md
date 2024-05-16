@@ -29,6 +29,32 @@ These two purposes operate in different modes:
 - **Raw mode** (`options=Options(raw_mode=True)`),
   which allows storing only `bytes`.
 
+## Easily inspect RocksDB created by C++, Java, or Other Languages
+
+```python
+from rocksdict import Rdict
+
+# This will automatically load latest options and column families.
+# Note also that this is automatically RAW MODE,
+# as it knows that the db is not created by RocksDict.
+db = Rdict("db_path")
+
+# list column families
+cfs = Rdict.list_cf("db_path")
+print(cfs)
+
+# use one of the column families
+cf1 = db.get_column_family(cfs[1])
+
+# iterate through all key-value pairs in cf1
+for k, v in cf1.items():
+    print(f"{k} -> {v}")
+
+# iterate through all wide columns in cf1
+for k, v in cf1.entities():
+    print(f"{k} -> {v}")
+```
+
 ## Examples
 
 ### A minimal example
