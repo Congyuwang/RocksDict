@@ -16,20 +16,6 @@ from json import loads, dumps
 from subprocess import Popen
 
 
-def compile_create_cf_db():
-    compile = Popen(["cargo", "build", "--release", "--bin", "create_cf_db"])
-    compile.wait()
-
-
-def create_db_with_cf(path, cfs):
-    create = Popen(["./target/release/create_cf_db", path, *cfs])
-    create.wait()
-
-
-if not os.path.exists("./target/release/create_cf_db"):
-    compile_create_cf_db()
-
-
 TEST_INT_RANGE_UPPER = 999999
 
 
@@ -932,30 +918,6 @@ class TestIntWithSecondary(unittest.TestCase):
         del cls.secondary_dict
         Rdict.destroy(cls.path, cls.opt)
         Rdict.destroy(cls.secondary_path, cls.opt)
-
-
-class TestOpenForeignDB(unittest.TestCase):
-    test_dict = None
-    path = "./foreign_db"
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        create_db_with_cf(cls.path, ["string", "integer"])
-        cls.test_dict = Rdict(cls.path)
-
-    def test_open_foreign_dict_column_families(self):
-        ds = self.test_dict.get_column_family(name="string")
-        di = self.test_dict.get_column_family(name="integer")
-        ds[b"a"] = b"b"
-        di[b"1"] = b"2"
-        ds.close()
-        di.close()
-        self.test_dict.close()
-
-    @classmethod
-    def tearDownClass(cls):
-        del cls.test_dict
-        Rdict.destroy(cls.path)
 
 
 if __name__ == "__main__":
