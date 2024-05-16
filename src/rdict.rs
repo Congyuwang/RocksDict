@@ -110,6 +110,15 @@ pub struct RocksDictConfig {
     pub prefix_extractors: HashMap<String, SliceTransformType>,
 }
 
+impl Default for RocksDictConfig {
+    fn default() -> Self {
+        Self {
+            raw_mode: true,
+            prefix_extractors: Default::default(),
+        }
+    }
+}
+
 impl RocksDictConfig {
     pub fn load<P: AsRef<Path>>(path: P) -> PyResult<Self> {
         let config_file = fs::File::options().read(true).open(path)?;

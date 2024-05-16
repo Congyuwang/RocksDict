@@ -509,7 +509,7 @@ impl OptionsPy {
     ) -> PyResult<(OptionsPy, HashMap<String, OptionsPy>)> {
         let mut config_path = PathBuf::from(path);
         config_path.push(ROCKSDICT_CONFIG_FILE);
-        let rocksdict_config = RocksDictConfig::load(config_path)?;
+        let rocksdict_config = RocksDictConfig::load(config_path).unwrap_or_default();
         let raw_mode = rocksdict_config.raw_mode;
         let slice_transforms = rocksdict_config.prefix_extractors;
         let load_result = Options::load_latest(path, env.0, ignore_unknown_options, cache.0);

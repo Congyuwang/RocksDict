@@ -1,6 +1,6 @@
 [package]
 name = "RocksDict"
-version = "0.3.24-beta.1"
+version = "0.3.24-beta.2"
 edition = "2021"
 description = "Rocksdb Python Binding"
 
@@ -9,6 +9,11 @@ description = "Rocksdb Python Binding"
 [lib]
 name = "rocksdict"
 crate-type = ["cdylib"]
+
+[[bin]]
+name = "create_cf_db"
+path = "bin/create-cf-db/main.rs"
+test = false
 
 [dependencies]
 rocksdb = { path = "rust-rocksdb" }
