@@ -50,6 +50,12 @@ type DB = rocksdb::DBWithThreadMode<rocksdb::MultiThreaded>;
 ///         db = Rdict("./test_dir")
 ///         assert(db[0] == 1)
 ///
+/// Opening DB created by other language is easy:
+/// you don't need to manually configure Options and Column
+/// Families. Just use `db = Rdict("./db_path")`.
+/// It will automatically open the db in right Options and
+/// Column Families for you in RAW MODE.
+///
 /// Args:
 ///     path (str): path to the database
 ///     options (Options): Options object
@@ -108,6 +114,15 @@ pub struct RocksDictConfig {
     pub raw_mode: bool,
     // mapping from column families to SliceTransformType
     pub prefix_extractors: HashMap<String, SliceTransformType>,
+}
+
+impl Default for RocksDictConfig {
+    fn default() -> Self {
+        Self {
+            raw_mode: true,
+            prefix_extractors: Default::default(),
+        }
+    }
 }
 
 impl RocksDictConfig {
