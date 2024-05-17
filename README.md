@@ -31,12 +31,15 @@ These two purposes operate in different modes:
 
 ## Easily inspect RocksDB created by C++, Java, or Other Languages
 
+Since v0.3.24b2.
+
 ```python
 from rocksdict import Rdict
 
 # This will automatically load latest options and column families.
 # Note also that this is automatically RAW MODE,
-# as it knows that the db is not created by RocksDict.
+# as it knows that the db is not created by RocksDict
+# (since v0.3.24b2).
 db = Rdict("db_path")
 
 # list column families
