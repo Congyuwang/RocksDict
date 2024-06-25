@@ -1,5 +1,3 @@
-import shutil
-
 from rocksdict import Rdict, Options, SliceTransform, PlainTableFactoryOptions
 import os
 

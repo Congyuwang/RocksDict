@@ -205,10 +205,7 @@ impl Rdict {
                 (None, None) => (opt_loaded, Some(cols_loaded)),
             },
             (Err(_), Some(opt), cols) => (opt, cols),
-            (Err(_), None, cols) => {
-                log::info!("using default configuration");
-                (OptionsPy::new(false), cols)
-            }
+            (Err(_), None, cols) => (OptionsPy::new(false), cols),
         };
         // save slice transforms types in rocksdict config
         let config_path = config_file(path);
@@ -983,6 +980,8 @@ impl Rdict {
 
     /// Use this method to obtain a ColumnFamily instance, which can be used in WriteBatch.
     ///
+    /// The name of the default column family name is `"default"`.
+    ///
     /// Example:
     ///     ::
     ///
@@ -1124,6 +1123,7 @@ impl Rdict {
     ///     begin: included
     ///     end: excluded
     ///     write_opt: WriteOptions
+    #[pyo3(signature = (begin, end, write_opt=None))]
     pub fn delete_range(
         &self,
         begin: &Bound<PyAny>,
