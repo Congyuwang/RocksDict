@@ -145,6 +145,7 @@ fn rocksdict(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<BottommostLevelCompactionPy>()?;
     m.add_class::<ChecksumTypePy>()?;
     m.add_class::<KeyEncodingTypePy>()?;
+    m.add_class::<WriteBufferManagerPy>()?;
 
     m.add("DbClosedError", py.get_type_bound::<DbClosedError>())?;
 

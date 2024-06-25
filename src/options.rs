@@ -334,6 +334,40 @@ pub(crate) struct DBCompressionTypePy(DBCompressionType);
 #[pyclass(name = "DBCompactionStyle")]
 pub(crate) struct DBCompactionStylePy(DBCompactionStyle);
 
+/// <https://github.com/facebook/rocksdb/wiki/Write-Buffer-Manager>
+/// Write buffer manager helps users control the total memory used
+/// by memtables across multiple column families and/or DB instances.
+/// Users can enable this control by 2 ways:
+///
+/// 1- Limit the total memtable usage across multiple column families
+/// and DBs under a threshold.
+/// 2- Cost the memtable memory usage to block cache so that memory of
+/// RocksDB can be capped by the single limit.
+/// The usage of a write buffer manager is similar to rate_limiter and sst_file_manager.
+/// Users can create one write buffer manager object and pass it to all the options
+/// of column families or DBs whose memtable size they want to be controlled by this object.
+///
+/// A memory limit is given when creating the write buffer manager object.
+/// RocksDB will try to limit the total memory to under this limit.
+///
+/// a flush will be triggered on one column family of the DB you are inserting to,
+///
+/// If mutable memtable size exceeds about 90% of the limit,
+/// If the total memory is over the limit, more aggressive flush may also be
+/// triggered only if the mutable memtable size also exceeds 50% of the limit.
+/// Both checks are needed because if already more than half memory is being
+/// flushed, triggering more flush may not help.
+///
+/// The total memory is counted as total memory allocated in the arena,
+/// even if some of that may not yet be used by memtable.
+///
+/// buffer_size: the memory limit in bytes.
+/// allow_stall: If set true, it will enable stalling of all writers when
+/// memory usage exceeds buffer_size (soft limit).
+///             It will wait for flush to complete and memory usage to drop down
+#[pyclass(name = "WriteBufferManager")]
+pub(crate) struct WriteBufferManagerPy(WriteBufferManager);
+
 /// Used by BlockBasedOptions::set_checksum_type.
 ///
 /// Call the corresponding functions of each
@@ -1869,6 +1903,147 @@ impl OptionsPy {
         self.inner_opt
             .set_memtable_whole_key_filtering(whole_key_filter)
     }
+
+    /// Enable the use of key-value separation.
+    ///
+    /// More details can be found here: [Integrated BlobDB](http://rocksdb.org/blog/2021/05/26/integrated-blob-db.html).
+    ///
+    /// Default: false (disable)
+    ///
+    /// Dynamically changeable through SetOptions() API
+    pub fn set_enable_blob_files(&mut self, val: bool) {
+        self.inner_opt.set_enable_blob_files(val)
+    }
+    /// Sets the minimum threshold value at or above which will be written
+    /// to blob files during flush or compaction.
+    ///
+    /// Dynamically changeable through SetOptions() API
+    pub fn set_min_blob_size(&mut self, val: u64) {
+        self.inner_opt.set_min_blob_size(val)
+    }
+    /// Sets the size limit for blob files.
+    ///
+    /// Dynamically changeable through SetOptions() API
+    pub fn set_blob_file_size(&mut self, val: u64) {
+        self.inner_opt.set_blob_file_size(val)
+    }
+    /// Sets the blob compression type. All blob files use the same
+    /// compression type.
+    ///
+    /// Dynamically changeable through SetOptions() API
+    pub fn set_blob_compression_type(&mut self, val: &DBCompressionTypePy) {
+        self.inner_opt.set_blob_compression_type(val.0)
+    }
+    /// If this is set to true RocksDB will actively relocate valid blobs from the oldest blob files
+    /// as they are encountered during compaction.
+    ///
+    /// Dynamically changeable through SetOptions() API
+    pub fn set_enable_blob_gc(&mut self, val: bool) {
+        self.inner_opt.set_enable_blob_gc(val)
+    }
+    /// Sets the threshold that the GC logic uses to determine which blob files should be considered “old.”
+    ///
+    /// For example, the default value of 0.25 signals to RocksDB that blobs residing in the
+    /// oldest 25% of blob files should be relocated by GC. This parameter can be tuned to adjust
+    /// the trade-off between write amplification and space amplification.
+    ///
+    /// Dynamically changeable through SetOptions() API
+    pub fn set_blob_gc_age_cutoff(&mut self, val: c_double) {
+        self.inner_opt.set_blob_gc_age_cutoff(val)
+    }
+    /// Sets the blob GC force threshold.
+    ///
+    /// Dynamically changeable through SetOptions() API
+    pub fn set_blob_gc_force_threshold(&mut self, val: c_double) {
+        self.inner_opt.set_blob_gc_force_threshold(val)
+    }
+    /// Sets the blob compaction read ahead size.
+    ///
+    /// Dynamically changeable through SetOptions() API
+    pub fn set_blob_compaction_readahead_size(&mut self, val: u64) {
+        self.inner_opt.set_blob_compaction_readahead_size(val)
+    }
+    /// Set this option to true during creation of database if you want
+    /// to be able to ingest behind (call IngestExternalFile() skipping keys
+    /// that already exist, rather than overwriting matching keys).
+    /// Setting this option to true has the following effects:
+    /// 1) Disable some internal optimizations around SST file compression.
+    /// 2) Reserve the last level for ingested files only.
+    /// 3) Compaction will not include any file from the last level.
+    /// Note that only Universal Compaction supports allow_ingest_behind.
+    /// `num_levels` should be >= 3 if this option is turned on.
+    ///
+    /// DEFAULT: false
+    /// Immutable.
+    pub fn set_allow_ingest_behind(&mut self, val: bool) {
+        self.inner_opt.set_allow_ingest_behind(val)
+    }
+
+    /// A factory of a table property collector that marks an SST
+    /// file as need-compaction when it observe at least "D" deletion
+    /// entries in any "N" consecutive entries, or the ratio of tombstone
+    /// entries >= deletion_ratio.
+    ///
+    /// `window_size`: is the sliding window size "N"
+    /// `num_dels_trigger`: is the deletion trigger "D"
+    /// `deletion_ratio`: if <= 0 or > 1, disable triggering compaction based on
+    /// deletion ratio.
+    pub fn add_compact_on_deletion_collector_factory(
+        &mut self,
+        window_size: size_t,
+        num_dels_trigger: size_t,
+        deletion_ratio: f64,
+    ) {
+        self.inner_opt.add_compact_on_deletion_collector_factory(
+            window_size,
+            num_dels_trigger,
+            deletion_ratio,
+        )
+    }
+
+    /// Write buffer manager helps users control the total memory used by
+    /// memtables across multiple column families and/or DB instances.
+    ///
+    /// <https://github.com/facebook/rocksdb/wiki/Write-Buffer-Manager>
+    ///
+    /// Users can enable this control by 2 ways:
+    ///
+    /// 1- Limit the total memtable usage across multiple column families and DBs under a threshold.
+    /// 2- Cost the memtable memory usage to block cache so that memory of RocksDB can be capped by the single limit.
+    ///
+    /// The usage of a write buffer manager is similar to rate_limiter and sst_file_manager.
+    /// Users can create one write buffer manager object and pass it to all the options of column families
+    /// or DBs whose memtable size they want to be controlled by this object.
+    pub fn set_write_buffer_manager(&mut self, write_buffer_manager: &WriteBufferManagerPy) {
+        self.inner_opt
+            .set_write_buffer_manager(&write_buffer_manager.0)
+    }
+
+    /// If true, working thread may avoid doing unnecessary and long-latency
+    /// operation (such as deleting obsolete files directly or deleting memtable)
+    /// and will instead schedule a background job to do it.
+    ///
+    /// Use it if you're latency-sensitive.
+    ///
+    /// Default: false (disabled)
+    pub fn set_avoid_unnecessary_blocking_io(&mut self, val: bool) {
+        self.inner_opt.set_avoid_unnecessary_blocking_io(val)
+    }
+
+    /// Use to control write rate of flush and compaction. Flush has higher
+    /// priority than compaction.
+    /// If rate limiter is enabled, bytes_per_sync is set to 1MB by default.
+    ///
+    /// Default: disable
+    pub fn set_auto_tuned_ratelimiter(
+        &mut self,
+        rate_bytes_per_sec: i64,
+        refill_period_us: i64,
+        fairness: i32,
+    ) {
+        self.inner_opt
+            .set_auto_tuned_ratelimiter(rate_bytes_per_sec, refill_period_us, fairness)
+    }
 }
 
 #[pymethods]
@@ -2922,6 +3097,63 @@ impl CompactOptionsPy {
     /// files will be moved to target_level.
     pub fn set_target_level(&mut self, lvl: c_int) {
         self.0.set_target_level(lvl)
+    }
+}
+
+#[pymethods]
+impl WriteBufferManagerPy {
+    #[new]
+    pub fn new_write_buffer_manager(buffer_size: size_t, allow_stall: bool) -> Self {
+        Self(WriteBufferManager::new_write_buffer_manager(
+            buffer_size,
+            allow_stall,
+        ))
+    }
+
+    /// Users can set up RocksDB to cost memory used by memtables to block cache.
+    /// This can happen no matter whether you enable memtable memory limit or not.
+    /// This option is added to manage memory (memtables + block cache) under a single limit.
+    ///
+    /// buffer_size: the memory limit in bytes.
+    /// allow_stall: If set true, it will enable stalling of all writers when memory usage exceeds buffer_size (soft limit).
+    ///             It will wait for flush to complete and memory usage to drop down
+    /// cache: the block cache instance
+    #[staticmethod]
+    pub fn new_write_buffer_manager_with_cache(
+        buffer_size: size_t,
+        allow_stall: bool,
+        cache: CachePy,
+    ) -> Self {
+        Self(WriteBufferManager::new_write_buffer_manager_with_cache(
+            buffer_size,
+            allow_stall,
+            cache.0,
+        ))
+    }
+
+    /// Returns the WriteBufferManager memory usage in bytes.
+    pub fn get_usage(&self) -> usize {
+        self.0.get_usage()
+    }
+
+    /// Returns the current buffer size in bytes.
+    pub fn get_buffer_size(&self) -> usize {
+        self.0.get_buffer_size()
+    }
+
+    /// Set the buffer size in bytes.
+    pub fn set_buffer_size(&self, new_size: usize) {
+        self.0.set_buffer_size(new_size)
+    }
+
+    /// Returns if WriteBufferManager is enabled.
+    pub fn enabled(&self) -> bool {
+        self.0.enabled()
+    }
+
+    /// set the allow_stall flag.
+    pub fn set_allow_stall(&self, allow_stall: bool) {
+        self.0.set_allow_stall(allow_stall)
     }
 }
 
