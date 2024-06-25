@@ -3,6 +3,7 @@ clean:
 
 # for macos
 develop:
+    conda deactivate
     LIBCLANG_PATH=${HOMEBREW_PREFIX}/opt/llvm/lib \
     CC=${HOMEBREW_PREFIX}/opt/llvm/bin/clang \
     CXX=${HOMEBREW_PREFIX}/opt/llvm/bin/clang++ \
@@ -14,6 +15,7 @@ develop:
 
 # for macos
 build:
+    conda deactivate
     LIBCLANG_PATH=${HOMEBREW_PREFIX}/opt/llvm/lib \
     CC=${HOMEBREW_PREFIX}/opt/llvm/bin/clang \
     CXX=${HOMEBREW_PREFIX}/opt/llvm/bin/clang++ \

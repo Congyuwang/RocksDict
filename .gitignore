@@ -4,3 +4,4 @@
 Cargo.lock
 *.so
 __pycache__
+venv
