@@ -1,5 +1,3 @@
-import shutil
-
 import rocksdict as rd
 from tqdm import tqdm
 import os

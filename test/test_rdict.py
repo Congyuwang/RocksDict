@@ -8,6 +8,7 @@ from rocksdict import (
     SliceTransform,
     CuckooTableOptions,
     DbClosedError,
+    WriteBatch
 )
 from random import randint, random, getrandbits
 import os
@@ -467,14 +468,14 @@ class TestWideColumnsRaw(unittest.TestCase):
         cls.test_dict = Rdict(cls.path, cls.opt)
 
     def test_put_wide_columns(self):
-        self.test_dict.put_entity(key=b"Guangdong", names=[b"language", b"city"], values=[b"Cantonese", b"Shenzhen"]);
-        self.test_dict.put_entity(key=b"Sichuan", names=[b"language", b"city"], values=[b"Mandarin", b"Chengdu"]);
+        self.test_dict.put_entity(key=b"Guangdong", names=[b"language", b"city"], values=[b"Cantonese", b"Shenzhen"])
+        self.test_dict.put_entity(key=b"Sichuan", names=[b"language", b"city"], values=[b"Mandarin", b"Chengdu"])
         self.assertEqual(self.test_dict[b"Guangdong"], b"")
         self.assertEqual(self.test_dict.get_entity(b"Guangdong"), [(b"city", b"Shenzhen"), (b"language", b"Cantonese")])
         self.assertEqual(self.test_dict[b"Sichuan"], b"")
         self.assertEqual(self.test_dict.get_entity(b"Sichuan"), [(b"city", b"Chengdu"), (b"language", b"Mandarin")])
         # overwrite
-        self.test_dict.put_entity(key=b"Sichuan", names=[b"language", b"city"], values=[b"Sichuanhua", b"Chengdu"]);
+        self.test_dict.put_entity(key=b"Sichuan", names=[b"language", b"city"], values=[b"Sichuanhua", b"Chengdu"])
         self.test_dict[b"Beijing"] = b"Beijing"
 
         # assertions
@@ -528,6 +529,82 @@ class TestWideColumnsRaw(unittest.TestCase):
         Rdict.destroy(cls.path, cls.opt)
 
 
+class TestWriteBatchWideColumnsRaw(unittest.TestCase):
+    test_dict = None
+    opt = None
+    path = "./temp_write_batch_wide_columns_raw"
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.opt = Options(True)
+        cls.opt.create_if_missing(True)
+        cls.test_dict = Rdict(cls.path, cls.opt)
+
+    def test_put_wide_columns(self):
+        write_batch = WriteBatch(raw_mode=True)
+        default_cf_handle = self.test_dict.get_column_family_handle("default")
+        write_batch.set_default_column_family(default_cf_handle)
+        write_batch.put_entity(key=b"Guangdong", names=[b"language", b"city"], values=[b"Cantonese", b"Shenzhen"])
+        write_batch.put_entity(key=b"Sichuan", names=[b"language", b"city"], values=[b"Mandarin", b"Chengdu"])
+        # overwrite
+        write_batch.put_entity(key=b"Sichuan", names=[b"language", b"city"], values=[b"Sichuanhua", b"Chengdu"])
+        write_batch[b"Beijing"] = b"Beijing"
+
+        self.test_dict.write(write_batch)
+
+        # assertions
+        self.assertEqual(self.test_dict[b"Beijing"], b"Beijing")
+        self.assertEqual(self.test_dict.get_entity(b"Beijing"), [(b"", b"Beijing")])
+        self.assertEqual(self.test_dict[b"Guangdong"], b"")
+        self.assertEqual(self.test_dict.get_entity(b"Guangdong"), [(b"city", b"Shenzhen"), (b"language", b"Cantonese")])
+        self.assertEqual(self.test_dict[b"Sichuan"], b"")
+        self.assertEqual(self.test_dict.get_entity(b"Sichuan"), [(b"city", b"Chengdu"), (b"language", b"Sichuanhua")])
+
+        # iterator
+        it = self.test_dict.iter()
+        it.seek_to_first()
+        self.assertTrue(it.valid())
+        self.assertEqual(it.key(), b"Beijing")
+        self.assertEqual(it.value(), b"Beijing")
+        self.assertEqual(it.columns(), [(b"", b"Beijing")])
+        it.next()
+        self.assertTrue(it.valid())
+        self.assertEqual(it.key(), b"Guangdong")
+        self.assertEqual(it.value(), b"")
+        self.assertEqual(it.columns(), [(b"city", b"Shenzhen"), (b"language", b"Cantonese")])
+        it.next()
+        self.assertTrue(it.valid())
+        self.assertEqual(it.key(), b"Sichuan")
+        self.assertEqual(it.value(), b"")
+        self.assertEqual(it.columns(), [(b"city", b"Chengdu"), (b"language", b"Sichuanhua")])
+
+        # iterators
+        expected = [
+            (b"Beijing", [(b"", b"Beijing")]),
+            (b"Guangdong", [(b"city", b"Shenzhen"), (b"language", b"Cantonese")]),
+            (b"Sichuan", [(b"city", b"Chengdu"), (b"language", b"Sichuanhua")]),
+        ]
+        for i, (key, entity) in enumerate(self.test_dict.entities()):
+            self.assertEqual(key, expected[i][0])
+            self.assertEqual(entity, expected[i][1])
+
+        self.assertEqual(
+            [c for c in self.test_dict.columns()],
+            [
+                [(b"", b"Beijing")],
+                [(b"city", b"Shenzhen"), (b"language", b"Cantonese")],
+                [(b"city", b"Chengdu"), (b"language", b"Sichuanhua")],
+            ]
+        )
+
+        del write_batch
+
+    @classmethod
+    def tearDownClass(cls):
+        del cls.test_dict
+        Rdict.destroy(cls.path, cls.opt)
+
+
 class TestWideColumns(unittest.TestCase):
     test_dict = None
     opt = None
@@ -540,14 +617,14 @@ class TestWideColumns(unittest.TestCase):
         cls.test_dict = Rdict(cls.path, cls.opt)
 
     def test_put_wide_columns(self):
-        self.test_dict.put_entity(key="Guangdong", names=["language", "city", "population"], values=["Cantonese", "Shenzhen", 1.27]);
-        self.test_dict.put_entity(key="Sichuan", names=["language", "city"], values=["Mandarin", "Chengdu"]);
+        self.test_dict.put_entity(key="Guangdong", names=["language", "city", "population"], values=["Cantonese", "Shenzhen", 1.27])
+        self.test_dict.put_entity(key="Sichuan", names=["language", "city"], values=["Mandarin", "Chengdu"])
         self.assertEqual(self.test_dict["Guangdong"], "")
         self.assertEqual(self.test_dict.get_entity("Guangdong"), [("city", "Shenzhen"), ("language", "Cantonese"), ("population", 1.27)])
         self.assertEqual(self.test_dict["Sichuan"], "")
         self.assertEqual(self.test_dict.get_entity("Sichuan"), [("city", "Chengdu"), ("language", "Mandarin")])
         # overwrite
-        self.test_dict.put_entity(key="Sichuan", names=["language", "city"], values=["Sichuanhua", "Chengdu"]);
+        self.test_dict.put_entity(key="Sichuan", names=["language", "city"], values=["Sichuanhua", "Chengdu"])
         self.test_dict["Beijing"] = "Beijing"
 
         # assertions
