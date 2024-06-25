@@ -43,23 +43,25 @@ class TestGetDel(unittest.TestCase):
         cls.test_dict[123] = 123
 
     def testGetItem(self):
+        assert self.test_dict is not None
         self.assertEqual(self.test_dict["a"], "a")
         self.assertEqual(self.test_dict[123], 123)
         self.assertIsNone(self.test_dict.get("b"))
         self.assertIsNone(self.test_dict.get(250))
         self.assertEqual(self.test_dict.get("b", "b"), "b")
         self.assertEqual(self.test_dict.get(250, 1324123), 1324123)
-        self.assertRaises(KeyError, lambda: self.test_dict["b"])
-        self.assertRaises(KeyError, lambda: self.test_dict[250])
+        self.assertRaises(KeyError, lambda: self.test_dict["b"] if self.test_dict is not None else None)
+        self.assertRaises(KeyError, lambda: self.test_dict[250] if self.test_dict is not None else None)
 
     def testDelItem(self):
+        assert self.test_dict is not None
         # no exception raise when deleting non-existing key
         self.test_dict.__delitem__("b")
         self.test_dict.__delitem__(250)
 
     @classmethod
     def tearDownClass(cls):
-        cls.test_dict.close()
+        del cls.test_dict
         Rdict.destroy(cls.path, Options())
 
 
@@ -79,6 +81,7 @@ class TestGetDelCustomDumpsLoads(unittest.TestCase):
         cls.test_dict["ok"] = ["o", "k"]
 
     def testGetItem(self):
+        assert self.test_dict is not None
         self.assertEqual(self.test_dict["a"], "a")
         self.assertEqual(self.test_dict[123], 123)
         self.assertEqual(self.test_dict["ok"], ["o", "k"])
@@ -87,17 +90,18 @@ class TestGetDelCustomDumpsLoads(unittest.TestCase):
         self.assertEqual(self.test_dict.get("b", "b"), "b")
         self.assertEqual(self.test_dict.get(250, 1324123), 1324123)
         self.assertEqual(self.test_dict["ok"], ["o", "k"])
-        self.assertRaises(KeyError, lambda: self.test_dict["b"])
-        self.assertRaises(KeyError, lambda: self.test_dict[250])
+        self.assertRaises(KeyError, lambda: self.test_dict["b"] if self.test_dict is not None else None)
+        self.assertRaises(KeyError, lambda: self.test_dict[250] if self.test_dict is not None else None)
 
     def testDelItem(self):
+        assert self.test_dict is not None
         # no exception raise when deleting non-existing key
         self.test_dict.__delitem__("b")
         self.test_dict.__delitem__(250)
 
     @classmethod
     def tearDownClass(cls):
-        cls.test_dict.close()
+        del cls.test_dict
         Rdict.destroy(cls.path, Options())
 
 
@@ -110,7 +114,9 @@ class TestIterBytes(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.opt = Options()
-        cls.opt.increase_parallelism(os.cpu_count())
+        cpu_count = os.cpu_count()
+        assert cpu_count is not None
+        cls.opt.increase_parallelism(cpu_count)
         cls.test_dict = Rdict(cls.path, cls.opt)
         cls.ref_dict = dict()
         for i in range(100000):
@@ -128,12 +134,16 @@ class TestIterBytes(unittest.TestCase):
             del cls.ref_dict[key]
 
     def test_seek_forward_key(self):
+        assert self.ref_dict is not None
+        assert self.test_dict is not None
         key = randbytes(10)
         ref_list = [k for k in self.ref_dict.keys() if k >= key]
         ref_list.sort()
         self.assertEqual([k for k in self.test_dict.keys(from_key=key)], ref_list)
 
     def test_seek_backward_key(self):
+        assert self.ref_dict is not None
+        assert self.test_dict is not None
         key = randbytes(20)
         ref_list = [k for k in self.ref_dict.keys() if k <= key]
         ref_list.sort(reverse=True)
@@ -142,13 +152,19 @@ class TestIterBytes(unittest.TestCase):
         )
 
     def test_may_exists(self):
+        assert self.ref_dict is not None
+        assert self.test_dict is not None
         for k, v in self.ref_dict.items():
-            may_exists, value = self.test_dict.key_may_exist(k, fetch=True)
+            fetched = self.test_dict.key_may_exist(k, fetch=True)
+            assert isinstance(fetched, tuple)
+            may_exists, value = fetched
             self.assertTrue(may_exists)
             if value is not None:
                 self.assertEqual(v, value)
 
     def test_seek_forward(self):
+        assert self.ref_dict is not None
+        assert self.test_dict is not None
         key = randbytes(20)
         self.assertEqual(
             {k: v for k, v in self.test_dict.items(from_key=key)},
@@ -157,6 +173,8 @@ class TestIterBytes(unittest.TestCase):
 
     def test_seek_backward(self):
         key = randbytes(20)
+        assert self.ref_dict is not None
+        assert self.test_dict is not None
         self.assertEqual(
             {k: v for k, v in self.test_dict.items(from_key=key, backwards=True)},
             {k: v for k, v in self.ref_dict.items() if k <= key},
@@ -164,7 +182,7 @@ class TestIterBytes(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.test_dict.close()
+        del cls.test_dict
         Rdict.destroy(cls.path, Options())
 
 
@@ -190,24 +208,32 @@ class TestIterInt(unittest.TestCase):
                 del cls.test_dict[key]
 
     def test_seek_forward(self):
+        assert self.ref_dict is not None
+        assert self.test_dict is not None
         self.assertEqual(
             {k: v for k, v in self.test_dict.items()},
             {k: v for k, v in self.ref_dict.items()},
         )
 
     def test_seek_backward(self):
+        assert self.ref_dict is not None
+        assert self.test_dict is not None
         self.assertEqual(
             {k: v for k, v in self.test_dict.items(backwards=True)},
             {k: v for k, v in self.ref_dict.items()},
         )
 
     def test_seek_forward_key(self):
+        assert self.ref_dict is not None
+        assert self.test_dict is not None
         key = randint(0, TEST_INT_RANGE_UPPER - 1)
         ref_list = [k for k in self.ref_dict.keys() if k >= key]
         ref_list.sort()
         self.assertEqual([k for k in self.test_dict.keys(from_key=key)], ref_list)
 
     def test_seek_backward_key(self):
+        assert self.ref_dict is not None
+        assert self.test_dict is not None
         key = randint(0, TEST_INT_RANGE_UPPER - 1)
         ref_list = [k for k in self.ref_dict.keys() if k <= key]
         ref_list.sort(reverse=True)
@@ -217,7 +243,7 @@ class TestIterInt(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.test_dict.close()
+        del cls.test_dict
         Rdict.destroy(cls.path, Options())
 
 
@@ -235,6 +261,8 @@ class TestInt(unittest.TestCase):
         cls.ref_dict = dict()
 
     def test_add_integer(self):
+        assert self.ref_dict is not None
+        assert self.test_dict is not None
         for i in range(10000):
             key = randint(0, TEST_INT_RANGE_UPPER - 1)
             value = randint(0, TEST_INT_RANGE_UPPER - 1)
@@ -244,6 +272,8 @@ class TestInt(unittest.TestCase):
         compare_dicts(self, self.ref_dict, self.test_dict)
 
     def test_delete_integer(self):
+        assert self.ref_dict is not None
+        assert self.test_dict is not None
         for i in range(5000):
             key = randint(0, TEST_INT_RANGE_UPPER - 1)
             if key in self.ref_dict:
@@ -253,6 +283,8 @@ class TestInt(unittest.TestCase):
         compare_dicts(self, self.ref_dict, self.test_dict)
 
     def test_delete_range(self):
+        assert self.ref_dict is not None
+        assert self.test_dict is not None
         to_delete = []
         for key in self.ref_dict:
             if key >= 99999:
@@ -263,14 +295,18 @@ class TestInt(unittest.TestCase):
         compare_dicts(self, self.ref_dict, self.test_dict)
 
     def test_reopen(self):
+        assert self.ref_dict is not None
+        assert self.test_dict is not None
         self.test_dict.close()
 
-        self.assertRaises(DbClosedError, lambda: self.test_dict.get(1))
+        self.assertRaises(DbClosedError, lambda: self.test_dict.get(1) if self.test_dict is not None else None)
 
         test_dict = Rdict(self.path, self.opt)
         compare_dicts(self, self.ref_dict, test_dict)
 
     def test_get_batch(self):
+        assert self.ref_dict is not None
+        assert self.test_dict is not None
         keys = list(self.ref_dict.keys())[:100]
         self.assertEqual(
             self.test_dict[keys + ["no such key"] * 3],
@@ -279,6 +315,7 @@ class TestInt(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        assert cls.opt is not None
         Rdict.destroy(cls.path, cls.opt)
 
 
@@ -296,6 +333,7 @@ class TestBigInt(unittest.TestCase):
         cls.test_dict = Rdict(cls.path, cls.opt)
 
     def test_big_int(self):
+        assert self.test_dict is not None
         key = 13456436145354564353464754615223435465543
         value = 3456321456543245657643253647543212425364342343564
         self.test_dict[key] = value
@@ -310,7 +348,8 @@ class TestBigInt(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.test_dict.close()
+        del cls.test_dict
+        assert cls.opt is not None
         Rdict.destroy(cls.path, cls.opt)
 
 
@@ -328,6 +367,8 @@ class TestFloat(unittest.TestCase):
         cls.ref_dict = dict()
 
     def test_add_float(self):
+        assert self.test_dict is not None
+        assert self.ref_dict is not None
         for i in range(10000):
             key = random()
             value = random()
@@ -337,6 +378,8 @@ class TestFloat(unittest.TestCase):
         compare_dicts(self, self.ref_dict, self.test_dict)
 
     def test_delete_float(self):
+        assert self.test_dict is not None
+        assert self.ref_dict is not None
         for i in range(5000):
             keys = [k for k in self.ref_dict.keys()]
             key = keys[randint(0, len(self.ref_dict) - 1)]
@@ -346,11 +389,15 @@ class TestFloat(unittest.TestCase):
         compare_dicts(self, self.ref_dict, self.test_dict)
 
     def test_reopen(self):
+        assert self.test_dict is not None
+        assert self.ref_dict is not None
         self.test_dict.close()
         test_dict = Rdict(self.path, self.opt)
         compare_dicts(self, self.ref_dict, test_dict)
 
     def test_get_batch(self):
+        assert self.test_dict is not None
+        assert self.ref_dict is not None
         keys = list(self.ref_dict.keys())[:100]
         self.assertEqual(
             self.test_dict[keys + ["no such key"] * 3],
@@ -359,6 +406,7 @@ class TestFloat(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        assert cls.opt is not None
         Rdict.destroy(cls.path, cls.opt)
 
 
@@ -381,6 +429,8 @@ class TestBytes(unittest.TestCase):
         cls.ref_dict = dict()
 
     def test_add_bytes(self):
+        assert self.test_dict is not None
+        assert self.ref_dict is not None
         for i in range(10000):
             key = randbytes(10)
             value = randbytes(20)
@@ -397,6 +447,8 @@ class TestBytes(unittest.TestCase):
         compare_dicts(self, self.ref_dict, self.test_dict)
 
     def test_delete_bytes(self):
+        assert self.test_dict is not None
+        assert self.ref_dict is not None
         for i in range(5000):
             keys = [k for k in self.ref_dict.keys()]
             key = keys[randint(0, len(self.ref_dict) - 1)]
@@ -410,11 +462,15 @@ class TestBytes(unittest.TestCase):
         compare_dicts(self, self.ref_dict, self.test_dict)
 
     def test_reopen(self):
+        assert self.test_dict is not None
+        assert self.ref_dict is not None
         self.test_dict.close()
         test_dict = Rdict(self.path, self.opt)
         compare_dicts(self, self.ref_dict, test_dict)
 
     def test_get_batch(self):
+        assert self.test_dict is not None
+        assert self.ref_dict is not None
         keys = list(self.ref_dict.keys())[:100]
         self.assertEqual(
             self.test_dict[keys + ["no such key"] * 3],
@@ -423,6 +479,7 @@ class TestBytes(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        assert cls.opt is not None
         Rdict.destroy(cls.path, cls.opt)
 
 
@@ -438,6 +495,7 @@ class TestString(unittest.TestCase):
         cls.test_dict = Rdict(cls.path, cls.opt)
 
     def test_string(self):
+        assert self.test_dict is not None
         self.test_dict["Guangdong"] = "Shenzhen"
         self.test_dict["Sichuan"] = "Changsha"
         # overwrite
@@ -446,13 +504,14 @@ class TestString(unittest.TestCase):
         del self.test_dict["Beijing"]
 
         # assertions
-        self.assertNotIn("Beijing", self.test_dict)
+        self.assertFalse("Beijing" in self.test_dict)
         self.assertEqual(self.test_dict["Sichuan"], "Chengdu")
         self.assertEqual(self.test_dict["Guangdong"], "Shenzhen")
 
     @classmethod
     def tearDownClass(cls):
         del cls.test_dict
+        assert cls.opt is not None
         Rdict.destroy(cls.path, cls.opt)
 
 
@@ -468,6 +527,7 @@ class TestWideColumnsRaw(unittest.TestCase):
         cls.test_dict = Rdict(cls.path, cls.opt)
 
     def test_put_wide_columns(self):
+        assert self.test_dict is not None
         self.test_dict.put_entity(key=b"Guangdong", names=[b"language", b"city"], values=[b"Cantonese", b"Shenzhen"])
         self.test_dict.put_entity(key=b"Sichuan", names=[b"language", b"city"], values=[b"Mandarin", b"Chengdu"])
         self.assertEqual(self.test_dict[b"Guangdong"], b"")
@@ -526,6 +586,7 @@ class TestWideColumnsRaw(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         del cls.test_dict
+        assert cls.opt is not None
         Rdict.destroy(cls.path, cls.opt)
 
 
@@ -541,6 +602,7 @@ class TestWriteBatchWideColumnsRaw(unittest.TestCase):
         cls.test_dict = Rdict(cls.path, cls.opt)
 
     def test_put_wide_columns(self):
+        assert self.test_dict is not None
         write_batch = WriteBatch(raw_mode=True)
         default_cf_handle = self.test_dict.get_column_family_handle("default")
         write_batch.set_default_column_family(default_cf_handle)
@@ -602,6 +664,7 @@ class TestWriteBatchWideColumnsRaw(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         del cls.test_dict
+        assert cls.opt is not None
         Rdict.destroy(cls.path, cls.opt)
 
 
@@ -617,6 +680,7 @@ class TestWideColumns(unittest.TestCase):
         cls.test_dict = Rdict(cls.path, cls.opt)
 
     def test_put_wide_columns(self):
+        assert self.test_dict is not None
         self.test_dict.put_entity(key="Guangdong", names=["language", "city", "population"], values=["Cantonese", "Shenzhen", 1.27])
         self.test_dict.put_entity(key="Sichuan", names=["language", "city"], values=["Mandarin", "Chengdu"])
         self.assertEqual(self.test_dict["Guangdong"], "")
@@ -674,6 +738,7 @@ class TestWideColumns(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         del cls.test_dict
+        assert cls.opt is not None
         Rdict.destroy(cls.path, cls.opt)
 
 
@@ -686,6 +751,7 @@ class TestColumnFamiliesDefaultOpts(unittest.TestCase):
         cls.test_dict = Rdict(cls.path)
 
     def test_column_families(self):
+        assert self.test_dict is not None
         ds = self.test_dict.create_column_family(name="string")
         di = self.test_dict.create_column_family(name="integer")
 
@@ -729,6 +795,7 @@ class TestColumnFamiliesDefaultOptsCreate(unittest.TestCase):
         cls.test_dict = Rdict(cls.path, options=opt, column_families=cls.cfs)
 
     def test_column_families_create(self):
+        assert self.test_dict is not None
         ds = self.test_dict.get_column_family(name="string")
         di = self.test_dict.get_column_family(name="integer")
 
@@ -774,6 +841,7 @@ class TestColumnFamiliesCustomOpts(unittest.TestCase):
         cls.test_dict = Rdict(cls.path, options=plain_opts, column_families=cls.cfs)
 
     def test_column_families_custom_options_auto_reopen(self):
+        assert self.test_dict is not None
         ds = self.test_dict.get_column_family(name="string")
         di = self.test_dict.get_column_family(name="integer")
 
@@ -819,7 +887,9 @@ class TestColumnFamiliesCustomOptionsCreate(unittest.TestCase):
         cls.test_dict = Rdict(cls.path, options=cls.plain_opts, column_families=cls.cfs)
 
     def test_column_families_custom_options_auto_reopen(self):
+        assert self.test_dict is not None
         ds = self.test_dict.create_column_family(name="string")
+        assert self.plain_opts is not None
         di = self.test_dict.create_column_family(
             name="integer", options=self.plain_opts
         )
@@ -866,7 +936,9 @@ class TestColumnFamiliesCustomOptionsCreateReopenOverride(unittest.TestCase):
         cls.test_dict = Rdict(cls.path, options=cls.plain_opts)
 
     def test_column_families_custom_options_auto_reopen_override(self):
+        assert self.test_dict is not None
         ds = self.test_dict.create_column_family(name="string")
+        assert self.plain_opts is not None
         di = self.test_dict.create_column_family(
             name="integer", options=self.plain_opts
         )
@@ -943,6 +1015,9 @@ class TestIntWithSecondary(unittest.TestCase):
         cls.ref_dict = dict()
 
     def test_add_integer(self):
+        assert self.test_dict is not None
+        assert self.secondary_dict is not None
+        assert self.ref_dict is not None
         for i in range(10000):
             key = randint(0, TEST_INT_RANGE_UPPER - 1)
             value = randint(0, TEST_INT_RANGE_UPPER - 1)
@@ -954,6 +1029,9 @@ class TestIntWithSecondary(unittest.TestCase):
         compare_dicts(self, self.ref_dict, self.secondary_dict)
 
     def test_delete_integer(self):
+        assert self.test_dict is not None
+        assert self.secondary_dict is not None
+        assert self.ref_dict is not None
         for i in range(5000):
             key = randint(0, TEST_INT_RANGE_UPPER - 1)
             if key in self.ref_dict:
@@ -965,6 +1043,9 @@ class TestIntWithSecondary(unittest.TestCase):
         compare_dicts(self, self.ref_dict, self.secondary_dict)
 
     def test_delete_range(self):
+        assert self.test_dict is not None
+        assert self.secondary_dict is not None
+        assert self.ref_dict is not None
         to_delete = []
         for key in self.ref_dict:
             if key >= 99999:
@@ -978,9 +1059,12 @@ class TestIntWithSecondary(unittest.TestCase):
         compare_dicts(self, self.ref_dict, self.secondary_dict)
 
     def test_reopen(self):
+        assert self.test_dict is not None
+        assert self.secondary_dict is not None
+        assert self.ref_dict is not None
         self.secondary_dict.close()
 
-        self.assertRaises(DbClosedError, lambda: self.secondary_dict.get(1))
+        self.assertRaises(DbClosedError, lambda: self.secondary_dict.get(1) if self.secondary_dict is not None else None)
 
         self.secondary_dict = Rdict(
             self.path,
@@ -993,6 +1077,7 @@ class TestIntWithSecondary(unittest.TestCase):
     def tearDownClass(cls):
         del cls.test_dict
         del cls.secondary_dict
+        assert cls.opt is not None
         Rdict.destroy(cls.path, cls.opt)
         Rdict.destroy(cls.secondary_path, cls.opt)
 

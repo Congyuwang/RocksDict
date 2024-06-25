@@ -12,6 +12,8 @@ for i in range(90):
 
 # 0-89 are no longer in db
 for k, v in db.items():
+    assert k is int
+    assert v is int
     assert k >= 90
     assert v >= 90
 
