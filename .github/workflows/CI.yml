@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        py_version: [3.7, 3.8, 3.9, "3.10", "3.11", "3.12"]
+        py_version: [3.7, 3.8, 3.9, "3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -52,9 +52,9 @@ jobs:
         run: |
           python -m unittest discover -v test
       - name: Upload wheels
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: wheels-macos-${{ matrix.py_version }}
           path: dist
 
   windows:
@@ -63,7 +63,7 @@ jobs:
       fail-fast: false
       matrix:
         target: [x64]
-        py_version: [3.7, 3.8, 3.9, "3.10", "3.11", "3.12"]
+        py_version: [3.7, 3.8, 3.9, "3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -101,9 +101,9 @@ jobs:
           pip install speedict --no-index --find-links dist --force-reinstall || true
           python -m unittest discover -v test
       - name: Upload wheels
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: wheels-win-${{ matrix.py_version }}
           path: dist
 
   manylinux_2_28:
@@ -127,7 +127,7 @@ jobs:
           rustup-components: rustfmt
           target: ${{ matrix.target }}
           manylinux: 2_28
-          args: --release --out dist --interpreter '3.7 3.8 3.9 3.10 3.11 3.12'
+          args: --release --out dist --interpreter '3.7 3.8 3.9 3.10 3.11 3.12 3.13'
           container: congyuwang/manylinux_2_28_x86_64:llvm-18.1.5
         env:
           LIBCLANG_PATH: /usr/local/lib
@@ -144,9 +144,9 @@ jobs:
           pip install speedict --no-index --find-links dist --force-reinstall || true
           python -m unittest discover -v test
       - name: Upload wheels
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: wheels-manylinux_2_28-${{ matrix.target }}
           path: dist
 
   manylinux2014:
@@ -170,7 +170,7 @@ jobs:
           rustup-components: rustfmt
           target: ${{ matrix.target }}
           manylinux: 2014
-          args: --release --out dist --interpreter '3.7 3.8 3.9 3.10 3.11 3.12'
+          args: --release --out dist --interpreter '3.7 3.8 3.9 3.10 3.11 3.12 3.13'
           container: congyuwang/manylinux2014_x86_64:llvm-18.1.5
         env:
           LIBCLANG_PATH: /usr/local/lib
@@ -186,9 +186,9 @@ jobs:
           pip install speedict --no-index --find-links dist --force-reinstall || true
           python -m unittest discover -v test
       - name: Upload wheels
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: wheels-manylinux2014-${{ matrix.target }}
           path: dist
 
   linux-cross:
@@ -211,7 +211,7 @@ jobs:
           rustup-components: rustfmt
           target: ${{ matrix.target }}
           manylinux: 2_28
-          args: --release --out dist --interpreter '3.7 3.8 3.9 3.10 3.11 3.12'
+          args: --release --out dist --interpreter '3.7 3.8 3.9 3.10 3.11 3.12 3.13'
           container: congyuwang/manylinux_2_28_aarch64:llvm-18.1.5
           docker-options: "-e BINDGEN_EXTRA_CLANG_ARGS"
           before-script-linux: |
@@ -252,9 +252,9 @@ jobs:
             pip3 install speedict --no-index --find-links dist --force-reinstall || true
             python3 -m unittest discover -v test
       - name: Upload wheels
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: wheels-linux-cross-${{ matrix.target }}
           path: dist
 
   release:
@@ -265,6 +265,8 @@ jobs:
       - uses: actions/download-artifact@v4.1.7
         with:
           name: wheels
+          pattern: wheels-*
+          merge-multiple: true
       - uses: actions/setup-python@v5
         with:
           python-version: 3.9
