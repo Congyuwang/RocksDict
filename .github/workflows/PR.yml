@@ -34,13 +34,13 @@ jobs:
           pip install maturin
           eval "$(brew shellenv)"
           export MACOSX_DEPLOYMENT_TARGET=10.14
-          export LIBCLANG_PATH=${HOMEBREW_PREFIX}/opt/llvm/lib
-          export CC=${HOMEBREW_PREFIX}/opt/llvm/bin/clang
-          export CXX=${HOMEBREW_PREFIX}/opt/llvm/bin/clang++
-          export AR=${HOMEBREW_PREFIX}/opt/llvm/bin/llvm-ar
+          export LIBCLANG_PATH=${HOMEBREW_PREFIX}/opt/llvm@18/lib
+          export CC=${HOMEBREW_PREFIX}/opt/llvm@18/bin/clang
+          export CXX=${HOMEBREW_PREFIX}/opt/llvm@18/bin/clang++
+          export AR=${HOMEBREW_PREFIX}/opt/llvm@18/bin/llvm-ar
           export CFLAGS="-flto=thin -O3"
           export CXXFLAGS="-flto=thin -O3"
-          export LLD=${HOMEBREW_PREFIX}/opt/llvm/bin/ld64.lld
+          export LLD=${HOMEBREW_PREFIX}/opt/llvm@18/bin/ld64.lld
           export RUSTFLAGS="-Clinker-plugin-lto -Clinker=$PWD/macos-linker.sh -Clink-arg=-fuse-ld=${LLD}"
           maturin build --release --target aarch64-apple-darwin --out dist -i python${{ matrix.py_version }}
           maturin build --release --target x86_64-apple-darwin --out dist -i python${{ matrix.py_version }}
