@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        py_version: [3.7, 3.8, 3.9, "3.10", "3.11", "3.12", "3.13"]
+        py_version: [3.7, 3.8, 3.9, "3.10", "3.11", "3.12", "3.13", "pypy3.9", "pypy3.10"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -42,8 +42,8 @@ jobs:
           export CXXFLAGS="-flto=thin -O3"
           export LLD=${HOMEBREW_PREFIX}/opt/llvm/bin/ld64.lld
           export RUSTFLAGS="-Clinker-plugin-lto -Clinker=$PWD/macos-linker.sh -Clink-arg=-fuse-ld=${LLD}"
-          maturin build --release --target aarch64-apple-darwin --out dist -i python${{ matrix.py_version }}
-          maturin build --release --target x86_64-apple-darwin --out dist -i python${{ matrix.py_version }}
+          maturin build --release --target aarch64-apple-darwin --out dist -f
+          maturin build --release --target x86_64-apple-darwin --out dist -f
       - name: Install built wheel
         run: |
           pip install rocksdict --no-index --find-links dist --force-reinstall || true
