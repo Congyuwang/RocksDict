@@ -145,20 +145,27 @@ impl RocksDictConfig {
             Err(e) => Err(PyException::new_err(e.to_string())),
         }
     }
+
+    pub fn save_to_dir(&self, dir: &str) -> PyResult<()> {
+        self.save(config_file(dir))
+    }
 }
 
 impl Rdict {
-    fn dump_config(&self) -> PyResult<()> {
-        let config_path = config_file(&self.path()?);
+    #[inline]
+    pub(crate) fn config(&self) -> RocksDictConfig {
         RocksDictConfig {
             raw_mode: self.opt_py.raw_mode,
             prefix_extractors: self.slice_transforms.read().unwrap().clone(),
         }
-        .save(config_path)
+    }
+
+    fn dump_config(&self) -> PyResult<()> {
+        self.config().save_to_dir(&self.path()?)
     }
 
     #[inline]
-    fn get_db(&self) -> PyResult<&DbReference> {
+    pub(crate) fn get_db(&self) -> PyResult<&DbReference> {
         self.db
             .get()
             .ok_or_else(|| DbClosedError::new_err("DB instance already closed"))
