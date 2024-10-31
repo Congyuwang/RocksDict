@@ -265,7 +265,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          path: wheels
+          path: dist
           pattern: wheels-*
           merge-multiple: true
       - uses: actions/setup-python@v5
@@ -277,4 +277,4 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
           pip install --upgrade twine
-          twine upload  --skip-existing *
+          twine upload --skip-existing dist/*
