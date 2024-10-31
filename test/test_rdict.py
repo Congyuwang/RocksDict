@@ -7,7 +7,8 @@ from rocksdict import (
     SliceTransform,
     CuckooTableOptions,
     DbClosedError,
-    WriteBatch
+    WriteBatch,
+    Checkpoint
 )
 from random import randint, random, getrandbits
 import os
@@ -1083,6 +1084,89 @@ class TestIntWithSecondary(unittest.TestCase):
         assert cls.opt is not None
         Rdict.destroy(cls.path, cls.opt)
         Rdict.destroy(cls.secondary_path, cls.opt)
+
+
+class TestCheckpoint(unittest.TestCase):
+    test_dict = None
+    checkpoint_path = "./temp_checkpoint"
+    path = "./temp_checkpoint_db"
+    opt = None
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.opt = Options()
+        cls.opt.create_if_missing(True)
+        cls.test_dict = Rdict(cls.path, cls.opt)
+
+    def test_create_checkpoint(self):
+        assert self.test_dict is not None
+        # Populate the database
+        for i in range(1000):
+            self.test_dict[i] = i * i
+
+        # Create a checkpoint
+        checkpoint = Checkpoint(self.test_dict)
+        checkpoint.create_checkpoint(self.checkpoint_path)
+        del checkpoint
+
+        # Open the checkpoint as a new Rdict instance
+        checkpoint_dict = Rdict(self.checkpoint_path)
+
+        # Verify the checkpoint data
+        for i in range(1000):
+            self.assertIn(i, checkpoint_dict)
+            self.assertEqual(checkpoint_dict[i], i * i)
+
+        checkpoint_dict.close()
+
+    @classmethod
+    def tearDownClass(cls):
+        del cls.test_dict
+        assert cls.opt is not None
+        Rdict.destroy(cls.path, cls.opt)
+        Rdict.destroy(cls.checkpoint_path, cls.opt)
+
+
+class TestCheckpointRaw(unittest.TestCase):
+    test_dict = None
+    checkpoint_path = "./temp_checkpoint_raw"
+    path = "./temp_checkpoint_raw_db"
+    opt = None
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.opt = Options(True)  # Enable raw mode by passing True
+        cls.opt.create_if_missing(True)
+        cls.test_dict = Rdict(cls.path, cls.opt)
+
+    def test_create_checkpoint(self):
+        assert self.test_dict is not None
+        # Populate the database
+        for i in range(1000):
+            self.test_dict.put_entity(bytes(i), names=[b"value"], values=[bytes(i * i)])
+
+        # Create a checkpoint
+        checkpoint = Checkpoint(self.test_dict)
+        checkpoint.create_checkpoint(self.checkpoint_path)
+        del checkpoint
+
+        # Open the checkpoint as a new Rdict instance
+        checkpoint_dict = Rdict(self.checkpoint_path)
+
+        # Verify the checkpoint data
+        for i in range(1000):
+            self.assertIn(bytes(i), checkpoint_dict)
+            entity = checkpoint_dict.get_entity(bytes(i))
+            self.assertEqual(entity, [(b"value", bytes(i * i))])
+
+        checkpoint_dict.close()
+
+    @classmethod
+    def tearDownClass(cls):
+        del cls.test_dict
+        assert cls.opt is not None
+        Rdict.destroy(cls.path, cls.opt)
+        Rdict.destroy(cls.checkpoint_path, cls.opt)
 
 
 if __name__ == "__main__":

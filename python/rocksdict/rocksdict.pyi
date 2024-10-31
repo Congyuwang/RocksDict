@@ -32,7 +32,8 @@ __all__ = ["Rdict",
            "BottommostLevelCompaction",
            "KeyEncodingType",
            "DbClosedError",
-           "WriteBufferManager"]
+           "WriteBufferManager",
+           "Checkpoint"]
 
 class DataBlockIndexType:
     @staticmethod
@@ -600,6 +601,10 @@ class KeyEncodingType:
     def none() -> KeyEncodingType: ...
     @staticmethod
     def prefix() -> KeyEncodingType: ...
+
+class Checkpoint:
+    def __init__(self, db: Rdict) -> None: ...
+    def create_checkpoint(self, path: str) -> None: ...
 
 class DbClosedError(Exception):
     """Raised when accessing a closed database instance."""
