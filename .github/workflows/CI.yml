@@ -263,9 +263,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [windows, manylinux_2_28, manylinux2014, macos, linux-cross]
     steps:
-      - uses: actions/download-artifact@v4.1.7
+      - uses: actions/download-artifact@v4
         with:
-          name: wheels
+          path: wheels
           pattern: wheels-*
           merge-multiple: true
       - uses: actions/setup-python@v5
