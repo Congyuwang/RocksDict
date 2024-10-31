@@ -10,7 +10,7 @@ develop:
     AR=${HOMEBREW_PREFIX}/opt/llvm/bin/llvm-ar \
     CFLAGS="-flto=thin -O3" \
     CXXFLAGS="-flto=thin -O3" \
-    RUSTFLAGS="-Clinker-plugin-lto -Clinker=$PWD/macos-linker.sh -Clink-arg=-fuse-ld=${HOMEBREW_PREFIX}/opt/llvm/bin/ld64.lld" \
+    RUSTFLAGS="-Clinker-plugin-lto -Clinker=$PWD/macos-linker.sh -Clink-arg=-fuse-ld=${HOMEBREW_PREFIX}/opt/lld/bin/ld64.lld" \
     maturin develop --release --verbose
 
 # for macos
@@ -22,7 +22,7 @@ build:
     AR=${HOMEBREW_PREFIX}/opt/llvm/bin/llvm-ar \
     CFLAGS="-flto=thin -O3" \
     CXXFLAGS="-flto=thin -O3" \
-    RUSTFLAGS="-Clinker-plugin-lto -Clinker=$PWD/macos-linker.sh -Clink-arg=-fuse-ld=${HOMEBREW_PREFIX}/opt/llvm/bin/ld64.lld" \
+    RUSTFLAGS="-Clinker-plugin-lto -Clinker=$PWD/macos-linker.sh -Clink-arg=-fuse-ld=${HOMEBREW_PREFIX}/opt/lld/bin/ld64.lld" \
     maturin build --release --verbose
 
 bin:
@@ -32,5 +32,5 @@ bin:
     AR=${HOMEBREW_PREFIX}/opt/llvm/bin/llvm-ar \
     CFLAGS="-flto=thin -O3" \
     CXXFLAGS="-flto=thin -O3" \
-    RUSTFLAGS="-Clinker-plugin-lto -Clinker=$PWD/macos-linker.sh -Clink-arg=-fuse-ld=${HOMEBREW_PREFIX}/opt/llvm/bin/ld64.lld" \
+    RUSTFLAGS="-Clinker-plugin-lto -Clinker=$PWD/macos-linker.sh -Clink-arg=-fuse-ld=${HOMEBREW_PREFIX}/opt/lld/bin/ld64.lld" \
     cargo build --release --bin create_cf_db
