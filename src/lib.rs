@@ -1,4 +1,4 @@
-// #![feature(core_intrinsics)]
+mod checkpoints;
 mod db_reference;
 mod encoder;
 mod exceptions;
@@ -17,6 +17,7 @@ use crate::rdict::*;
 use crate::snapshot::Snapshot;
 use crate::sst_file_writer::*;
 use crate::write_batch::*;
+use checkpoints::CheckpointPy;
 use pyo3::prelude::*;
 
 /// ## Abstract
@@ -146,6 +147,7 @@ fn rocksdict(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<ChecksumTypePy>()?;
     m.add_class::<KeyEncodingTypePy>()?;
     m.add_class::<WriteBufferManagerPy>()?;
+    m.add_class::<CheckpointPy>()?;
 
     m.add("DbClosedError", py.get_type_bound::<DbClosedError>())?;
 
