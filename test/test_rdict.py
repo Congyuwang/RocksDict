@@ -1,5 +1,4 @@
 import unittest
-from sys import getrefcount
 from rocksdict import (
     AccessType,
     Rdict,
@@ -13,6 +12,7 @@ from rocksdict import (
 from random import randint, random, getrandbits
 import os
 import sys
+import platform
 from json import loads, dumps
 from subprocess import Popen
 
@@ -42,6 +42,7 @@ class TestGetDel(unittest.TestCase):
         cls.test_dict["a"] = "a"
         cls.test_dict[123] = 123
 
+    @unittest.skipIf(platform.python_implementation() == "PyPy", reason="sys.getrefcount() not available in PyPy")
     def testGetItem(self):
         assert self.test_dict is not None
         self.assertEqual(self.test_dict["a"], "a")
@@ -428,36 +429,38 @@ class TestBytes(unittest.TestCase):
         cls.test_dict = Rdict(cls.path, cls.opt)
         cls.ref_dict = dict()
 
+    @unittest.skipIf(platform.python_implementation() == "PyPy", reason="sys.getrefcount() not available in PyPy")
     def test_add_bytes(self):
         assert self.test_dict is not None
         assert self.ref_dict is not None
         for i in range(10000):
             key = randbytes(10)
             value = randbytes(20)
-            self.assertEqual(getrefcount(key), 2)
-            self.assertEqual(getrefcount(value), 2)
+            self.assertEqual(sys.getrefcount(key), 2)
+            self.assertEqual(sys.getrefcount(value), 2)
             self.test_dict[key] = value
             # rdict does not increase ref_count
-            self.assertEqual(getrefcount(key), 2)
-            self.assertEqual(getrefcount(value), 2)
+            self.assertEqual(sys.getrefcount(key), 2)
+            self.assertEqual(sys.getrefcount(value), 2)
             self.ref_dict[key] = value
-            self.assertEqual(getrefcount(key), 3)
-            self.assertEqual(getrefcount(value), 3)
+            self.assertEqual(sys.getrefcount(key), 3)
+            self.assertEqual(sys.getrefcount(value), 3)
 
         compare_dicts(self, self.ref_dict, self.test_dict)
 
+    @unittest.skipIf(platform.python_implementation() == "PyPy", reason="sys.getrefcount() not available in PyPy")
     def test_delete_bytes(self):
         assert self.test_dict is not None
         assert self.ref_dict is not None
         for i in range(5000):
             keys = [k for k in self.ref_dict.keys()]
             key = keys[randint(0, len(self.ref_dict) - 1)]
-            # key + ref_dict + keys + getrefcount -> 4
-            self.assertEqual(getrefcount(key), 4)
+            # key + ref_dict + keys + sys.getrefcount -> 4
+            self.assertEqual(sys.getrefcount(key), 4)
             del self.test_dict[key]
-            self.assertEqual(getrefcount(key), 4)
+            self.assertEqual(sys.getrefcount(key), 4)
             del self.ref_dict[key]
-            self.assertEqual(getrefcount(key), 3)
+            self.assertEqual(sys.getrefcount(key), 3)
 
         compare_dicts(self, self.ref_dict, self.test_dict)
 
