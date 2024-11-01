@@ -50,6 +50,6 @@ all_columns = [
 ]
 assert [c for c in test_dict.columns()] == all_columns
 
-del test_dict
+test_dict.close()
 
 Rdict.destroy(path)

@@ -28,7 +28,7 @@ def run_checkpoint_raw_example():
         assert entity == [(b"value", bytes(i * i))]
 
     checkpoint_dict.close()
-    del test_dict
+    test_dict.close()
 
     # Cleanup
     Rdict.destroy(path, opt)

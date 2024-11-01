@@ -64,7 +64,8 @@ class TestGetDel(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        assert cls.test_dict is not None
+        cls.test_dict.close()
         gc.collect()
         Rdict.destroy(cls.path, Options())
 
@@ -105,7 +106,8 @@ class TestGetDelCustomDumpsLoads(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        assert cls.test_dict is not None
+        cls.test_dict.close()
         gc.collect()
         Rdict.destroy(cls.path, Options())
 
@@ -359,7 +361,8 @@ class TestBigInt(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        assert cls.test_dict is not None
+        cls.test_dict.close()
         assert cls.opt is not None
         gc.collect()
         Rdict.destroy(cls.path, cls.opt)
@@ -527,7 +530,8 @@ class TestString(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        assert cls.test_dict is not None
+        cls.test_dict.close()
         assert cls.opt is not None
         gc.collect()
         Rdict.destroy(cls.path, cls.opt)
@@ -603,7 +607,8 @@ class TestWideColumnsRaw(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        assert cls.test_dict is not None
+        cls.test_dict.close()
         assert cls.opt is not None
         gc.collect()
         Rdict.destroy(cls.path, cls.opt)
@@ -682,7 +687,8 @@ class TestWriteBatchWideColumnsRaw(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        assert cls.test_dict is not None
+        cls.test_dict.close()
         assert cls.opt is not None
         gc.collect()
         Rdict.destroy(cls.path, cls.opt)
@@ -757,7 +763,8 @@ class TestWideColumns(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        assert cls.test_dict is not None
+        cls.test_dict.close()
         assert cls.opt is not None
         gc.collect()
         Rdict.destroy(cls.path, cls.opt)
@@ -799,7 +806,6 @@ class TestColumnFamiliesDefaultOpts(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
         gc.collect()
         Rdict.destroy(cls.path)
 
@@ -844,7 +850,6 @@ class TestColumnFamiliesDefaultOptsCreate(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
         gc.collect()
         Rdict.destroy(cls.path)
 
@@ -891,7 +896,6 @@ class TestColumnFamiliesCustomOpts(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
         gc.collect()
         Rdict.destroy(cls.path)
 
@@ -941,7 +945,6 @@ class TestColumnFamiliesCustomOptionsCreate(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
         gc.collect()
         Rdict.destroy(cls.path)
 
@@ -1015,7 +1018,6 @@ class TestColumnFamiliesCustomOptionsCreateReopenOverride(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
         gc.collect()
         Rdict.destroy(cls.path)
 
@@ -1142,18 +1144,18 @@ class TestCheckpoint(unittest.TestCase):
 
         # Verify the checkpoint data
         for i in range(1000):
-            self.assertIn(i, checkpoint_dict)
+            self.assertTrue(i in checkpoint_dict)
             self.assertEqual(checkpoint_dict[i], i * i)
 
         checkpoint_dict.close()
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        assert cls.test_dict is not None
         assert cls.opt is not None
+        cls.test_dict.close()
         gc.collect()
         Rdict.destroy(cls.path, cls.opt)
-        gc.collect()
         Rdict.destroy(cls.checkpoint_path, cls.opt)
 
 
@@ -1185,7 +1187,7 @@ class TestCheckpointRaw(unittest.TestCase):
 
         # Verify the checkpoint data
         for i in range(1000):
-            self.assertIn(bytes(i), checkpoint_dict)
+            self.assertTrue(bytes(i) in checkpoint_dict)
             entity = checkpoint_dict.get_entity(bytes(i))
             self.assertEqual(entity, [(b"value", bytes(i * i))])
 
@@ -1193,14 +1195,13 @@ class TestCheckpointRaw(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        assert cls.test_dict is not None
+        cls.test_dict.close()
         assert cls.opt is not None
         gc.collect()
         Rdict.destroy(cls.path, cls.opt)
-        gc.collect()
         Rdict.destroy(cls.checkpoint_path, cls.opt)
 
 
 if __name__ == "__main__":
     unittest.main()
-
