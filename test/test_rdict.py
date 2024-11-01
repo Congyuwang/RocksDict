@@ -1,5 +1,4 @@
 import unittest
-from sys import getrefcount
 from rocksdict import (
     AccessType,
     Rdict,
@@ -13,7 +12,9 @@ from rocksdict import (
 )
 from random import randint, random, getrandbits
 import os
+import gc
 import sys
+import platform
 from json import loads, dumps
 from subprocess import Popen
 
@@ -43,6 +44,7 @@ class TestGetDel(unittest.TestCase):
         cls.test_dict["a"] = "a"
         cls.test_dict[123] = 123
 
+    @unittest.skipIf(platform.python_implementation() == "PyPy", reason="sys.getrefcount() not available in PyPy")
     def testGetItem(self):
         assert self.test_dict is not None
         self.assertEqual(self.test_dict["a"], "a")
@@ -62,7 +64,9 @@ class TestGetDel(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        assert cls.test_dict is not None
+        cls.test_dict.close()
+        gc.collect()
         Rdict.destroy(cls.path, Options())
 
 
@@ -102,7 +106,9 @@ class TestGetDelCustomDumpsLoads(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        assert cls.test_dict is not None
+        cls.test_dict.close()
+        gc.collect()
         Rdict.destroy(cls.path, Options())
 
 
@@ -183,7 +189,9 @@ class TestIterBytes(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        assert cls.test_dict is not None
+        cls.test_dict.close()
+        gc.collect()
         Rdict.destroy(cls.path, Options())
 
 
@@ -244,7 +252,9 @@ class TestIterInt(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        assert cls.test_dict is not None
+        cls.test_dict.close()
+        gc.collect()
         Rdict.destroy(cls.path, Options())
 
 
@@ -302,6 +312,7 @@ class TestInt(unittest.TestCase):
 
         self.assertRaises(DbClosedError, lambda: self.test_dict.get(1) if self.test_dict is not None else None)
 
+        gc.collect()
         test_dict = Rdict(self.path, self.opt)
         compare_dicts(self, self.ref_dict, test_dict)
 
@@ -317,6 +328,7 @@ class TestInt(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         assert cls.opt is not None
+        gc.collect()
         Rdict.destroy(cls.path, cls.opt)
 
 
@@ -349,8 +361,10 @@ class TestBigInt(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        assert cls.test_dict is not None
+        cls.test_dict.close()
         assert cls.opt is not None
+        gc.collect()
         Rdict.destroy(cls.path, cls.opt)
 
 
@@ -393,6 +407,7 @@ class TestFloat(unittest.TestCase):
         assert self.test_dict is not None
         assert self.ref_dict is not None
         self.test_dict.close()
+        gc.collect()
         test_dict = Rdict(self.path, self.opt)
         compare_dicts(self, self.ref_dict, test_dict)
 
@@ -408,6 +423,7 @@ class TestFloat(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         assert cls.opt is not None
+        gc.collect()
         Rdict.destroy(cls.path, cls.opt)
 
 
@@ -429,36 +445,38 @@ class TestBytes(unittest.TestCase):
         cls.test_dict = Rdict(cls.path, cls.opt)
         cls.ref_dict = dict()
 
+    @unittest.skipIf(platform.python_implementation() == "PyPy", reason="sys.getrefcount() not available in PyPy")
     def test_add_bytes(self):
         assert self.test_dict is not None
         assert self.ref_dict is not None
         for i in range(10000):
             key = randbytes(10)
             value = randbytes(20)
-            self.assertEqual(getrefcount(key), 2)
-            self.assertEqual(getrefcount(value), 2)
+            self.assertEqual(sys.getrefcount(key), 2)
+            self.assertEqual(sys.getrefcount(value), 2)
             self.test_dict[key] = value
             # rdict does not increase ref_count
-            self.assertEqual(getrefcount(key), 2)
-            self.assertEqual(getrefcount(value), 2)
+            self.assertEqual(sys.getrefcount(key), 2)
+            self.assertEqual(sys.getrefcount(value), 2)
             self.ref_dict[key] = value
-            self.assertEqual(getrefcount(key), 3)
-            self.assertEqual(getrefcount(value), 3)
+            self.assertEqual(sys.getrefcount(key), 3)
+            self.assertEqual(sys.getrefcount(value), 3)
 
         compare_dicts(self, self.ref_dict, self.test_dict)
 
+    @unittest.skipIf(platform.python_implementation() == "PyPy", reason="sys.getrefcount() not available in PyPy")
     def test_delete_bytes(self):
         assert self.test_dict is not None
         assert self.ref_dict is not None
         for i in range(5000):
             keys = [k for k in self.ref_dict.keys()]
             key = keys[randint(0, len(self.ref_dict) - 1)]
-            # key + ref_dict + keys + getrefcount -> 4
-            self.assertEqual(getrefcount(key), 4)
+            # key + ref_dict + keys + sys.getrefcount -> 4
+            self.assertEqual(sys.getrefcount(key), 4)
             del self.test_dict[key]
-            self.assertEqual(getrefcount(key), 4)
+            self.assertEqual(sys.getrefcount(key), 4)
             del self.ref_dict[key]
-            self.assertEqual(getrefcount(key), 3)
+            self.assertEqual(sys.getrefcount(key), 3)
 
         compare_dicts(self, self.ref_dict, self.test_dict)
 
@@ -481,6 +499,7 @@ class TestBytes(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         assert cls.opt is not None
+        gc.collect()
         Rdict.destroy(cls.path, cls.opt)
 
 
@@ -511,8 +530,10 @@ class TestString(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        assert cls.test_dict is not None
+        cls.test_dict.close()
         assert cls.opt is not None
+        gc.collect()
         Rdict.destroy(cls.path, cls.opt)
 
 
@@ -586,8 +607,10 @@ class TestWideColumnsRaw(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        assert cls.test_dict is not None
+        cls.test_dict.close()
         assert cls.opt is not None
+        gc.collect()
         Rdict.destroy(cls.path, cls.opt)
 
 
@@ -664,8 +687,10 @@ class TestWriteBatchWideColumnsRaw(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        assert cls.test_dict is not None
+        cls.test_dict.close()
         assert cls.opt is not None
+        gc.collect()
         Rdict.destroy(cls.path, cls.opt)
 
 
@@ -738,8 +763,10 @@ class TestWideColumns(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        assert cls.test_dict is not None
+        cls.test_dict.close()
         assert cls.opt is not None
+        gc.collect()
         Rdict.destroy(cls.path, cls.opt)
 
 
@@ -779,7 +806,7 @@ class TestColumnFamiliesDefaultOpts(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        gc.collect()
         Rdict.destroy(cls.path)
 
 
@@ -823,7 +850,7 @@ class TestColumnFamiliesDefaultOptsCreate(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        gc.collect()
         Rdict.destroy(cls.path)
 
 
@@ -869,7 +896,7 @@ class TestColumnFamiliesCustomOpts(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        gc.collect()
         Rdict.destroy(cls.path)
 
 
@@ -918,7 +945,7 @@ class TestColumnFamiliesCustomOptionsCreate(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        gc.collect()
         Rdict.destroy(cls.path)
 
 
@@ -955,6 +982,7 @@ class TestColumnFamiliesCustomOptionsCreateReopenOverride(unittest.TestCase):
         self.test_dict.close()
 
         # reopen
+        gc.collect()
         old_opts, old_cols = Options.load_latest(self.path)
         old_opts.create_missing_column_families(True)
         old_cols["bytes"] = self.plain_opts
@@ -973,6 +1001,7 @@ class TestColumnFamiliesCustomOptionsCreateReopenOverride(unittest.TestCase):
         self.test_dict.close()
 
         # reopen again auto read config
+        gc.collect()
         self.test_dict = Rdict(self.path)
         ds = self.test_dict.get_column_family("string")
         di = self.test_dict.get_column_family("integer")
@@ -989,7 +1018,7 @@ class TestColumnFamiliesCustomOptionsCreateReopenOverride(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        gc.collect()
         Rdict.destroy(cls.path)
 
 
@@ -1067,6 +1096,7 @@ class TestIntWithSecondary(unittest.TestCase):
 
         self.assertRaises(DbClosedError, lambda: self.secondary_dict.get(1) if self.secondary_dict is not None else None)
 
+        gc.collect()
         self.secondary_dict = Rdict(
             self.path,
             options=self.opt,
@@ -1076,9 +1106,12 @@ class TestIntWithSecondary(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
-        del cls.secondary_dict
+        assert cls.test_dict is not None
+        assert cls.secondary_dict is not None
+        cls.test_dict.close()
+        cls.secondary_dict.close()
         assert cls.opt is not None
+        gc.collect()
         Rdict.destroy(cls.path, cls.opt)
         Rdict.destroy(cls.secondary_path, cls.opt)
 
@@ -1111,15 +1144,17 @@ class TestCheckpoint(unittest.TestCase):
 
         # Verify the checkpoint data
         for i in range(1000):
-            self.assertIn(i, checkpoint_dict)
+            self.assertTrue(i in checkpoint_dict)
             self.assertEqual(checkpoint_dict[i], i * i)
 
         checkpoint_dict.close()
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        assert cls.test_dict is not None
         assert cls.opt is not None
+        cls.test_dict.close()
+        gc.collect()
         Rdict.destroy(cls.path, cls.opt)
         Rdict.destroy(cls.checkpoint_path, cls.opt)
 
@@ -1152,7 +1187,7 @@ class TestCheckpointRaw(unittest.TestCase):
 
         # Verify the checkpoint data
         for i in range(1000):
-            self.assertIn(bytes(i), checkpoint_dict)
+            self.assertTrue(bytes(i) in checkpoint_dict)
             entity = checkpoint_dict.get_entity(bytes(i))
             self.assertEqual(entity, [(b"value", bytes(i * i))])
 
@@ -1160,8 +1195,10 @@ class TestCheckpointRaw(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.test_dict
+        assert cls.test_dict is not None
+        cls.test_dict.close()
         assert cls.opt is not None
+        gc.collect()
         Rdict.destroy(cls.path, cls.opt)
         Rdict.destroy(cls.checkpoint_path, cls.opt)
 

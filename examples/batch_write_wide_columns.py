@@ -62,5 +62,6 @@ assert (
     ]
 )
 
+test_dict.close()
 del write_batch, it, default_cf_handle, test_dict
 Rdict.destroy(path, opt)

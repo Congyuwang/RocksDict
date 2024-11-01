@@ -27,7 +27,7 @@ def run_checkpoint_example():
         assert checkpoint_dict[i] == i * i
 
     checkpoint_dict.close()
-    del test_dict
+    test_dict.close()
 
     # Cleanup
     Rdict.destroy(path, opt)

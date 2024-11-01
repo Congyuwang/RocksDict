@@ -38,5 +38,5 @@ for k, v in db.items():
     count += 1
 
 # auto flush
-del db
+db.close()
 rd.Rdict.destroy("test")

@@ -22,6 +22,7 @@ for i in range(100):
     assert snapshot[i] == i
 
 # drop the snapshot
+db.close()
 del snapshot, db
 
 Rdict.destroy("tmp")
