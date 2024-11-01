@@ -7,13 +7,13 @@ readme = "README.md"
 keywords = ["rocksdb", "dbm", "dict", "key-value"]
 
 classifiers = [
-    "Programming Language :: Rust",
-    "License :: OSI Approved :: MIT License",
+    'Programming Language :: Rust',
+    'Programming Language :: Python',
+    'License :: OSI Approved :: MIT License',
     'Operating System :: MacOS :: MacOS X',
     'Operating System :: Microsoft :: Windows',
     'Operating System :: POSIX :: Linux',
     'Topic :: Database',
-    'Topic :: Software Development :: Embedded Systems',
     'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
@@ -21,6 +21,9 @@ classifiers = [
     'Programming Language :: Python :: 3.11',
     'Programming Language :: Python :: 3.12',
     'Programming Language :: Python :: 3.13',
+    'Programming Language :: Python :: Implementation :: CPython',
+    'Programming Language :: Python :: Implementation :: PyPy',
+    'Development Status :: 5 - Production/Stable',
 ]
 
 [build-system]
